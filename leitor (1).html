@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Leitor de Quadrinhos - HQ Verso</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        body {
+            background: #18122b;
+            color: #f6f6f6;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        body.light-mode {
+            background: #f8fafc;
+            color: #2d3748;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(15, 52, 96, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        body.light-mode .theme-toggle {
+            background: rgba(233, 69, 96, 0.8);
+            color: white;
+        }
+        
+        .reader-header {
+            background: #0f3460;
+            padding: 20px;
+            text-align: center;
+            font-size: 2rem;
+            color: #e94560;
+            letter-spacing: 2px;
+        }
+        
+        body.light-mode .reader-header {
+            background: #e94560;
+            color: white;
+        }
+        
+        .comic-pages {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+        
+        .comic-page-img {
+            width: 90vw;
+            max-width: 700px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+        
+        body.light-mode .comic-page-img {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .back-btn {
+            display: inline-block;
+            margin: 20px;
+            padding: 10px 20px;
+            background: #e94560;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #d8345f;
+            transform: translateY(-2px);
+        }
+        
+        .read-now-btn {
+            display: inline-block;
+            margin: 20px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .read-now-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .page-list {
+            width: 90vw;
+            max-width: 700px;
+            margin: 10px auto 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .page-link {
+            display: block;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        body.light-mode .page-link {
+            background: rgba(0, 0, 0, 0.05);
+            color: #2d3748;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .page-link.current {
+            background: linear-gradient(90deg,#e94560,#ff6b81);
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(233,69,96,0.28);
+        }
+        
+        .reader-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .info-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #0f3460;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        body.light-mode .info-link {
+            background: #e94560;
+        }
+        
+        .info-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+    
+    <div class="reader-header">
+        <span id="readerTitleText">Título do Quadrinho</span>
+        <a href="detection.html" class="info-link" style="font-size: 14px; margin-left: 20px;">
+            <i class="fas fa-info-circle"></i> Info do Navegador
+        </a>
+    </div>
+    
+    <div class="reader-actions">
+        <a href="comics.php" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Voltar para Biblioteca
+        </a>
+        <button class="read-now-btn" id="readNowBtn">
+            <i class="fas fa-play"></i> Ler agora
+        </button>
+    </div>
+    
+    <div class="comic-pages" id="comicPages">
+        <!-- As páginas do quadrinho serão inseridas aqui -->
+    </div>
+    
+    <div class="page-list" id="pageList" aria-label="Lista de páginas">
+        <!-- Lista clicável de páginas -->
+    </div>
+
+    <script>
+        // Sistema de Tema
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        // Verificar tema salvo
+        const savedTheme = localStorage.getItem('hq-verso-theme');
+        if (savedTheme === 'light') {
+            body.classList.add('light-mode');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('light-mode');
+            
+            if (body.classList.contains('light-mode')) {
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                localStorage.setItem('hq-verso-theme', 'light');
+            } else {
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                localStorage.setItem('hq-verso-theme', 'dark');
+            }
+        });
+
+        // Ler parâmetros da URL
+        const params = new URLSearchParams(window.location.search);
+        const comicId = params.get('comic') || '';
+        const comicTitle = params.get('title') || 'Quadrinho';
+        const comicCover = params.get('cover') || '';
+
+        // Atualizar título
+        const titleEl = document.getElementById('readerTitleText');
+        if (titleEl) titleEl.textContent = comicTitle;
+
+        // Gerar páginas
+        const pagesDiv = document.getElementById('comicPages');
+        const pageListDiv = document.getElementById('pageList');
+        const pages = [];
+        
+        if (comicCover) pages.push(comicCover);
+        pages.push('https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Página+1');
+        pages.push('https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Página+2');
+        pages.push('https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Página+3');
+
+        // Criar elementos de imagem e lista
+        const imgs = [];
+        if (pagesDiv && pages.length) {
+            pages.forEach((src, idx) => {
+                const img = document.createElement('img');
+                img.className = 'comic-page-img';
+                img.alt = `Página ${idx + 1}`;
+                img.dataset.pageIndex = String(idx);
+                const placeholderSrc = `https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Página+${idx+1}`;
+                img.onerror = () => { if (!img.dataset.broken) { img.dataset.broken = '1'; img.src = placeholderSrc; } };
+                img.src = src || placeholderSrc;
+                pagesDiv.appendChild(img);
+                imgs.push(img);
+
+                // Página na lista
+                if (pageListDiv) {
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.className = 'page-link';
+                    a.textContent = `Página ${idx + 1}`;
+                    a.dataset.pageIndex = String(idx);
+                    a.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        const i = Number(a.dataset.pageIndex || 0);
+                        const target = imgs[i];
+                        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        updateCurrentPage(i);
+                    });
+                    pageListDiv.appendChild(a);
+                }
+            });
+        }
+
+        // Determinar página inicial
+        let initialIndex = 0;
+        const progressRaw = params.get('progress') || '';
+        if (progressRaw) {
+            const n = Number(String(progressRaw).replace('%',''));
+            if (!Number.isNaN(n) && pages.length > 0) {
+                const pct = Math.max(0, Math.min(100, n));
+                initialIndex = Math.round((pct / 100) * (pages.length - 1));
+            }
+        }
+
+        // Marcar página atual
+        function updateCurrentPage(index) {
+            const links = pageListDiv ? Array.from(pageListDiv.querySelectorAll('.page-link')) : [];
+            links.forEach(l => l.classList.remove('current'));
+            const link = links[index];
+            if (link) link.classList.add('current');
+        }
+
+        // Scroll para página inicial
+        setTimeout(() => {
+            if (imgs[initialIndex]) {
+                imgs[initialIndex].scrollIntoView({ behavior: 'auto', block: 'start' });
+                updateCurrentPage(initialIndex);
+            }
+        }, 80);
+
+        // Botão 'Ler agora'
+        const readNowBtn = document.getElementById('readNowBtn');
+        if (readNowBtn) {
+            readNowBtn.addEventListener('click', () => {
+                const firstPage = document.querySelector('.comic-page-img');
+                if (firstPage) firstPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                updateCurrentPage(0);
+            });
+        }
+
+        console.log('Leitor de quadrinhos carregado com sucesso!');
+    </script>
+</body>
+</html>

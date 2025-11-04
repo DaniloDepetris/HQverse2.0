@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HQ Verso - Detecção de Navegador</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        /* Modo Claro */
+        body.light-mode {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+        }
+        
+        .container {
+            background-color: rgba(26, 26, 46, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        body.light-mode .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            color: #333;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: #e94560;
+            text-decoration: none;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        body.light-mode .logo {
+            color: #e94560;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        
+        body.light-mode h1 {
+            color: #2d3748;
+        }
+        
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+        
+        .browser-info {
+            background: rgba(15, 52, 96, 0.3);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        body.light-mode .browser-info {
+            background: rgba(233, 69, 96, 0.1);
+            color: #333;
+        }
+        
+        .browser-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+        
+        .browser-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #e94560;
+        }
+        
+        .browser-details {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+        
+        .recommendation {
+            background: rgba(233, 69, 96, 0.1);
+            border-left: 4px solid #e94560;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        body.light-mode .recommendation {
+            background: rgba(233, 69, 96, 0.1);
+            border-left: 4px solid #e94560;
+            color: #333;
+        }
+        
+        .recommendation h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #e94560;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 30px;
+            background: #e94560;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn:hover {
+            background: #d8345f;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(233, 69, 96, 0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #e94560;
+            color: #e94560;
+            margin-left: 15px;
+        }
+        
+        body.light-mode .btn-outline {
+            color: #e94560;
+        }
+        
+        .btn-outline:hover {
+            background: rgba(233, 69, 96, 0.1);
+        }
+        
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(15, 52, 96, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        body.light-mode .theme-toggle {
+            background: rgba(233, 69, 96, 0.8);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            p {
+                font-size: 16px;
+            }
+            
+            .browser-icon {
+                font-size: 50px;
+            }
+            
+            .browser-name {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+    
+    <div class="container">
+        <div class="header">
+            <a href="#" class="logo">HQ VERSO</a>
+            <h1>Detecção de Navegador</h1>
+            <p>Seu navegador foi identificado e temos uma recomendação especial para melhorar sua experiência de leitura!</p>
+        </div>
+        
+        <div class="browser-info">
+            <div class="browser-icon" id="browserIcon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <div class="browser-name" id="browserName">Detectando seu navegador...</div>
+            <div class="browser-details" id="browserDetails">Aguarde enquanto analisamos seu navegador.</div>
+        </div>
+        
+        <div class="recommendation">
+            <h3>Recomendação para melhor experiência</h3>
+            <p id="browserRecommendation">Carregando recomendação personalizada...</p>
+        </div>
+        
+        <div class="actions">
+            <button class="btn" id="actionButton">Otimizar Minha Experiência</button>
+            <button class="btn btn-outline" onclick="window.location.href='comics.php'">Voltar para Quadrinhos</button>
+        </div>
+        
+        <div class="footer">
+            <p>Sistema de detecção de navegador - HQ Verso © 2023</p>
+        </div>
+    </div>
+
+    <script>
+        // Sistema de Tema
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        // Verificar tema salvo
+        const savedTheme = localStorage.getItem('hq-verso-theme');
+        if (savedTheme === 'light') {
+            body.classList.add('light-mode');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('light-mode');
+            
+            if (body.classList.contains('light-mode')) {
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                localStorage.setItem('hq-verso-theme', 'light');
+            } else {
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                localStorage.setItem('hq-verso-theme', 'dark');
+            }
+        });
+
+        // Função para detectar o navegador
+        function detectBrowser() {
+            const userAgent = navigator.userAgent;
+            let browserName = "Navegador Desconhecido";
+            let browserIcon = "fa-question-circle";
+            let browserDetails = "";
+            let recommendation = "";
+            let actionText = "Otimizar Minha Experiência";
+            let actionLink = "#";
+            
+            // Detecção do Chrome
+            if (userAgent.includes("Chrome") && !userAgent.includes("Edg")) {
+                browserName = "Google Chrome";
+                browserIcon = "fa-chrome";
+                browserDetails = "Versão: " + userAgent.match(/Chrome\/([0-9.]+)/)[1];
+                recommendation = "Recomendamos a extensão 'HQ Reader' para melhor visualização de quadrinhos. Ela oferece modo de leitura especializado e controle de zoom inteligente.";
+                actionText = "Instalar Extensão HQ Reader";
+                actionLink = "https://chrome.google.com/webstore/detail/hq-reader/example";
+            }
+            // Detecção do Firefox
+            else if (userAgent.includes("Firefox")) {
+                browserName = "Mozilla Firefox";
+                browserIcon = "fa-firefox";
+                browserDetails = "Versão: " + userAgent.match(/Firefox\/([0-9.]+)/)[1];
+                recommendation = "Para uma experiência ideal, instale o complemento 'Comic Viewer' que melhora a renderização de quadrinhos e oferece modo de leitura em painéis.";
+                actionText = "Adicionar Comic Viewer";
+                actionLink = "https://addons.mozilla.org/firefox/addon/comic-viewer/";
+            }
+            // Detecção do Safari
+            else if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) {
+                browserName = "Safari";
+                browserIcon = "fa-safari";
+                browserDetails = "Versão: " + userAgent.match(/Version\/([0-9.]+)/)[1];
+                recommendation = "Ative o 'Modo Leitor' para uma experiência de leitura mais limpa. Use o zoom com pinça para navegar painel por painel.";
+                actionText = "Como Usar o Modo Leitor";
+                actionLink = "https://support.apple.com/guide/safari/use-reader-ibrw1040/mac";
+            }
+            // Detecção do Edge
+            else if (userAgent.includes("Edg")) {
+                browserName = "Microsoft Edge";
+                browserIcon = "fa-edge";
+                browserDetails = "Versão: " + userAgent.match(/Edg\/([0-9.]+)/)[1];
+                recommendation = "Use a 'Leitura Imersiva' para focar no conteúdo dos quadrinhos. Experimente também o recurso de leitura em voz alta para uma experiência alternativa.";
+                actionText = "Ativar Leitura Imersiva";
+                actionLink = "https://support.microsoft.com/pt-br/microsoft-edge/recursos-de-learning-tools-no-microsoft-edge-4c8c966c-1e57-4a03-8f7c-12c2a576b4d2";
+            }
+            // Detecção do Opera
+            else if (userAgent.includes("OPR")) {
+                browserName = "Opera";
+                browserIcon = "fa-opera";
+                browserDetails = "Versão: " + userAgent.match(/OPR\/([0-9.]+)/)[1];
+                recommendation = "Aproveite o modo 'Turbo' do Opera para carregamento mais rápido das imagens dos quadrinhos, mesmo em conexões mais lentas.";
+                actionText = "Ativar Modo Turbo";
+                actionLink = "https://help.opera.com/en/latest/features/#turboMode";
+            }
+            // Navegador não identificado
+            else {
+                browserName = "Navegador Não Identificado";
+                browserDetails = "Seu user agent: " + userAgent;
+                recommendation = "Para a melhor experiência com quadrinhos online, recomendamos usar Google Chrome, Mozilla Firefox ou Microsoft Edge.";
+                actionText = "Ver Navegadores Recomendados";
+                actionLink = "https://www.google.com/chrome/";
+            }
+            
+            // Atualizar a interface com as informações do navegador
+            document.getElementById("browserIcon").innerHTML = `<i class="fab ${browserIcon}"></i>`;
+            document.getElementById("browserName").textContent = browserName;
+            document.getElementById("browserDetails").textContent = browserDetails;
+            document.getElementById("browserRecommendation").textContent = recommendation;
+            
+            // Configurar a ação do botão
+            const actionButton = document.getElementById("actionButton");
+            actionButton.textContent = actionText;
+            actionButton.onclick = function() {
+                window.open(actionLink, '_blank');
+            };
+        }
+        
+        // Executar a detecção quando a página carregar
+        window.onload = detectBrowser;
+        
+        // Demonstrar para fins de teste (remover em produção)
+        function showTestOptions() {
+            if (confirm("Deseja testar a detecção para diferentes navegadores? (Recurso para demonstração)")) {
+                const testBrowser = prompt("Digite o navegador para testar (chrome, firefox, safari, edge, opera):");
+                simulateBrowser(testBrowser);
+            }
+        }
+        
+        // Simular diferentes navegadores para teste
+        function simulateBrowser(browser) {
+            let userAgent = "";
+            
+            switch(browser.toLowerCase()) {
+                case "chrome":
+                    userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36";
+                    break;
+                case "firefox":
+                    userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0";
+                    break;
+                case "safari":
+                    userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15";
+                    break;
+                case "edge":
+                    userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59";
+                    break;
+                case "opera":
+                    userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 OPR/77.0.4054.203";
+                    break;
+                default:
+                    alert("Navegador não reconhecido. Use: chrome, firefox, safari, edge ou opera");
+                    return;
+            }
+            
+            // Substituir temporariamente o userAgent para teste
+            const originalUserAgent = navigator.userAgent;
+            Object.defineProperty(navigator, 'userAgent', {
+                value: userAgent,
+                configurable: true
+            });
+            
+            // Executar detecção novamente
+            detectBrowser();
+            
+            // Restaurar userAgent original após 5 segundos
+            setTimeout(() => {
+                Object.defineProperty(navigator, 'userAgent', {
+                    value: originalUserAgent,
+                    configurable: true
+                });
+                alert("Modo de teste finalizado. Retornando à detecção real.");
+                detectBrowser();
+            }, 5000);
+        }
+        
+        // Adicionar botão de teste (apenas para desenvolvimento)
+        const testButton = document.createElement('button');
+        testButton.textContent = 'Modo Teste (TCC)';
+        testButton.style.position = 'fixed';
+        testButton.style.bottom = '20px';
+        testButton.style.right = '20px';
+        testButton.style.padding = '10px';
+        testButton.style.background = '#0f3460';
+        testButton.style.color = 'white';
+        testButton.style.border = 'none';
+        testButton.style.borderRadius = '5px';
+        testButton.style.cursor = 'pointer';
+        testButton.style.zIndex = '1000';
+        testButton.onclick = showTestOptions;
+        document.body.appendChild(testButton);
+    </script>
+</body>
+</html>
