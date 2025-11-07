@@ -452,14 +452,19 @@ if($viewing_own_profile && $_POST && isset($_POST['delete_account'])) {
                     </div>
                 </div>
                 
-                <?php if(!empty($user_data['bio'])): ?>
+                <!-- CORREÇÃO: Biografia sempre visível para outros usuários -->
                 <div class="form-group">
                     <label>Biografia</label>
-                    <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 5px; line-height: 1.5;">
-                        <?php echo nl2br(htmlspecialchars($user_data['bio'])); ?>
-                    </div>
+                    <?php if(!empty($user_data['bio'])): ?>
+                        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 5px; line-height: 1.5;">
+                            <?php echo nl2br(htmlspecialchars($user_data['bio'])); ?>
+                        </div>
+                    <?php else: ?>
+                        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 5px; line-height: 1.5; opacity: 0.7; font-style: italic;">
+                            Este usuário ainda não adicionou uma biografia.
+                        </div>
+                    <?php endif; ?>
                 </div>
-                <?php endif; ?>
                 <?php endif; ?>
             </div>
             
