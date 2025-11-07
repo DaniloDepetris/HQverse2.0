@@ -1,14 +1,11 @@
-CREATE DATABASE hqsql CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE hqsql;
-
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 21/10/2025 às 03:42
--- Versão do servidor: 10.4.32-MariaDB
--- Versão do PHP: 8.2.12
+-- Tempo de geração: 07-Nov-2025 às 14:32
+-- Versão do servidor: 10.4.27-MariaDB
+-- versão do PHP: 8.1.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -23,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Banco de dados: `hqsql`
 --
+CREATE DATABASE IF NOT EXISTS `hqsql` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `hqsql`;
 
 DELIMITER $$
 --
@@ -37,7 +36,31 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `categories`
+-- Estrutura da tabela `banned_users`
+--
+
+CREATE TABLE `banned_users` (
+  `id` int(11) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `reason` text DEFAULT NULL,
+  `banned_by` int(11) NOT NULL,
+  `banned_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `ip_address` varchar(45) DEFAULT NULL,
+  `is_permanent` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Extraindo dados da tabela `banned_users`
+--
+
+INSERT INTO `banned_users` (`id`, `email`, `username`, `reason`, `banned_by`, `banned_at`, `ip_address`, `is_permanent`) VALUES
+(1, 'souchato@gmail.com', 'souchato', 'é chato', 4, '2025-10-21 17:59:14', NULL, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura da tabela `categories`
 --
 
 CREATE TABLE `categories` (
@@ -48,7 +71,7 @@ CREATE TABLE `categories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Despejando dados para a tabela `categories`
+-- Extraindo dados da tabela `categories`
 --
 
 INSERT INTO `categories` (`id`, `name`, `description`, `created_at`) VALUES
@@ -66,7 +89,7 @@ INSERT INTO `categories` (`id`, `name`, `description`, `created_at`) VALUES
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `comics`
+-- Estrutura da tabela `comics`
 --
 
 CREATE TABLE `comics` (
@@ -100,7 +123,7 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `comic_categories`
+-- Estrutura da tabela `comic_categories`
 --
 
 CREATE TABLE `comic_categories` (
@@ -111,7 +134,7 @@ CREATE TABLE `comic_categories` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `comic_collaborators`
+-- Estrutura da tabela `comic_collaborators`
 --
 
 CREATE TABLE `comic_collaborators` (
@@ -125,7 +148,7 @@ CREATE TABLE `comic_collaborators` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `comic_comments`
+-- Estrutura da tabela `comic_comments`
 --
 
 CREATE TABLE `comic_comments` (
@@ -141,7 +164,7 @@ CREATE TABLE `comic_comments` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `comic_drafts`
+-- Estrutura da tabela `comic_drafts`
 --
 
 CREATE TABLE `comic_drafts` (
@@ -156,7 +179,7 @@ CREATE TABLE `comic_drafts` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `comic_pages`
+-- Estrutura da tabela `comic_pages`
 --
 
 CREATE TABLE `comic_pages` (
@@ -171,8 +194,8 @@ CREATE TABLE `comic_pages` (
 -- --------------------------------------------------------
 
 --
--- Estrutura stand-in para view `comic_stats`
--- (Veja abaixo para a visão atual)
+-- Estrutura stand-in para vista `comic_stats`
+-- (Veja abaixo para a view atual)
 --
 CREATE TABLE `comic_stats` (
 `id` int(11)
@@ -189,7 +212,7 @@ CREATE TABLE `comic_stats` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `favorites`
+-- Estrutura da tabela `favorites`
 --
 
 CREATE TABLE `favorites` (
@@ -202,7 +225,7 @@ CREATE TABLE `favorites` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `forums`
+-- Estrutura da tabela `forums`
 --
 
 CREATE TABLE `forums` (
@@ -214,7 +237,7 @@ CREATE TABLE `forums` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Despejando dados para a tabela `forums`
+-- Extraindo dados da tabela `forums`
 --
 
 INSERT INTO `forums` (`id`, `name`, `description`, `category_id`, `created_at`) VALUES
@@ -227,7 +250,7 @@ INSERT INTO `forums` (`id`, `name`, `description`, `category_id`, `created_at`) 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `posts`
+-- Estrutura da tabela `posts`
 --
 
 CREATE TABLE `posts` (
@@ -242,7 +265,7 @@ CREATE TABLE `posts` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `publishers`
+-- Estrutura da tabela `publishers`
 --
 
 CREATE TABLE `publishers` (
@@ -254,7 +277,7 @@ CREATE TABLE `publishers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Despejando dados para a tabela `publishers`
+-- Extraindo dados da tabela `publishers`
 --
 
 INSERT INTO `publishers` (`id`, `name`, `logo`, `description`, `created_at`) VALUES
@@ -272,7 +295,7 @@ INSERT INTO `publishers` (`id`, `name`, `logo`, `description`, `created_at`) VAL
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `reactions`
+-- Estrutura da tabela `reactions`
 --
 
 CREATE TABLE `reactions` (
@@ -286,7 +309,7 @@ CREATE TABLE `reactions` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `reading_progress`
+-- Estrutura da tabela `reading_progress`
 --
 
 CREATE TABLE `reading_progress` (
@@ -303,7 +326,7 @@ CREATE TABLE `reading_progress` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `reviews`
+-- Estrutura da tabela `reviews`
 --
 
 CREATE TABLE `reviews` (
@@ -321,7 +344,7 @@ CREATE TABLE `reviews` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `topics`
+-- Estrutura da tabela `topics`
 --
 
 CREATE TABLE `topics` (
@@ -341,7 +364,7 @@ CREATE TABLE `topics` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `transactions`
+-- Estrutura da tabela `transactions`
 --
 
 CREATE TABLE `transactions` (
@@ -358,7 +381,7 @@ CREATE TABLE `transactions` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `users`
+-- Estrutura da tabela `users`
 --
 
 CREATE TABLE `users` (
@@ -366,29 +389,51 @@ CREATE TABLE `users` (
   `username` varchar(50) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
+  `bio` text DEFAULT NULL,
+  `role` enum('user','creator','moderator','admin') DEFAULT 'user',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `avatar` varchar(255) DEFAULT NULL,
   `avatar_file_name` varchar(255) DEFAULT NULL,
   `avatar_file_size` int(11) DEFAULT NULL,
   `avatar_mime_type` varchar(50) DEFAULT NULL,
-  `avatar_updated_at` timestamp NULL DEFAULT NULL,
-  `bio` text DEFAULT NULL,
-  `role` enum('user','creator','moderator','admin') DEFAULT 'user',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `avatar_updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Despejando dados para a tabela `users`
+-- Extraindo dados da tabela `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `password`, `avatar`, `avatar_file_name`, `avatar_file_size`, `avatar_mime_type`, `avatar_updated_at`, `bio`, `role`, `created_at`, `updated_at`) VALUES
-(2, 'Juan Taborda', 'taborda.mjuan@gmail.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', NULL, NULL, NULL, NULL, NULL, 'sou legal', 'user', '2025-10-20 23:21:30', '2025-10-21 01:39:54'),
-(4, 'admin', 'admin@hqverso.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-10-21 01:11:36', '2025-10-21 01:11:36');
+INSERT INTO `users` (`id`, `username`, `email`, `password`, `bio`, `role`, `created_at`, `updated_at`, `avatar`, `avatar_file_name`, `avatar_file_size`, `avatar_mime_type`, `avatar_updated_at`) VALUES
+(2, 'Juan Taborda', 'taborda.mjuan@gmail.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', '\"Todos veem o que você parece ser, mas poucos sabem o que você realmente é.\"\r\n-Luva de pedreiro, receba', 'user', '2025-10-20 23:21:30', '2025-10-28 11:21:07', 'uploads/avatars/avatar_2_1761648349.png', 'images.png', 10652, 'image/png', '2025-10-28 10:45:49'),
+(4, 'admin', 'admin@hqverso.com', '$2y$10$YRu2yXW6fY5EA969Ft5naeawk5M7FLcCLm4Br0NNnuSPJjGSRminW', 'sou admin do hq verso', 'admin', '2025-10-21 01:11:36', '2025-11-06 13:17:10', 'uploads/avatars/avatar_4_1762435030.png', 'images.png', 10652, 'image/png', '2025-11-06 13:17:10'),
+(7, 'aa', 'a@a', '$2y$10$4O0Et2u4YtCkqoqbNHMiL.TJpPyDeWjEoCbtcRx2K/dTFALYSERGW', NULL, 'user', '2025-11-07 12:17:46', '2025-11-07 12:17:46', NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `user_library`
+-- Estrutura da tabela `user_follows`
+--
+
+CREATE TABLE `user_follows` (
+  `id` int(11) NOT NULL,
+  `follower_id` int(11) NOT NULL,
+  `following_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Extraindo dados da tabela `user_follows`
+--
+
+INSERT INTO `user_follows` (`id`, `follower_id`, `following_id`, `created_at`) VALUES
+(1, 7, 2, '2025-11-07 13:24:45'),
+(2, 7, 4, '2025-11-07 13:25:13');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura da tabela `user_library`
 --
 
 CREATE TABLE `user_library` (
@@ -402,8 +447,8 @@ CREATE TABLE `user_library` (
 -- --------------------------------------------------------
 
 --
--- Estrutura stand-in para view `user_stats`
--- (Veja abaixo para a visão atual)
+-- Estrutura stand-in para vista `user_stats`
+-- (Veja abaixo para a view atual)
 --
 CREATE TABLE `user_stats` (
 `id` int(11)
@@ -419,7 +464,7 @@ CREATE TABLE `user_stats` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `user_uploads`
+-- Estrutura da tabela `user_uploads`
 --
 
 CREATE TABLE `user_uploads` (
@@ -438,34 +483,44 @@ CREATE TABLE `user_uploads` (
 -- --------------------------------------------------------
 
 --
--- Estrutura para view `comic_stats`
+-- Estrutura para vista `comic_stats`
 --
 DROP TABLE IF EXISTS `comic_stats`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `comic_stats`  AS SELECT `c`.`id` AS `id`, `c`.`title` AS `title`, `c`.`author_id` AS `author_id`, `u`.`username` AS `author_name`, count(distinct `r`.`id`) AS `review_count`, avg(`r`.`rating`) AS `avg_rating`, count(distinct `f`.`id`) AS `favorite_count`, count(distinct `t`.`id`) AS `library_count`, `c`.`views` AS `views` FROM ((((`comics` `c` left join `users` `u` on(`c`.`author_id` = `u`.`id`)) left join `reviews` `r` on(`c`.`id` = `r`.`comic_id`)) left join `favorites` `f` on(`c`.`id` = `f`.`comic_id`)) left join `user_library` `t` on(`c`.`id` = `t`.`comic_id`)) GROUP BY `c`.`id` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `comic_stats`  AS SELECT `c`.`id` AS `id`, `c`.`title` AS `title`, `c`.`author_id` AS `author_id`, `u`.`username` AS `author_name`, count(distinct `r`.`id`) AS `review_count`, avg(`r`.`rating`) AS `avg_rating`, count(distinct `f`.`id`) AS `favorite_count`, count(distinct `t`.`id`) AS `library_count`, `c`.`views` AS `views` FROM ((((`comics` `c` left join `users` `u` on(`c`.`author_id` = `u`.`id`)) left join `reviews` `r` on(`c`.`id` = `r`.`comic_id`)) left join `favorites` `f` on(`c`.`id` = `f`.`comic_id`)) left join `user_library` `t` on(`c`.`id` = `t`.`comic_id`)) GROUP BY `c`.`id``id`  ;
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para view `user_stats`
+-- Estrutura para vista `user_stats`
 --
 DROP TABLE IF EXISTS `user_stats`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `user_stats`  AS SELECT `u`.`id` AS `id`, `u`.`username` AS `username`, `u`.`email` AS `email`, `u`.`created_at` AS `created_at`, count(distinct `c`.`id`) AS `comics_created`, count(distinct `l`.`id`) AS `library_count`, count(distinct `f`.`id`) AS `favorites_count`, count(distinct `r`.`id`) AS `reviews_count` FROM ((((`users` `u` left join `comics` `c` on(`u`.`id` = `c`.`author_id`)) left join `user_library` `l` on(`u`.`id` = `l`.`user_id`)) left join `favorites` `f` on(`u`.`id` = `f`.`user_id`)) left join `reviews` `r` on(`u`.`id` = `r`.`user_id`)) GROUP BY `u`.`id` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `user_stats`  AS SELECT `u`.`id` AS `id`, `u`.`username` AS `username`, `u`.`email` AS `email`, `u`.`created_at` AS `created_at`, count(distinct `c`.`id`) AS `comics_created`, count(distinct `l`.`id`) AS `library_count`, count(distinct `f`.`id`) AS `favorites_count`, count(distinct `r`.`id`) AS `reviews_count` FROM ((((`users` `u` left join `comics` `c` on(`u`.`id` = `c`.`author_id`)) left join `user_library` `l` on(`u`.`id` = `l`.`user_id`)) left join `favorites` `f` on(`u`.`id` = `f`.`user_id`)) left join `reviews` `r` on(`u`.`id` = `r`.`user_id`)) GROUP BY `u`.`id``id`  ;
 
 --
 -- Índices para tabelas despejadas
 --
 
 --
--- Índices de tabela `categories`
+-- Índices para tabela `banned_users`
+--
+ALTER TABLE `banned_users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `banned_by` (`banned_by`),
+  ADD KEY `idx_banned_email` (`email`),
+  ADD KEY `idx_banned_username` (`username`);
+
+--
+-- Índices para tabela `categories`
 --
 ALTER TABLE `categories`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `name` (`name`);
 
 --
--- Índices de tabela `comics`
+-- Índices para tabela `comics`
 --
 ALTER TABLE `comics`
   ADD PRIMARY KEY (`id`),
@@ -477,7 +532,7 @@ ALTER TABLE `comics`
   ADD KEY `idx_comics_price` (`price`);
 
 --
--- Índices de tabela `comic_categories`
+-- Índices para tabela `comic_categories`
 --
 ALTER TABLE `comic_categories`
   ADD PRIMARY KEY (`comic_id`,`category_id`),
@@ -485,7 +540,7 @@ ALTER TABLE `comic_categories`
   ADD KEY `idx_comic_cat_category` (`category_id`);
 
 --
--- Índices de tabela `comic_collaborators`
+-- Índices para tabela `comic_collaborators`
 --
 ALTER TABLE `comic_collaborators`
   ADD PRIMARY KEY (`id`),
@@ -494,7 +549,7 @@ ALTER TABLE `comic_collaborators`
   ADD KEY `idx_collaborators_user` (`user_id`);
 
 --
--- Índices de tabela `comic_comments`
+-- Índices para tabela `comic_comments`
 --
 ALTER TABLE `comic_comments`
   ADD PRIMARY KEY (`id`),
@@ -503,14 +558,14 @@ ALTER TABLE `comic_comments`
   ADD KEY `idx_comments_parent` (`parent_comment_id`);
 
 --
--- Índices de tabela `comic_drafts`
+-- Índices para tabela `comic_drafts`
 --
 ALTER TABLE `comic_drafts`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_drafts_comic` (`comic_id`);
 
 --
--- Índices de tabela `comic_pages`
+-- Índices para tabela `comic_pages`
 --
 ALTER TABLE `comic_pages`
   ADD PRIMARY KEY (`id`),
@@ -518,7 +573,7 @@ ALTER TABLE `comic_pages`
   ADD KEY `idx_pages_number` (`page_number`);
 
 --
--- Índices de tabela `favorites`
+-- Índices para tabela `favorites`
 --
 ALTER TABLE `favorites`
   ADD PRIMARY KEY (`id`),
@@ -527,14 +582,14 @@ ALTER TABLE `favorites`
   ADD KEY `idx_favorites_comic` (`comic_id`);
 
 --
--- Índices de tabela `forums`
+-- Índices para tabela `forums`
 --
 ALTER TABLE `forums`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_forums_category` (`category_id`);
 
 --
--- Índices de tabela `posts`
+-- Índices para tabela `posts`
 --
 ALTER TABLE `posts`
   ADD PRIMARY KEY (`id`),
@@ -543,14 +598,14 @@ ALTER TABLE `posts`
   ADD KEY `idx_posts_created` (`created_at`);
 
 --
--- Índices de tabela `publishers`
+-- Índices para tabela `publishers`
 --
 ALTER TABLE `publishers`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `name` (`name`);
 
 --
--- Índices de tabela `reactions`
+-- Índices para tabela `reactions`
 --
 ALTER TABLE `reactions`
   ADD PRIMARY KEY (`id`),
@@ -559,7 +614,7 @@ ALTER TABLE `reactions`
   ADD KEY `idx_reactions_post` (`post_id`);
 
 --
--- Índices de tabela `reading_progress`
+-- Índices para tabela `reading_progress`
 --
 ALTER TABLE `reading_progress`
   ADD PRIMARY KEY (`id`),
@@ -568,7 +623,7 @@ ALTER TABLE `reading_progress`
   ADD KEY `idx_reading_comic` (`comic_id`);
 
 --
--- Índices de tabela `reviews`
+-- Índices para tabela `reviews`
 --
 ALTER TABLE `reviews`
   ADD PRIMARY KEY (`id`),
@@ -578,7 +633,7 @@ ALTER TABLE `reviews`
   ADD KEY `idx_reviews_user` (`user_id`);
 
 --
--- Índices de tabela `topics`
+-- Índices para tabela `topics`
 --
 ALTER TABLE `topics`
   ADD PRIMARY KEY (`id`),
@@ -588,7 +643,7 @@ ALTER TABLE `topics`
   ADD KEY `idx_topics_created` (`created_at`);
 
 --
--- Índices de tabela `transactions`
+-- Índices para tabela `transactions`
 --
 ALTER TABLE `transactions`
   ADD PRIMARY KEY (`id`),
@@ -599,7 +654,7 @@ ALTER TABLE `transactions`
   ADD KEY `idx_transactions_created` (`created_at`);
 
 --
--- Índices de tabela `users`
+-- Índices para tabela `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
@@ -610,7 +665,16 @@ ALTER TABLE `users`
   ADD KEY `idx_users_created` (`created_at`);
 
 --
--- Índices de tabela `user_library`
+-- Índices para tabela `user_follows`
+--
+ALTER TABLE `user_follows`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `follower_following` (`follower_id`,`following_id`),
+  ADD KEY `idx_follows_follower` (`follower_id`),
+  ADD KEY `idx_follows_following` (`following_id`);
+
+--
+-- Índices para tabela `user_library`
 --
 ALTER TABLE `user_library`
   ADD PRIMARY KEY (`id`),
@@ -620,7 +684,7 @@ ALTER TABLE `user_library`
   ADD KEY `idx_library_comic` (`comic_id`);
 
 --
--- Índices de tabela `user_uploads`
+-- Índices para tabela `user_uploads`
 --
 ALTER TABLE `user_uploads`
   ADD PRIMARY KEY (`id`),
@@ -628,8 +692,14 @@ ALTER TABLE `user_uploads`
   ADD KEY `idx_uploads_type` (`upload_type`);
 
 --
--- AUTO_INCREMENT para tabelas despejadas
+-- AUTO_INCREMENT de tabelas despejadas
 --
+
+--
+-- AUTO_INCREMENT de tabela `banned_users`
+--
+ALTER TABLE `banned_users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de tabela `categories`
@@ -725,7 +795,13 @@ ALTER TABLE `transactions`
 -- AUTO_INCREMENT de tabela `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT de tabela `user_follows`
+--
+ALTER TABLE `user_follows`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de tabela `user_library`
@@ -740,32 +816,38 @@ ALTER TABLE `user_uploads`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- Restrições para tabelas despejadas
+-- Restrições para despejos de tabelas
 --
 
 --
--- Restrições para tabelas `comics`
+-- Limitadores para a tabela `banned_users`
+--
+ALTER TABLE `banned_users`
+  ADD CONSTRAINT `banned_users_ibfk_1` FOREIGN KEY (`banned_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Limitadores para a tabela `comics`
 --
 ALTER TABLE `comics`
   ADD CONSTRAINT `comics_ibfk_1` FOREIGN KEY (`author_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `comics_ibfk_2` FOREIGN KEY (`publisher_id`) REFERENCES `publishers` (`id`) ON DELETE SET NULL;
 
 --
--- Restrições para tabelas `comic_categories`
+-- Limitadores para a tabela `comic_categories`
 --
 ALTER TABLE `comic_categories`
   ADD CONSTRAINT `comic_categories_ibfk_1` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `comic_categories_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `comic_collaborators`
+-- Limitadores para a tabela `comic_collaborators`
 --
 ALTER TABLE `comic_collaborators`
   ADD CONSTRAINT `comic_collaborators_ibfk_1` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `comic_collaborators_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `comic_comments`
+-- Limitadores para a tabela `comic_comments`
 --
 ALTER TABLE `comic_comments`
   ADD CONSTRAINT `comic_comments_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
@@ -773,60 +855,60 @@ ALTER TABLE `comic_comments`
   ADD CONSTRAINT `comic_comments_ibfk_3` FOREIGN KEY (`parent_comment_id`) REFERENCES `comic_comments` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `comic_drafts`
+-- Limitadores para a tabela `comic_drafts`
 --
 ALTER TABLE `comic_drafts`
   ADD CONSTRAINT `comic_drafts_ibfk_1` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `comic_pages`
+-- Limitadores para a tabela `comic_pages`
 --
 ALTER TABLE `comic_pages`
   ADD CONSTRAINT `comic_pages_ibfk_1` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `favorites`
+-- Limitadores para a tabela `favorites`
 --
 ALTER TABLE `favorites`
   ADD CONSTRAINT `favorites_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `favorites_ibfk_2` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `forums`
+-- Limitadores para a tabela `forums`
 --
 ALTER TABLE `forums`
   ADD CONSTRAINT `forums_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL;
 
 --
--- Restrições para tabelas `posts`
+-- Limitadores para a tabela `posts`
 --
 ALTER TABLE `posts`
   ADD CONSTRAINT `posts_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `posts_ibfk_2` FOREIGN KEY (`topic_id`) REFERENCES `topics` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `reactions`
+-- Limitadores para a tabela `reactions`
 --
 ALTER TABLE `reactions`
   ADD CONSTRAINT `reactions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `reactions_ibfk_2` FOREIGN KEY (`post_id`) REFERENCES `posts` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `reading_progress`
+-- Limitadores para a tabela `reading_progress`
 --
 ALTER TABLE `reading_progress`
   ADD CONSTRAINT `reading_progress_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `reading_progress_ibfk_2` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `reviews`
+-- Limitadores para a tabela `reviews`
 --
 ALTER TABLE `reviews`
   ADD CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `topics`
+-- Limitadores para a tabela `topics`
 --
 ALTER TABLE `topics`
   ADD CONSTRAINT `topics_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
@@ -834,14 +916,21 @@ ALTER TABLE `topics`
   ADD CONSTRAINT `topics_ibfk_3` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE SET NULL;
 
 --
--- Restrições para tabelas `transactions`
+-- Limitadores para a tabela `transactions`
 --
 ALTER TABLE `transactions`
   ADD CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `user_library`
+-- Limitadores para a tabela `user_follows`
+--
+ALTER TABLE `user_follows`
+  ADD CONSTRAINT `user_follows_ibfk_1` FOREIGN KEY (`follower_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `user_follows_ibfk_2` FOREIGN KEY (`following_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Limitadores para a tabela `user_library`
 --
 ALTER TABLE `user_library`
   ADD CONSTRAINT `user_library_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
@@ -849,7 +938,7 @@ ALTER TABLE `user_library`
   ADD CONSTRAINT `user_library_ibfk_3` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`id`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `user_uploads`
+-- Limitadores para a tabela `user_uploads`
 --
 ALTER TABLE `user_uploads`
   ADD CONSTRAINT `user_uploads_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
