@@ -8,7 +8,7 @@ if(!$auth->isLoggedIn()) {
 }
 
 $type = $_GET['type'] ?? 'followers';
-$user_id = $_SESSION['user_id'];
+$user_id = $_GET['user_id'] ?? $_SESSION['user_id'];
 
 header('Content-Type: application/json');
 
