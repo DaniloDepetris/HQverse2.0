@@ -244,10 +244,50 @@
         // Ler parâmetros da URL
         const params = new URLSearchParams(window.location.search);
         const comicId = params.get('comic') || '';
-        const comicTitle = params.get('title') || 'Quadrinho';
-        const comicCover = params.get('cover') || '';
+        let comicTitle = params.get('title') || 'Quadrinho';
+        let comicCover = params.get('cover') || '';
+        let comicProgress = params.get('progress') || '';
 
-        // Atualizar título
+        // Mapa local reduzido (mesmos dados usados na página principal)
+        const COMICS_MAP = {
+            1:{title:"Homem-Aranha: A Última Caçada",cover:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9az9jtGfQoj20u_4hUEeTQXvXvX9i0W2KPKw&s",progress:20},
+            2:{title:"Watchmen",cover:"https://upload.wikimedia.org/wikipedia/pt/d/d0/Watchmen.jpg",progress:45},
+            3:{title:"Sandman: Prelúdios e Noturnos",cover:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcReNzUJRFsrqKb-Y4UIxg-jUSPYg-4ermAT3w&s",progress:60},
+            4:{title:"V de Vingança",cover:"https://m.media-amazon.com/images/I/711dLCQ6kuL._UF1000,1000_QL80_.jpg",progress:50},
+            5:{title:"Maus",cover:"https://m.media-amazon.com/images/I/916IgqQ-54L.jpg"},
+            6:{title:"Persépolis",cover:"https://via.placeholder.com/200x300?text=Persepolis"},
+            7:{title:"Hellboy Omnibus Vol 3",cover:"https://images.tcdn.com.br/img/img_prod/1119494/hellboy_omnibus_vol_3_1709745_1_a6e86cfa8f53f219f4d0d0b0c4f79558.jpg"},
+            8:{title:"Saga",cover:"https://m.media-amazon.com/images/I/81s49EEptML.jpg"},
+            9:{title:"Superman: Terra Um",cover:"https://m.media-amazon.com/images/I/91wpPruCKrL._UF1000,1000_QL80_.jpg"},
+            10:{title:"Liga da Justiça: A Torre de Babel",cover:"https://super.abril.com.br/wp-content/uploads/2018/07/torredebabel.jpg"},
+            11:{title:"Akira",cover:"https://m.media-amazon.com/images/I/81K1+Z+Yf+L.jpg"},
+            12:{title:"Death Note",cover:"https://m.media-amazon.com/images/I/81MZ6eFQsfL.jpg"},
+            13:{title:"Attack on Titan",cover:"https://m.media-amazon.com/images/I/81d6e+kN5+L.jpg"},
+            14:{title:"One-Punch Man",cover:"https://m.media-amazon.com/images/I/81I1+-+0R0L.jpg"},
+            15:{title:"Scott Pilgrim",cover:"https://m.media-amazon.com/images/I/81K1+Z+Yf+L.jpg"},
+            16:{title:"Batman: Ano Um",cover:"https://m.media-amazon.com/images/I/81zK5OjR5aL.jpg"},
+            17:{title:"X-Men: Fênix Negra",cover:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmC8oS-dR6n1EW5YxEnvL0mPaz13taAKsbvQ&s"},
+            18:{title:"Monstress",cover:"https://m.media-amazon.com/images/I/81bGs636lzL.jpg"},
+            19:{title:"Homem de Ferro: Extremis",cover:"https://m.media-amazon.com/images/I/81bGs636lzL.jpg"},
+            20:{title:"Capitão América: O Soldado Invernal",cover:"https://m.media-amazon.com/images/I/611wcUISMmL._UF1000,1000_QL80_.jpg"},
+            21:{title:"Thor: Deus do Trovão",cover:"https://m.media-amazon.com/images/I/91JTRo6EFcL._UF1000,1000_QL80_.jpg"},
+            22:{title:"Doutor Estranho: O Juramento",cover:"https://m.media-amazon.com/images/I/91DcEu1b-rL.jpg"},
+            23:{title:"Pantera Negra: Rei do Wakanda",cover:"https://d14d9vp3wdof84.cloudfront.net/image/589816272436/image_v8bl17fqv95mf8v1jd9k8lrp5r/-S897-FWEBP"},
+            24:{title:"Batman: Silêncio",cover:"https://lh3.googleusercontent.com/proxy/9y2rp6F2x4dSCvFkZoz847oXtBE8IP0mscS0W0SkYpRtdub4qCQRCzj-Qwfgd4BWQq6EtqSmr7edCB_rNckNCs8pGT8jFx0HdMknRmb_1EmPWIb5zuujbw"},
+            25:{title:"Mulher-Maravilha: Deuses e Mortais",cover:"https://cdn.awsli.com.br/600x450/1668/1668242/produto/162790896905299a6a0.jpg"},
+            26:{title:"Flashpoint",cover:"https://m.media-amazon.com/images/I/91dXNvO2fML.jpg"},
+            27:{title:"Arqueiro Verde: Ano Um",cover:"https://rika.vtexassets.com/arquivos/ids/219835/-herois_panini-arqueiro-verde-ano-um.jpg?v=635316153891630000"}
+        };
+
+        // Se tiver um id nos params e existir no mapa, usar esses dados como prioridade
+        if (comicId && COMICS_MAP[Number(comicId)]){
+            const cm = COMICS_MAP[Number(comicId)];
+            comicTitle = cm.title || comicTitle;
+            comicCover = cm.cover || comicCover;
+            comicProgress = (typeof cm.progress !== 'undefined') ? String(cm.progress) : comicProgress;
+        }
+
+    // Atualizar título
         const titleEl = document.getElementById('readerTitleText');
         if (titleEl) titleEl.textContent = comicTitle;
 
@@ -260,6 +300,10 @@
         pages.push('https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Página+1');
         pages.push('https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Página+2');
         pages.push('https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Página+3');
+
+        // criar variáveis de controle de paginação (acessíveis para salvar progresso)
+        let currentPage = 1;
+        let totalPages = 1;
 
         // Criar elementos de imagem e lista
         const imgs = [];
@@ -296,7 +340,7 @@
 
         // Determinar página inicial
         let initialIndex = 0;
-        const progressRaw = params.get('progress') || '';
+        const progressRaw = comicProgress || '';
         if (progressRaw) {
             const n = Number(String(progressRaw).replace('%',''));
             if (!Number.isNaN(n) && pages.length > 0) {
@@ -311,6 +355,8 @@
             links.forEach(l => l.classList.remove('current'));
             const link = links[index];
             if (link) link.classList.add('current');
+            // atualizar indicador de página usado para salvar progresso
+            currentPage = index + 1;
         }
 
         // Scroll para página inicial
@@ -320,6 +366,67 @@
                 updateCurrentPage(initialIndex);
             }
         }, 80);
+
+        // ajustar totalPages após criação de imgs
+        totalPages = Math.max(1, imgs.length);
+
+        // Função para salvar progresso atual no localStorage
+        function saveProgressToLocalStorage() {
+            try {
+                if (!comicId) return;
+                const pct = Math.round((currentPage / Math.max(1, totalPages)) * 100);
+                localStorage.setItem('hq-progress-' + comicId, String(pct));
+                console.log('Progresso salvo localmente:', pct + '%');
+                return pct;
+            } catch (err) {
+                console.warn('Erro ao salvar progresso localmente:', err);
+                return null;
+            }
+        }
+
+        // Tenta salvar no servidor, com fallback para localStorage
+        function saveProgress() {
+            const pct = saveProgressToLocalStorage();
+            if (!comicId) return;
+            const payload = { comicId: Number(comicId), progress: pct || 0 };
+
+            fetch('save_progress.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            }).then(r => r.json()).then(json => {
+                if (json && json.ok) {
+                    console.log('Progresso salvo no servidor:', json.progress);
+                } else {
+                    console.warn('Falha ao salvar no servidor, mantido localmente');
+                }
+            }).catch(err => {
+                console.warn('Erro de rede ao salvar progresso no servidor, mantido localmente', err);
+            });
+        }
+
+        // Salvar progresso ao clicar no botão de voltar
+        const backBtn = document.querySelector('.back-btn');
+        if (backBtn) {
+            backBtn.addEventListener('click', function() {
+                saveProgress();
+                // navegação segue normalmente (href do link leva de volta)
+            });
+        }
+
+        // Salvar progresso ao descarregar a página (ex.: fechar aba) — tenta enviar ao servidor
+        window.addEventListener('beforeunload', function() {
+            try {
+                // salvar local sempre
+                saveProgressToLocalStorage();
+            } catch (e) {}
+            // enviar ao servidor (fire-and-forget)
+            try {
+                const pct = Math.round((currentPage / Math.max(1, totalPages)) * 100);
+                navigator.sendBeacon && navigator.sendBeacon('save_progress.php', JSON.stringify({ comicId: Number(comicId), progress: pct }));
+            } catch (e) {}
+        });
 
         // Botão 'Ler agora'
         const readNowBtn = document.getElementById('readNowBtn');
