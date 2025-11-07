@@ -9,9 +9,14 @@ if(!$auth->isLoggedIn()) {
 $user_data = $auth->getUserData($_SESSION['user_id']);
 $initial = strtoupper(substr($user_data['username'], 0, 1));
 
+// Obter estatísticas de seguidores
+$follow_stats = $auth->getFollowStats($user_data['id']);
+$followers_count = $follow_stats['followers_count'];
+$following_count = $follow_stats['following_count'];
+
 $success = '';
 $error = '';
-$active_tab = 'profile'; // profile ou password
+$active_tab = 'profile';
 
 // Processar edição de perfil
 if($_POST && isset($_POST['update_profile'])) {
@@ -21,12 +26,11 @@ if($_POST && isset($_POST['update_profile'])) {
     $result = $auth->updateProfile($_SESSION['user_id'], $username, $user_data['email'], $bio);
     if($result === true) {
         $success = "Perfil atualizado com sucesso!";
-        $user_data = $auth->getUserData($_SESSION['user_id']); // Recarregar dados
+        $user_data = $auth->getUserData($_SESSION['user_id']);
         $initial = strtoupper(substr($user_data['username'], 0, 1));
     } else {
         $error = $result;
     }
-    $active_tab = 'profile';
 }
 
 // Processar alteração de senha
@@ -49,6 +53,37 @@ if($_POST && isset($_POST['change_password'])) {
     }
     $active_tab = 'password';
 }
+
+// Processar remoção de avatar
+if($_POST && isset($_POST['remove_avatar'])) {
+    $result = $auth->removeAvatar($_SESSION['user_id']);
+    if($result === true) {
+        $success = "Foto de perfil removida com sucesso!";
+        $user_data = $auth->getUserData($_SESSION['user_id']);
+    } else {
+        $error = "Erro ao remover foto de perfil!";
+    }
+    $active_tab = 'avatar';
+}
+
+// Processar exclusão de conta
+if($_POST && isset($_POST['delete_account'])) {
+    $confirm_password = $_POST['confirm_password'] ?? '';
+    
+    $result = $auth->changePassword($_SESSION['user_id'], $confirm_password, $confirm_password);
+    if($result === true) {
+        $result = $auth->deleteUserAccount($_SESSION['user_id'], $_SESSION['user_id']);
+        if($result === true) {
+            header("Location: login.php?message=conta_excluida");
+            exit();
+        } else {
+            $error = $result;
+        }
+    } else {
+        $error = "Senha incorreta!";
+    }
+    $active_tab = 'delete';
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -58,378 +93,82 @@ if($_POST && isset($_POST['change_password'])) {
     <title>Meu Perfil - HQ Verso</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; min-height: 100vh; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; }
+        .logo { font-size: 28px; font-weight: 800; color: #e94560; text-decoration: none; }
+        .back-btn { color: #e94560; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .profile-container { background: rgba(26, 26, 46, 0.8); border-radius: 10px; padding: 30px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); }
         
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-        }
+        .profile-header { display: flex; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #e94560; }
+        .profile-avatar { width: 120px; height: 120px; border-radius: 50%; background: #e94560; display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: bold; margin-right: 25px; position: relative; overflow: hidden; border: 3px solid #e94560; }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; cursor: pointer; }
+        .profile-avatar:hover .avatar-overlay { opacity: 1; }
         
-        /* Modo Claro */
-        body.light-mode {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: #333;
-        }
+        .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
+        .email-info { color: #e94560; font-weight: 500; margin-bottom: 5px; }
         
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
+        .profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: rgba(15, 52, 96, 0.3); padding: 20px; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+        .stat-card:hover { background: rgba(15, 52, 96, 0.5); transform: translateY(-2px); }
+        .stat-number { font-size: 28px; font-weight: 700; color: #e94560; margin-bottom: 5px; }
+        .stat-label { font-size: 14px; opacity: 0.8; }
         
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            margin-bottom: 30px;
-        }
+        .tabs { display: flex; margin-bottom: 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+        .tab { padding: 15px 30px; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent; }
+        .tab.active { color: #e94560; border-bottom: 3px solid #e94560; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
         
-        .logo {
-            font-size: 28px;
-            font-weight: 800;
-            color: #e94560;
-            text-decoration: none;
-            letter-spacing: 1px;
-        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 5px; background: rgba(255, 255, 255, 0.05); color: #fff; font-size: 16px; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #e94560; }
+        .form-group textarea { height: 100px; resize: vertical; }
         
-        .back-btn {
-            color: #e94560;
-            text-decoration: none;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .password-toggle { position: relative; }
+        .password-toggle i { position: absolute; right: 15px; top: 40px; cursor: pointer; }
         
-        body.light-mode .back-btn {
-            color: #e94560;
-        }
+        .btn { padding: 12px 25px; border-radius: 5px; font-weight: 600; cursor: pointer; border: none; font-size: 16px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #e94560; color: white; }
+        .btn-primary:hover { background: #d8345f; }
+        .btn-outline { background: transparent; border: 2px solid #e94560; color: #e94560; }
+        .btn-danger { background: #dc3545; color: white; width: 100%; }
+        .btn-sm { padding: 8px 15px; font-size: 14px; }
         
-        body.light-mode .logo {
-            color: #e94560;
-        }
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; font-weight: 500; }
+        .alert-success { background: rgba(76, 175, 80, 0.2); border: 1px solid #4caf50; color: #4caf50; }
+        .alert-error { background: rgba(233, 69, 96, 0.2); border: 1px solid #e94560; color: #e94560; }
         
-        .profile-container {
-            background: rgba(26, 26, 46, 0.8);
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-        }
-        
-        body.light-mode .profile-container {
-            background: rgba(255, 255, 255, 0.95);
-            color: #333;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .profile-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e94560;
-        }
-        
-        .profile-avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: #e94560;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            font-weight: bold;
-            margin-right: 20px;
-            flex-shrink: 0;
-        }
-        
-        .profile-info h2 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-        
-        .profile-info p {
-            opacity: 0.8;
-            margin-bottom: 5px;
-        }
-        
-        .email-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #e94560;
-            font-weight: 500;
-        }
-        
-        .profile-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: rgba(15, 52, 96, 0.3);
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        body.light-mode .stat-card {
-            background: rgba(233, 69, 96, 0.1);
-            color: #333;
-        }
-        
-        .stat-number {
-            font-size: 28px;
-            font-weight: 700;
-            color: #e94560;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            opacity: 0.8;
-        }
-        
-        .tabs {
-            display: flex;
-            margin-bottom: 30px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        body.light-mode .tabs {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-        
-        .tab {
-            padding: 15px 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            border-bottom: 3px solid transparent;
-        }
-        
-        .tab.active {
-            color: #e94560;
-            border-bottom: 3px solid #e94560;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            font-size: 16px;
-            transition: border 0.3s ease;
-        }
-        
-        body.light-mode .form-group input,
-        body.light-mode .form-group textarea {
-            background: rgba(0, 0, 0, 0.03);
-            border: 1px solid #e2e8f0;
-            color: #333;
-        }
-        
-        .form-group input:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #e94560;
-        }
-        
-        .form-group textarea {
-            height: 100px;
-            resize: vertical;
-        }
-        
-        .password-toggle {
-            position: relative;
-        }
-        
-        .password-toggle i {
-            position: absolute;
-            right: 15px;
-            top: 45px;
-            cursor: pointer;
-            color: #718096;
-        }
-        
-        .email-display {
-            padding: 14px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            color: #e94560;
-            font-weight: 500;
-        }
-        
-        body.light-mode .email-display {
-            background: rgba(0, 0, 0, 0.03);
-            border: 1px solid #e2e8f0;
-            color: #e94560;
-        }
-        
-        .btn {
-            padding: 12px 25px;
-            border-radius: 5px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            border: none;
-            font-size: 16px;
-        }
-        
-        .btn-primary {
-            background: #e94560;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #d8345f;
-            transform: translateY(-2px);
-        }
-        
-        .btn-outline {
-            background: transparent;
-            border: 2px solid #e94560;
-            color: #e94560;
-        }
-        
-        body.light-mode .btn-outline {
-            color: #e94560;
-        }
-        
-        .btn-outline:hover {
-            background: rgba(233, 69, 96, 0.1);
-        }
-        
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(15, 52, 96, 0.8);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-        
-        .theme-toggle:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
-        }
-        
-        body.light-mode .theme-toggle {
-            background: rgba(233, 69, 96, 0.8);
-            color: white;
-        }
-        
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            text-align: center;
-            font-weight: 500;
-        }
-        
-        .alert-success {
-            background: rgba(76, 175, 80, 0.2);
-            border: 1px solid #4caf50;
-            color: #4caf50;
-        }
-        
-        .alert-error {
-            background: rgba(233, 69, 96, 0.2);
-            border: 1px solid #e94560;
-            color: #e94560;
-        }
-        
-        .profile-actions {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-top: 30px;
-        }
+        .upload-area { border: 2px dashed #e94560; border-radius: 10px; padding: 30px; text-align: center; margin-bottom: 20px; cursor: pointer; }
+        .upload-area:hover { background: rgba(233, 69, 96, 0.1); }
+
+        /* Estilos para lista de seguidores/seguindo */
+        .follow-list { display: grid; gap: 15px; margin-top: 20px; }
+        .follow-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; }
+        .follow-user { display: flex; align-items: center; gap: 15px; }
+        .follow-avatar { width: 50px; height: 50px; border-radius: 50%; background: #e94560; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        .follow-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .follow-info h4 { margin-bottom: 5px; }
+        .follow-info p { font-size: 0.8rem; opacity: 0.7; margin: 0; }
         
         @media (max-width: 768px) {
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .profile-avatar {
-                margin-right: 0;
-                margin-bottom: 15px;
-            }
-            
-            .tabs {
-                flex-direction: column;
-            }
-            
-            .tab {
-                text-align: center;
-            }
+            .profile-header { flex-direction: column; text-align: center; }
+            .profile-avatar { margin: 0 auto 15px; }
+            .tabs { flex-direction: column; }
+            .tab { text-align: center; }
+            .follow-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .follow-user { width: 100%; }
         }
     </style>
 </head>
 <body>
-    <button class="theme-toggle" id="themeToggle">
-        <i class="fas fa-moon"></i>
-    </button>
-    
     <div class="container">
         <header>
             <a href="comics.php" class="logo">HQ VERSO</a>
-            <a href="comics.php" class="back-btn">
-                <i class="fas fa-arrow-left"></i> Voltar
-            </a>
+            <a href="comics.php" class="back-btn"><i class="fas fa-arrow-left"></i> Voltar</a>
         </header>
         
         <?php if($success): ?>
@@ -441,19 +180,48 @@ if($_POST && isset($_POST['change_password'])) {
         <?php endif; ?>
         
         <div class="profile-container">
+            <!-- CABEÇALHO DO PERFIL -->
             <div class="profile-header">
-                <div class="profile-avatar"><?php echo $initial; ?></div>
+                <div class="profile-avatar">
+                    <?php if($user_data['avatar'] && file_exists($user_data['avatar'])): ?>
+                        <img src="<?php echo $user_data['avatar']; ?>" alt="Avatar">
+                    <?php else: ?>
+                        <span><?php echo $initial; ?></span>
+                    <?php endif; ?>
+                    <div class="avatar-overlay" onclick="document.getElementById('avatarInput').click()">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
                 <div class="profile-info">
                     <h2><?php echo htmlspecialchars($user_data['username']); ?></h2>
                     <div class="email-info">
-                        <i class="fas fa-envelope"></i>
-                        <?php echo htmlspecialchars($user_data['email']); ?>
+                        <i class="fas fa-envelope"></i> <?php echo htmlspecialchars($user_data['email']); ?>
                     </div>
                     <p>Membro desde: <?php echo date('d/m/Y', strtotime($user_data['created_at'])); ?></p>
+                    <?php if($user_data['avatar']): ?>
+                        <form method="POST" style="margin-top: 10px;">
+                            <input type="hidden" name="remove_avatar" value="1">
+                            <button type="submit" class="btn btn-outline btn-sm" onclick="return confirm('Remover foto de perfil?')">
+                                <i class="fas fa-trash"></i> Remover Foto
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             </div>
-            
+
+            <!-- INPUT OCULTO PARA UPLOAD -->
+            <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+
+            <!-- ESTATÍSTICAS -->
             <div class="profile-stats">
+                <div class="stat-card" onclick="showFollowers()">
+                    <div class="stat-number"><?php echo $followers_count; ?></div>
+                    <div class="stat-label">Seguidores</div>
+                </div>
+                <div class="stat-card" onclick="showFollowing()">
+                    <div class="stat-number"><?php echo $following_count; ?></div>
+                    <div class="stat-label">Seguindo</div>
+                </div>
                 <div class="stat-card">
                     <div class="stat-number">24</div>
                     <div class="stat-label">Quadrinhos Lidos</div>
@@ -462,41 +230,42 @@ if($_POST && isset($_POST['change_password'])) {
                     <div class="stat-number">8</div>
                     <div class="stat-label">Favoritos</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number">15</div>
-                    <div class="stat-label">Dias de Leitura</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">3</div>
-                    <div class="stat-label">Reviews</div>
-                </div>
             </div>
             
+            <!-- ABAS -->
             <div class="tabs">
                 <div class="tab <?php echo $active_tab === 'profile' ? 'active' : ''; ?>" data-tab="profile">
                     <i class="fas fa-user-edit"></i> Editar Perfil
                 </div>
+                <div class="tab <?php echo $active_tab === 'avatar' ? 'active' : ''; ?>" data-tab="avatar">
+                    <i class="fas fa-camera"></i> Foto do Perfil
+                </div>
+                <div class="tab <?php echo $active_tab === 'follow' ? 'active' : ''; ?>" data-tab="follow">
+                    <i class="fas fa-users"></i> Seguidores
+                </div>
                 <div class="tab <?php echo $active_tab === 'password' ? 'active' : ''; ?>" data-tab="password">
                     <i class="fas fa-lock"></i> Alterar Senha
                 </div>
+                <div class="tab <?php echo $active_tab === 'delete' ? 'active' : ''; ?>" data-tab="delete">
+                    <i class="fas fa-trash-alt"></i> Excluir Conta
+                </div>
             </div>
             
+            <!-- ABA 1: EDITAR PERFIL -->
             <div class="tab-content <?php echo $active_tab === 'profile' ? 'active' : ''; ?>" id="profile">
                 <form method="POST">
                     <input type="hidden" name="update_profile" value="1">
                     
                     <div class="form-group">
                         <label for="username">Nome de Usuário</label>
-                        <input type="text" id="username" name="username" 
-                               value="<?php echo htmlspecialchars($user_data['username']); ?>" required>
+                        <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($user_data['username']); ?>" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="email">Email</label>
-                        <div class="email-display">
-                            <i class="fas fa-lock"></i>
-                            <?php echo htmlspecialchars($user_data['email']); ?>
-                            <small style="opacity: 0.7; margin-left: 10px;">(O email não pode ser alterado)</small>
+                        <label>Email</label>
+                        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 5px; color: #e94560;">
+                            <i class="fas fa-lock"></i> <?php echo htmlspecialchars($user_data['email']); ?>
+                            <small style="opacity: 0.7;"> (não pode ser alterado)</small>
                         </div>
                     </div>
                     
@@ -511,6 +280,53 @@ if($_POST && isset($_POST['change_password'])) {
                 </form>
             </div>
             
+            <!-- ABA 2: FOTO DO PERFIL -->
+            <div class="tab-content <?php echo $active_tab === 'avatar' ? 'active' : ''; ?>" id="avatar">
+                <div class="upload-area" onclick="document.getElementById('avatarInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>Clique para escolher uma foto</h3>
+                    <p>Formatos: JPG, PNG, GIF, WebP (Máx. 5MB)</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <h4 style="margin-bottom: 15px; color: #e94560;">Foto Atual</h4>
+                    <div class="profile-avatar" style="margin: 0 auto; width: 100px; height: 100px; font-size: 36px;">
+                        <?php if($user_data['avatar'] && file_exists($user_data['avatar'])): ?>
+                            <img src="<?php echo $user_data['avatar']; ?>" alt="Avatar atual">
+                        <?php else: ?>
+                            <span><?php echo $initial; ?></span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 3: SEGUIDORES/SEGUINDO -->
+            <div class="tab-content <?php echo $active_tab === 'follow' ? 'active' : ''; ?>" id="follow">
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-outline active" onclick="showFollowers()" id="btnFollowers">
+                        <i class="fas fa-user-friends"></i> Seguidores (<?php echo $followers_count; ?>)
+                    </button>
+                    <button class="btn btn-outline" onclick="showFollowing()" id="btnFollowing">
+                        <i class="fas fa-user-check"></i> Seguindo (<?php echo $following_count; ?>)
+                    </button>
+                </div>
+                
+                <div id="followersList" class="follow-list">
+                    <!-- Lista de seguidores será carregada via AJAX -->
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin"></i> Carregando seguidores...
+                    </div>
+                </div>
+                
+                <div id="followingList" class="follow-list" style="display: none;">
+                    <!-- Lista de seguindo será carregada via AJAX -->
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin"></i> Carregando usuários seguidos...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ABA 4: ALTERAR SENHA -->
             <div class="tab-content <?php echo $active_tab === 'password' ? 'active' : ''; ?>" id="password">
                 <form method="POST">
                     <input type="hidden" name="change_password" value="1">
@@ -518,19 +334,19 @@ if($_POST && isset($_POST['change_password'])) {
                     <div class="form-group password-toggle">
                         <label for="current_password">Senha Atual</label>
                         <input type="password" id="current_password" name="current_password" required>
-                        <i class="fas fa-eye" id="toggleCurrentPassword"></i>
+                        <i class="fas fa-eye" onclick="togglePassword('current_password', this)"></i>
                     </div>
                     
                     <div class="form-group password-toggle">
                         <label for="new_password">Nova Senha</label>
                         <input type="password" id="new_password" name="new_password" required>
-                        <i class="fas fa-eye" id="toggleNewPassword"></i>
+                        <i class="fas fa-eye" onclick="togglePassword('new_password', this)"></i>
                     </div>
                     
                     <div class="form-group password-toggle">
                         <label for="confirm_password">Confirmar Nova Senha</label>
                         <input type="password" id="confirm_password" name="confirm_password" required>
-                        <i class="fas fa-eye" id="toggleConfirmPassword"></i>
+                        <i class="fas fa-eye" onclick="togglePassword('confirm_password', this)"></i>
                     </div>
                     
                     <button type="submit" class="btn btn-primary">
@@ -539,7 +355,30 @@ if($_POST && isset($_POST['change_password'])) {
                 </form>
             </div>
             
-            <div class="profile-actions">
+            <!-- ABA 5: EXCLUIR CONTA -->
+            <div class="tab-content <?php echo $active_tab === 'delete' ? 'active' : ''; ?>" id="delete">
+                <div class="alert alert-error" style="text-align: left;">
+                    <h3 style="margin-bottom: 10px;"><i class="fas fa-exclamation-triangle"></i> Atenção!</h3>
+                    <p>Esta ação é <strong>irreversível</strong>. Todos os seus dados serão permanentemente removidos.</p>
+                </div>
+                
+                <form method="POST">
+                    <input type="hidden" name="delete_account" value="1">
+                    
+                    <div class="form-group password-toggle">
+                        <label for="confirm_password_delete">Digite sua senha para confirmar:</label>
+                        <input type="password" id="confirm_password_delete" name="confirm_password" required>
+                        <i class="fas fa-eye" onclick="togglePassword('confirm_password_delete', this)"></i>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir sua conta permanentemente?')">
+                        <i class="fas fa-trash-alt"></i> Excluir Minha Conta
+                    </button>
+                </form>
+            </div>
+            
+            <!-- LINKS EXTRAS -->
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
                 <a href="detection.html" class="btn btn-outline">
                     <i class="fas fa-info-circle"></i> Info do Navegador
                 </a>
@@ -551,86 +390,158 @@ if($_POST && isset($_POST['change_password'])) {
     </div>
 
     <script>
-        // Sistema de Tema
-        const themeToggle = document.getElementById('themeToggle');
-        const body = document.body;
-        
-        const savedTheme = localStorage.getItem('hq-verso-theme');
-        if (savedTheme === 'light') {
-            body.classList.add('light-mode');
-            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-        }
-        
-        themeToggle.addEventListener('click', () => {
-            body.classList.toggle('light-mode');
-            
-            if (body.classList.contains('light-mode')) {
-                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-                localStorage.setItem('hq-verso-theme', 'light');
-            } else {
-                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-                localStorage.setItem('hq-verso-theme', 'dark');
-            }
-        });
-
-        // Sistema de Tabs
+        // SISTEMA DE ABAS
         document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remover active de todas as tabs
+            tab.addEventListener('click', function() {
+                // Remove active de todas as tabs
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                // Adicionar active na tab clicada
-                tab.classList.add('active');
+                // Adiciona active na tab clicada
+                this.classList.add('active');
                 
-                // Mostrar conteúdo correspondente
-                const tabName = tab.getAttribute('data-tab');
+                // Mostra o conteúdo correspondente
+                const tabName = this.getAttribute('data-tab');
                 document.querySelectorAll('.tab-content').forEach(content => {
                     content.classList.remove('active');
                 });
                 document.getElementById(tabName).classList.add('active');
+
+                // Carrega dados de seguidores se for a aba de follow
+                if(tabName === 'follow') {
+                    loadFollowers();
+                }
             });
         });
 
-        // Alternar visibilidade da senha
-        document.getElementById('toggleCurrentPassword').addEventListener('click', function() {
-            const passwordInput = document.getElementById('current_password');
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.classList.toggle('fa-eye-slash');
-        });
-        
-        document.getElementById('toggleNewPassword').addEventListener('click', function() {
-            const passwordInput = document.getElementById('new_password');
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.classList.toggle('fa-eye-slash');
-        });
-        
-        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
-            const passwordInput = document.getElementById('confirm_password');
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.classList.toggle('fa-eye-slash');
-        });
+        // UPLOAD DE AVATAR
+        document.getElementById('avatarInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('avatar', file);
 
-        // Validação do formulário de senha
-        document.querySelector('form[action*="change_password"]')?.addEventListener('submit', function(e) {
-            const newPassword = document.getElementById('new_password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-            
-            if (newPassword !== confirmPassword) {
-                e.preventDefault();
-                alert('As novas senhas não coincidem!');
-                return false;
-            }
-            
-            if (newPassword.length < 6) {
-                e.preventDefault();
-                alert('A nova senha deve ter pelo menos 6 caracteres!');
-                return false;
+                // Faz o upload
+                fetch('upload_avatar.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('Foto de perfil atualizada com sucesso!');
+                        location.reload(); // Recarrega a página
+                    } else {
+                        alert('Erro: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Erro no upload. Tente novamente.');
+                });
             }
         });
 
-        console.log('Perfil carregado com sucesso!');
+        // ALTERNAR VISIBILIDADE DA SENHA
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // FUNÇÕES PARA SEGUIDORES/SEGUINDO
+        function showFollowers() {
+            document.getElementById('btnFollowers').classList.add('active');
+            document.getElementById('btnFollowing').classList.remove('active');
+            document.getElementById('followersList').style.display = 'grid';
+            document.getElementById('followingList').style.display = 'none';
+            loadFollowers();
+        }
+
+        function showFollowing() {
+            document.getElementById('btnFollowers').classList.remove('active');
+            document.getElementById('btnFollowing').classList.add('active');
+            document.getElementById('followersList').style.display = 'none';
+            document.getElementById('followingList').style.display = 'grid';
+            loadFollowing();
+        }
+
+        function loadFollowers() {
+            fetch('get_follow_data.php?type=followers')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('followersList');
+                    if(data.length > 0) {
+                        container.innerHTML = data.map(user => `
+                            <div class="follow-item">
+                                <div class="follow-user">
+                                    <div class="follow-avatar">
+                                        ${user.avatar ? `<img src="${user.avatar}" alt="${user.username}">` : user.username.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div class="follow-info">
+                                        <h4>${user.username}</h4>
+                                        <p>${user.followers_count} seguidores</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline btn-sm" onclick="viewProfile(${user.id})">
+                                    <i class="fas fa-eye"></i> Ver Perfil
+                                </button>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div style="text-align: center; padding: 40px; opacity: 0.7;"><i class="fas fa-users"></i><p>Nenhum seguidor ainda</p></div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    document.getElementById('followersList').innerHTML = '<div style="text-align: center; padding: 40px; color: #e94560;"><i class="fas fa-exclamation-triangle"></i><p>Erro ao carregar seguidores</p></div>';
+                });
+        }
+
+        function loadFollowing() {
+            fetch('get_follow_data.php?type=following')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('followingList');
+                    if(data.length > 0) {
+                        container.innerHTML = data.map(user => `
+                            <div class="follow-item">
+                                <div class="follow-user">
+                                    <div class="follow-avatar">
+                                        ${user.avatar ? `<img src="${user.avatar}" alt="${user.username}">` : user.username.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div class="follow-info">
+                                        <h4>${user.username}</h4>
+                                        <p>${user.followers_count} seguidores</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline btn-sm" onclick="viewProfile(${user.id})">
+                                    <i class="fas fa-eye"></i> Ver Perfil
+                                </button>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div style="text-align: center; padding: 40px; opacity: 0.7;"><i class="fas fa-user-check"></i><p>Você não está seguindo ninguém</p></div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    document.getElementById('followingList').innerHTML = '<div style="text-align: center; padding: 40px; color: #e94560;"><i class="fas fa-exclamation-triangle"></i><p>Erro ao carregar lista</p></div>';
+                });
+        }
+
+        function viewProfile(userId) {
+            window.location.href = `perfil.php?user_id=${userId}`;
+        }
+
+        // Carrega seguidores se a aba estiver ativa
+        if(document.getElementById('follow').classList.contains('active')) {
+            loadFollowers();
+        }
     </script>
 </body>
 </html>
