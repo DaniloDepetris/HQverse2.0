@@ -1,12 +1,9 @@
-CREATE DATABASE hqsql CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE hqsql;
-
 -- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 21/10/2025 às 03:42
+-- Tempo de geração: 07/11/2025 às 22:41
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -23,13 +20,41 @@ SET time_zone = "+00:00";
 --
 -- Banco de dados: `hqsql`
 --
+CREATE DATABASE IF NOT EXISTS `hqsql` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `hqsql`;
 
 DELIMITER $$
 --
 -- Procedimentos
 --
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_all_user_progress` (IN `p_user_id` INT)   BEGIN
+  SELECT comic_id, progress_pct, last_read_at
+  FROM user_progress
+  WHERE user_id = p_user_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_user_progress` (IN `p_user_id` INT, IN `p_comic_id` INT)   BEGIN
+  SELECT comic_id, progress_pct, last_read_at
+  FROM user_progress
+  WHERE user_id = p_user_id AND comic_id = p_comic_id
+  LIMIT 1;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `increment_comic_views` (IN `comic_id` INT)   BEGIN
     UPDATE comics SET views = views + 1 WHERE id = comic_id;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `save_user_progress` (IN `p_user_id` INT, IN `p_comic_id` INT, IN `p_progress_pct` TINYINT)   BEGIN
+  -- validações simples
+  IF p_user_id IS NULL OR p_comic_id IS NULL OR p_progress_pct IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Parametros invalidos';
+  END IF;
+
+  INSERT INTO user_progress (user_id, comic_id, progress_pct)
+  VALUES (p_user_id, p_comic_id, LEAST(GREATEST(p_progress_pct,0),100))
+  ON DUPLICATE KEY UPDATE
+    progress_pct = LEAST(GREATEST(p_progress_pct,0),100),
+    last_read_at = CURRENT_TIMESTAMP;
 END$$
 
 DELIMITER ;
@@ -382,8 +407,29 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `avatar`, `avatar_file_name`, `avatar_file_size`, `avatar_mime_type`, `avatar_updated_at`, `bio`, `role`, `created_at`, `updated_at`) VALUES
-(2, 'Juan Taborda', 'taborda.mjuan@gmail.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', NULL, NULL, NULL, NULL, NULL, 'sou legal', 'user', '2025-10-20 23:21:30', '2025-10-21 01:39:54'),
-(4, 'admin', 'admin@hqverso.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-10-21 01:11:36', '2025-10-21 01:11:36');
+(2, 'Juan Taborda', 'taborda.mjuan@gmail.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', 'uploads/avatars/avatar_2_1762551496.png', 'avatar_4_1761095710.png', 427608, 'image/png', '2025-11-07 21:38:16', 'sou legal', 'user', '2025-10-20 23:21:30', '2025-11-07 21:38:16'),
+(4, 'admin', 'admin@hqverso.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-10-21 01:11:36', '2025-10-21 01:11:36'),
+(5, 'reza+', 'ghyslainemoraes@gmail.com', '$2y$10$Bl1YDtuy/P54grfdqfTcw.vV/Gt/gj8tBR562cgU3UqlaBArIswju', 'uploads/avatars/avatar_5_1762544145.png', '3tene_20250930220016.png', 91516, 'image/png', '2025-11-07 19:35:45', NULL, 'user', '2025-11-07 19:35:20', '2025-11-07 19:35:45');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `user_follows`
+--
+
+CREATE TABLE `user_follows` (
+  `id` int(11) NOT NULL,
+  `follower_id` int(11) NOT NULL,
+  `following_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `user_follows`
+--
+
+INSERT INTO `user_follows` (`id`, `follower_id`, `following_id`, `created_at`) VALUES
+(2, 2, 4, '2025-11-07 19:09:58');
 
 -- --------------------------------------------------------
 
@@ -401,66 +447,17 @@ CREATE TABLE `user_library` (
 
 -- --------------------------------------------------------
 
--- Tabela para armazenar progresso do usuário por quadrinho
--- chave única por (user_id, comic_id) para upsert eficiente
-CREATE TABLE IF NOT EXISTS `user_progress` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `user_id` INT NOT NULL,
-  `comic_id` INT NOT NULL,
-  `progress_pct` TINYINT NOT NULL DEFAULT 0,
-  `last_read_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `ux_user_comic` (`user_id`,`comic_id`),
-  KEY `ix_user` (`user_id`)
+--
+-- Estrutura para tabela `user_progress`
+--
+
+CREATE TABLE `user_progress` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `comic_id` int(11) NOT NULL,
+  `progress_pct` tinyint(4) NOT NULL DEFAULT 0,
+  `last_read_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- Procedimento para salvar/atualizar progresso (faz INSERT ou UPDATE)
-DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `save_user_progress` (
-  IN p_user_id INT,
-  IN p_comic_id INT,
-  IN p_progress_pct TINYINT
-)
-BEGIN
-  -- validações simples
-  IF p_user_id IS NULL OR p_comic_id IS NULL OR p_progress_pct IS NULL THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Parametros invalidos';
-  END IF;
-
-  INSERT INTO user_progress (user_id, comic_id, progress_pct)
-  VALUES (p_user_id, p_comic_id, LEAST(GREATEST(p_progress_pct,0),100))
-  ON DUPLICATE KEY UPDATE
-    progress_pct = LEAST(GREATEST(p_progress_pct,0),100),
-    last_read_at = CURRENT_TIMESTAMP;
-END$$
-DELIMITER ;
-
--- Função/Procedimento para obter progresso de um quadrinho para um usuário
-DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `get_user_progress` (
-  IN p_user_id INT,
-  IN p_comic_id INT
-)
-BEGIN
-  SELECT comic_id, progress_pct, last_read_at
-  FROM user_progress
-  WHERE user_id = p_user_id AND comic_id = p_comic_id
-  LIMIT 1;
-END$$
-DELIMITER ;
-
--- Procedimento para retornar todos os progressos de um usuário (bulk)
-DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `get_all_user_progress` (
-  IN p_user_id INT
-)
-BEGIN
-  SELECT comic_id, progress_pct, last_read_at
-  FROM user_progress
-  WHERE user_id = p_user_id;
-END$$
-DELIMITER ;
-
 
 -- --------------------------------------------------------
 
@@ -673,6 +670,15 @@ ALTER TABLE `users`
   ADD KEY `idx_users_created` (`created_at`);
 
 --
+-- Índices de tabela `user_follows`
+--
+ALTER TABLE `user_follows`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `follower_following` (`follower_id`,`following_id`),
+  ADD KEY `idx_follows_follower` (`follower_id`),
+  ADD KEY `idx_follows_following` (`following_id`);
+
+--
 -- Índices de tabela `user_library`
 --
 ALTER TABLE `user_library`
@@ -681,6 +687,14 @@ ALTER TABLE `user_library`
   ADD KEY `transaction_id` (`transaction_id`),
   ADD KEY `idx_library_user` (`user_id`),
   ADD KEY `idx_library_comic` (`comic_id`);
+
+--
+-- Índices de tabela `user_progress`
+--
+ALTER TABLE `user_progress`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `ux_user_comic` (`user_id`,`comic_id`),
+  ADD KEY `ix_user` (`user_id`);
 
 --
 -- Índices de tabela `user_uploads`
@@ -788,12 +802,24 @@ ALTER TABLE `transactions`
 -- AUTO_INCREMENT de tabela `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT de tabela `user_follows`
+--
+ALTER TABLE `user_follows`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de tabela `user_library`
 --
 ALTER TABLE `user_library`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `user_progress`
+--
+ALTER TABLE `user_progress`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -902,6 +928,13 @@ ALTER TABLE `topics`
 ALTER TABLE `transactions`
   ADD CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `user_follows`
+--
+ALTER TABLE `user_follows`
+  ADD CONSTRAINT `user_follows_ibfk_1` FOREIGN KEY (`follower_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `user_follows_ibfk_2` FOREIGN KEY (`following_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Restrições para tabelas `user_library`
