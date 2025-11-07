@@ -6,20 +6,46 @@ if(!$auth->isLoggedIn()) {
     exit();
 }
 
-$user_data = $auth->getUserData($_SESSION['user_id']);
+// Verificar se está visualizando outro perfil ou o próprio
+$viewing_own_profile = true;
+$profile_user_id = $_SESSION['user_id'];
+
+if(isset($_GET['user_id']) && !empty($_GET['user_id'])) {
+    $requested_user_id = intval($_GET['user_id']);
+    
+    // Não permitir visualizar o próprio perfil via user_id
+    if($requested_user_id != $_SESSION['user_id']) {
+        $profile_user_id = $requested_user_id;
+        $viewing_own_profile = false;
+    }
+}
+
+// Obter dados do usuário do perfil
+$user_data = $auth->getUserData($profile_user_id);
+if(!$user_data) {
+    header("Location: perfil.php");
+    exit();
+}
+
 $initial = strtoupper(substr($user_data['username'], 0, 1));
 
 // Obter estatísticas de seguidores
-$follow_stats = $auth->getFollowStats($user_data['id']);
+$follow_stats = $auth->getFollowStats($profile_user_id);
 $followers_count = $follow_stats['followers_count'];
 $following_count = $follow_stats['following_count'];
+
+// Verificar se o usuário atual está seguindo o perfil visualizado
+$is_following = false;
+if(!$viewing_own_profile) {
+    $is_following = $auth->isFollowing($_SESSION['user_id'], $profile_user_id);
+}
 
 $success = '';
 $error = '';
 $active_tab = 'profile';
 
-// Processar edição de perfil
-if($_POST && isset($_POST['update_profile'])) {
+// Processar edição de perfil (apenas para próprio perfil)
+if($viewing_own_profile && $_POST && isset($_POST['update_profile'])) {
     $username = $_POST['username'] ?? '';
     $bio = $_POST['bio'] ?? '';
     
@@ -33,8 +59,31 @@ if($_POST && isset($_POST['update_profile'])) {
     }
 }
 
-// Processar alteração de senha
-if($_POST && isset($_POST['change_password'])) {
+// Processar seguir/deseguir
+if(!$viewing_own_profile && $_POST && isset($_POST['toggle_follow'])) {
+    if($is_following) {
+        $result = $auth->unfollowUser($_SESSION['user_id'], $profile_user_id);
+        if($result === true) {
+            $success = "Deixou de seguir " . $user_data['username'] . "!";
+            $is_following = false;
+            $followers_count--;
+        } else {
+            $error = $result;
+        }
+    } else {
+        $result = $auth->followUser($_SESSION['user_id'], $profile_user_id);
+        if($result === true) {
+            $success = "Agora você está seguindo " . $user_data['username'] . "!";
+            $is_following = true;
+            $followers_count++;
+        } else {
+            $error = $result;
+        }
+    }
+}
+
+// Processar alteração de senha (apenas para próprio perfil)
+if($viewing_own_profile && $_POST && isset($_POST['change_password'])) {
     $current_password = $_POST['current_password'] ?? '';
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
@@ -54,8 +103,8 @@ if($_POST && isset($_POST['change_password'])) {
     $active_tab = 'password';
 }
 
-// Processar remoção de avatar
-if($_POST && isset($_POST['remove_avatar'])) {
+// Processar remoção de avatar (apenas para próprio perfil)
+if($viewing_own_profile && $_POST && isset($_POST['remove_avatar'])) {
     $result = $auth->removeAvatar($_SESSION['user_id']);
     if($result === true) {
         $success = "Foto de perfil removida com sucesso!";
@@ -66,8 +115,8 @@ if($_POST && isset($_POST['remove_avatar'])) {
     $active_tab = 'avatar';
 }
 
-// Processar exclusão de conta
-if($_POST && isset($_POST['delete_account'])) {
+// Processar exclusão de conta (apenas para próprio perfil)
+if($viewing_own_profile && $_POST && isset($_POST['delete_account'])) {
     $confirm_password = $_POST['confirm_password'] ?? '';
     
     $result = $auth->changePassword($_SESSION['user_id'], $confirm_password, $confirm_password);
@@ -90,33 +139,64 @@ if($_POST && isset($_POST['delete_account'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Perfil - HQ Verso</title>
+    <title><?php echo $viewing_own_profile ? 'Meu Perfil' : 'Perfil de ' . htmlspecialchars($user_data['username']); ?> - HQ Verso</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
         body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; min-height: 100vh; padding: 20px; }
+        
+        /* Modo Claro */
+        body.light-mode {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+        }
+        
         .container { max-width: 1000px; margin: 0 auto; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; }
         .logo { font-size: 28px; font-weight: 800; color: #e94560; text-decoration: none; }
         .back-btn { color: #e94560; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .profile-container { background: rgba(26, 26, 46, 0.8); border-radius: 10px; padding: 30px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); }
         
+        body.light-mode .profile-container {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
         .profile-header { display: flex; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #e94560; }
         .profile-avatar { width: 120px; height: 120px; border-radius: 50%; background: #e94560; display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: bold; margin-right: 25px; position: relative; overflow: hidden; border: 3px solid #e94560; }
         .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        <?php if($viewing_own_profile): ?>
         .avatar-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; cursor: pointer; }
         .profile-avatar:hover .avatar-overlay { opacity: 1; }
+        <?php endif; ?>
         
         .profile-info h2 { font-size: 24px; margin-bottom: 5px; }
         .email-info { color: #e94560; font-weight: 500; margin-bottom: 5px; }
         
         .profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: rgba(15, 52, 96, 0.3); padding: 20px; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+        
+        body.light-mode .stat-card {
+            background: rgba(233, 69, 96, 0.1);
+            color: #333;
+        }
+        
         .stat-card:hover { background: rgba(15, 52, 96, 0.5); transform: translateY(-2px); }
+        
+        body.light-mode .stat-card:hover {
+            background: rgba(233, 69, 96, 0.2);
+        }
+        
         .stat-number { font-size: 28px; font-weight: 700; color: #e94560; margin-bottom: 5px; }
         .stat-label { font-size: 14px; opacity: 0.8; }
         
         .tabs { display: flex; margin-bottom: 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+        
+        body.light-mode .tabs {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
         .tab { padding: 15px 30px; cursor: pointer; font-weight: 600; border-bottom: 3px solid transparent; }
         .tab.active { color: #e94560; border-bottom: 3px solid #e94560; }
         .tab-content { display: none; }
@@ -125,16 +205,25 @@ if($_POST && isset($_POST['delete_account'])) {
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
         .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 5px; background: rgba(255, 255, 255, 0.05); color: #fff; font-size: 16px; }
+        
+        body.light-mode .form-group input,
+        body.light-mode .form-group textarea {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #e2e8f0;
+            color: #333;
+        }
+        
         .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #e94560; }
         .form-group textarea { height: 100px; resize: vertical; }
         
         .password-toggle { position: relative; }
         .password-toggle i { position: absolute; right: 15px; top: 40px; cursor: pointer; }
         
-        .btn { padding: 12px 25px; border-radius: 5px; font-weight: 600; cursor: pointer; border: none; font-size: 16px; text-decoration: none; display: inline-block; }
+        .btn { padding: 12px 25px; border-radius: 5px; font-weight: 600; cursor: pointer; border: none; font-size: 16px; text-decoration: none; display: inline-block; transition: all 0.3s ease; }
         .btn-primary { background: #e94560; color: white; }
         .btn-primary:hover { background: #d8345f; }
         .btn-outline { background: transparent; border: 2px solid #e94560; color: #e94560; }
+        .btn-outline:hover { background: rgba(233, 69, 96, 0.1); }
         .btn-danger { background: #dc3545; color: white; width: 100%; }
         .btn-sm { padding: 8px 15px; font-size: 14px; }
         
@@ -142,17 +231,63 @@ if($_POST && isset($_POST['delete_account'])) {
         .alert-success { background: rgba(76, 175, 80, 0.2); border: 1px solid #4caf50; color: #4caf50; }
         .alert-error { background: rgba(233, 69, 96, 0.2); border: 1px solid #e94560; color: #e94560; }
         
-        .upload-area { border: 2px dashed #e94560; border-radius: 10px; padding: 30px; text-align: center; margin-bottom: 20px; cursor: pointer; }
+        .upload-area { border: 2px dashed #e94560; border-radius: 10px; padding: 30px; text-align: center; margin-bottom: 20px; cursor: pointer; transition: all 0.3s ease; }
         .upload-area:hover { background: rgba(233, 69, 96, 0.1); }
 
         /* Estilos para lista de seguidores/seguindo */
         .follow-list { display: grid; gap: 15px; margin-top: 20px; }
-        .follow-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; }
+        .follow-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; transition: all 0.3s ease; }
+        
+        body.light-mode .follow-item {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .follow-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        body.light-mode .follow-item:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
         .follow-user { display: flex; align-items: center; gap: 15px; }
         .follow-avatar { width: 50px; height: 50px; border-radius: 50%; background: #e94560; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
         .follow-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         .follow-info h4 { margin-bottom: 5px; }
         .follow-info p { font-size: 0.8rem; opacity: 0.7; margin: 0; }
+        
+        .follow-btn-container { margin-top: 20px; text-align: center; }
+        
+        /* Botão do Tema */
+        .theme-toggle {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: rgba(15, 52, 96, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        body.light-mode .theme-toggle {
+            background: rgba(233, 69, 96, 0.8);
+            color: white;
+        }
         
         @media (max-width: 768px) {
             .profile-header { flex-direction: column; text-align: center; }
@@ -165,6 +300,11 @@ if($_POST && isset($_POST['delete_account'])) {
     </style>
 </head>
 <body>
+    <!-- Botão do Tema -->
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+    
     <div class="container">
         <header>
             <a href="comics.php" class="logo">HQ VERSO</a>
@@ -188,9 +328,11 @@ if($_POST && isset($_POST['delete_account'])) {
                     <?php else: ?>
                         <span><?php echo $initial; ?></span>
                     <?php endif; ?>
+                    <?php if($viewing_own_profile): ?>
                     <div class="avatar-overlay" onclick="document.getElementById('avatarInput').click()">
                         <i class="fas fa-camera"></i>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <div class="profile-info">
                     <h2><?php echo htmlspecialchars($user_data['username']); ?></h2>
@@ -198,7 +340,8 @@ if($_POST && isset($_POST['delete_account'])) {
                         <i class="fas fa-envelope"></i> <?php echo htmlspecialchars($user_data['email']); ?>
                     </div>
                     <p>Membro desde: <?php echo date('d/m/Y', strtotime($user_data['created_at'])); ?></p>
-                    <?php if($user_data['avatar']): ?>
+                    
+                    <?php if($viewing_own_profile && $user_data['avatar']): ?>
                         <form method="POST" style="margin-top: 10px;">
                             <input type="hidden" name="remove_avatar" value="1">
                             <button type="submit" class="btn btn-outline btn-sm" onclick="return confirm('Remover foto de perfil?')">
@@ -206,11 +349,23 @@ if($_POST && isset($_POST['delete_account'])) {
                             </button>
                         </form>
                     <?php endif; ?>
+                    
+                    <?php if(!$viewing_own_profile): ?>
+                        <form method="POST" style="margin-top: 10px;">
+                            <input type="hidden" name="toggle_follow" value="1">
+                            <button type="submit" class="btn <?php echo $is_following ? 'btn-outline' : 'btn-primary'; ?>">
+                                <i class="fas fa-user-<?php echo $is_following ? 'check' : 'plus'; ?>"></i> 
+                                <?php echo $is_following ? 'Seguindo' : 'Seguir'; ?>
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             </div>
 
-            <!-- INPUT OCULTO PARA UPLOAD -->
+            <?php if($viewing_own_profile): ?>
+            <!-- INPUT OCULTO PARA UPLOAD (apenas para próprio perfil) -->
             <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+            <?php endif; ?>
 
             <!-- ESTATÍSTICAS -->
             <div class="profile-stats">
@@ -235,13 +390,15 @@ if($_POST && isset($_POST['delete_account'])) {
             <!-- ABAS -->
             <div class="tabs">
                 <div class="tab <?php echo $active_tab === 'profile' ? 'active' : ''; ?>" data-tab="profile">
-                    <i class="fas fa-user-edit"></i> Editar Perfil
-                </div>
-                <div class="tab <?php echo $active_tab === 'avatar' ? 'active' : ''; ?>" data-tab="avatar">
-                    <i class="fas fa-camera"></i> Foto do Perfil
+                    <i class="fas fa-user-edit"></i> <?php echo $viewing_own_profile ? 'Editar Perfil' : 'Perfil'; ?>
                 </div>
                 <div class="tab <?php echo $active_tab === 'follow' ? 'active' : ''; ?>" data-tab="follow">
                     <i class="fas fa-users"></i> Seguidores
+                </div>
+                
+                <?php if($viewing_own_profile): ?>
+                <div class="tab <?php echo $active_tab === 'avatar' ? 'active' : ''; ?>" data-tab="avatar">
+                    <i class="fas fa-camera"></i> Foto do Perfil
                 </div>
                 <div class="tab <?php echo $active_tab === 'password' ? 'active' : ''; ?>" data-tab="password">
                     <i class="fas fa-lock"></i> Alterar Senha
@@ -249,10 +406,12 @@ if($_POST && isset($_POST['delete_account'])) {
                 <div class="tab <?php echo $active_tab === 'delete' ? 'active' : ''; ?>" data-tab="delete">
                     <i class="fas fa-trash-alt"></i> Excluir Conta
                 </div>
+                <?php endif; ?>
             </div>
             
-            <!-- ABA 1: EDITAR PERFIL -->
+            <!-- ABA 1: PERFIL -->
             <div class="tab-content <?php echo $active_tab === 'profile' ? 'active' : ''; ?>" id="profile">
+                <?php if($viewing_own_profile): ?>
                 <form method="POST">
                     <input type="hidden" name="update_profile" value="1">
                     
@@ -278,9 +437,34 @@ if($_POST && isset($_POST['delete_account'])) {
                         <i class="fas fa-save"></i> Salvar Alterações
                     </button>
                 </form>
+                <?php else: ?>
+                <div class="form-group">
+                    <label>Nome de Usuário</label>
+                    <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                        <?php echo htmlspecialchars($user_data['username']); ?>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 5px; color: #e94560;">
+                        <i class="fas fa-lock"></i> <?php echo htmlspecialchars($user_data['email']); ?>
+                    </div>
+                </div>
+                
+                <?php if(!empty($user_data['bio'])): ?>
+                <div class="form-group">
+                    <label>Biografia</label>
+                    <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 5px; line-height: 1.5;">
+                        <?php echo nl2br(htmlspecialchars($user_data['bio'])); ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <?php endif; ?>
             </div>
             
-            <!-- ABA 2: FOTO DO PERFIL -->
+            <?php if($viewing_own_profile): ?>
+            <!-- ABA 2: FOTO DO PERFIL (apenas para próprio perfil) -->
             <div class="tab-content <?php echo $active_tab === 'avatar' ? 'active' : ''; ?>" id="avatar">
                 <div class="upload-area" onclick="document.getElementById('avatarInput').click()">
                     <i class="fas fa-cloud-upload-alt"></i>
@@ -299,6 +483,7 @@ if($_POST && isset($_POST['delete_account'])) {
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
             <!-- ABA 3: SEGUIDORES/SEGUINDO -->
             <div class="tab-content <?php echo $active_tab === 'follow' ? 'active' : ''; ?>" id="follow">
@@ -312,21 +497,20 @@ if($_POST && isset($_POST['delete_account'])) {
                 </div>
                 
                 <div id="followersList" class="follow-list">
-                    <!-- Lista de seguidores será carregada via AJAX -->
                     <div style="text-align: center; padding: 40px;">
                         <i class="fas fa-spinner fa-spin"></i> Carregando seguidores...
                     </div>
                 </div>
                 
                 <div id="followingList" class="follow-list" style="display: none;">
-                    <!-- Lista de seguindo será carregada via AJAX -->
                     <div style="text-align: center; padding: 40px;">
                         <i class="fas fa-spinner fa-spin"></i> Carregando usuários seguidos...
                     </div>
                 </div>
             </div>
             
-            <!-- ABA 4: ALTERAR SENHA -->
+            <?php if($viewing_own_profile): ?>
+            <!-- ABA 4: ALTERAR SENHA (apenas para próprio perfil) -->
             <div class="tab-content <?php echo $active_tab === 'password' ? 'active' : ''; ?>" id="password">
                 <form method="POST">
                     <input type="hidden" name="change_password" value="1">
@@ -355,7 +539,7 @@ if($_POST && isset($_POST['delete_account'])) {
                 </form>
             </div>
             
-            <!-- ABA 5: EXCLUIR CONTA -->
+            <!-- ABA 5: EXCLUIR CONTA (apenas para próprio perfil) -->
             <div class="tab-content <?php echo $active_tab === 'delete' ? 'active' : ''; ?>" id="delete">
                 <div class="alert alert-error" style="text-align: left;">
                     <h3 style="margin-bottom: 10px;"><i class="fas fa-exclamation-triangle"></i> Atenção!</h3>
@@ -376,20 +560,47 @@ if($_POST && isset($_POST['delete_account'])) {
                     </button>
                 </form>
             </div>
+            <?php endif; ?>
             
             <!-- LINKS EXTRAS -->
             <div style="display: flex; gap: 15px; margin-top: 30px;">
                 <a href="detection.html" class="btn btn-outline">
                     <i class="fas fa-info-circle"></i> Info do Navegador
                 </a>
+                <?php if($viewing_own_profile): ?>
                 <a href="logout.php" class="btn btn-outline">
                     <i class="fas fa-sign-out-alt"></i> Sair
                 </a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
     <script>
+        // SISTEMA DE TEMA
+        function setupTheme() {
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            
+            const savedTheme = localStorage.getItem('hq-verso-theme');
+            if (savedTheme === 'light') {
+                body.classList.add('light-mode');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('light-mode');
+                
+                if (body.classList.contains('light-mode')) {
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                    localStorage.setItem('hq-verso-theme', 'light');
+                } else {
+                    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                    localStorage.setItem('hq-verso-theme', 'dark');
+                }
+            });
+        }
+
         // SISTEMA DE ABAS
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', function() {
@@ -412,7 +623,8 @@ if($_POST && isset($_POST['delete_account'])) {
             });
         });
 
-        // UPLOAD DE AVATAR
+        <?php if($viewing_own_profile): ?>
+        // UPLOAD DE AVATAR (apenas para próprio perfil)
         document.getElementById('avatarInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -438,6 +650,7 @@ if($_POST && isset($_POST['delete_account'])) {
                 });
             }
         });
+        <?php endif; ?>
 
         // ALTERNAR VISIBILIDADE DA SENHA
         function togglePassword(inputId, icon) {
@@ -471,7 +684,7 @@ if($_POST && isset($_POST['delete_account'])) {
         }
 
         function loadFollowers() {
-            fetch('get_follow_data.php?type=followers')
+            fetch('get_follow_data.php?type=followers&user_id=<?php echo $profile_user_id; ?>')
                 .then(response => response.json())
                 .then(data => {
                     const container = document.getElementById('followersList');
@@ -503,7 +716,7 @@ if($_POST && isset($_POST['delete_account'])) {
         }
 
         function loadFollowing() {
-            fetch('get_follow_data.php?type=following')
+            fetch('get_follow_data.php?type=following&user_id=<?php echo $profile_user_id; ?>')
                 .then(response => response.json())
                 .then(data => {
                     const container = document.getElementById('followingList');
@@ -525,7 +738,7 @@ if($_POST && isset($_POST['delete_account'])) {
                             </div>
                         `).join('');
                     } else {
-                        container.innerHTML = '<div style="text-align: center; padding: 40px; opacity: 0.7;"><i class="fas fa-user-check"></i><p>Você não está seguindo ninguém</p></div>';
+                        container.innerHTML = '<div style="text-align: center; padding: 40px; opacity: 0.7;"><i class="fas fa-user-check"></i><p>Não está seguindo ninguém</p></div>';
                     }
                 })
                 .catch(error => {
@@ -538,10 +751,15 @@ if($_POST && isset($_POST['delete_account'])) {
             window.location.href = `perfil.php?user_id=${userId}`;
         }
 
-        // Carrega seguidores se a aba estiver ativa
-        if(document.getElementById('follow').classList.contains('active')) {
-            loadFollowers();
-        }
+        // INICIALIZAÇÃO
+        document.addEventListener('DOMContentLoaded', function() {
+            setupTheme();
+            
+            // Carrega seguidores se a aba estiver ativa
+            if(document.getElementById('follow').classList.contains('active')) {
+                loadFollowers();
+            }
+        });
     </script>
 </body>
 </html>
