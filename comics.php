@@ -16,6 +16,33 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
     <title>HQ Verso - Sua plataforma de quadrinhos online</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            
+            // Verificar tema salvo
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                body.classList.add('light-mode');
+                themeToggle.querySelector('i').classList.replace('fa-moon', 'fa-sun');
+            }
+            
+            // Alternar tema
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('light-mode');
+                const icon = themeToggle.querySelector('i');
+                
+                if (body.classList.contains('light-mode')) {
+                    icon.classList.replace('fa-moon', 'fa-sun');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    icon.classList.replace('fa-sun', 'fa-moon');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+        });
+    </script>
     <style>
         /* Estilos unificados - mantendo o melhor de cada arquivo */
         * {
@@ -45,16 +72,36 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 20px;
-            width: 100%; /* Garantir que ocupe 100% da largura disponível */
+            width: 100%;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body {
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
         
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 0;
+            padding: 20px;
             margin-bottom: 30px;
             width: 100%;
+            position: sticky;
+            top: 0;
+            background: linear-gradient(to bottom, rgba(26, 26, 46, 0.95), rgba(26, 26, 46, 0.85));
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode header {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         
         .logo {
@@ -69,6 +116,54 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             display: flex;
             align-items: center;
             gap: 20px;
+            margin-right: 20px;
+            position: relative;
+            z-index: 1000;
+        }
+
+        /* Botão de tema */
+        .theme-toggle {
+            background: transparent;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode .theme-toggle {
+            color: #333;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        body.light-mode .theme-toggle:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Navegação Principal */
+        .main-nav {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-item {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item:hover {
+            background: rgba(233, 69, 96, 0.2);
+            color: #e94560;
         }
         
         /* Container de Busca */
@@ -109,6 +204,47 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
         
         body.light-mode .search-bar input::placeholder {
             color: #718096;
+        }
+
+        /* Estilos das seções */
+        .section-title {
+            color: #e94560;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            font-size: 1.4rem;
+            opacity: 0.9;
+        }
+
+        .section-title {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e94560;
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+
+        .comics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+            padding: 10px;
+        }
+
+        .no-comics {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 30px;
+            font-size: 1.1rem;
+            grid-column: 1 / -1;
         }
         
         .search-bar button {
@@ -458,6 +594,130 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             100% { transform: rotate(360deg); }
         }
 
+        /* Responsividade */
+        @media (max-width: 1200px) {
+            .container {
+                padding: 0 15px;
+            }
+            
+            .comics-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 20px;
+            }
+            
+            .comic-card {
+                min-width: 220px;
+                height: 400px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .featured-comic {
+                height: 400px;
+            }
+            
+            .featured-title {
+                font-size: 2rem;
+            }
+            
+            .featured-description {
+                font-size: 1rem;
+            }
+            
+            .comics-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 15px;
+            }
+            
+            .comic-card {
+                min-width: 180px;
+                height: 350px;
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+            }
+            
+            .categories {
+                padding: 10px;
+                gap: 8px;
+            }
+            
+            .category {
+                padding: 8px 15px;
+                font-size: 13px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                padding: 15px;
+            }
+            
+            .header-right {
+                margin-right: 10px;
+            }
+
+            .user-dropdown {
+                right: -10px;
+                min-width: 280px;
+            }
+
+            .search-bar input {
+                width: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 10px;
+            }
+
+            .header-right {
+                gap: 10px;
+            }
+
+            .search-bar input {
+                width: 150px;
+            }
+
+            .comics-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 12px;
+            }
+
+            .user-dropdown {
+                right: -5px;
+                min-width: 260px;
+                max-width: calc(100vw - 40px);
+            }
+            
+            .comic-card {
+                min-width: 150px;
+                height: 300px;
+            }
+            
+            .card-bottom {
+                padding: 15px;
+            }
+            
+            .comic-title {
+                font-size: 0.9rem;
+            }
+            
+            .comic-meta {
+                font-size: 0.75rem;
+            }
+            
+            .featured-title {
+                font-size: 1.5rem;
+            }
+            
+            .featured-description {
+                font-size: 0.9rem;
+            }
+        }
+
         /* Modo Claro para o Modal */
         body.light-mode .search-modal {
             background: rgba(255, 255, 255, 0.95);
@@ -514,19 +774,32 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
         
         .categories {
             display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 12px;
+            margin: 30px 0;
             flex-wrap: wrap;
+            padding: 15px;
+            background: rgba(15, 52, 96, 0.2);
+            border-radius: 15px;
+            justify-content: center;
         }
         
         .category {
             padding: 10px 20px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
+            border-radius: 25px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 14px;
             font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .category i {
+            font-size: 1.1em;
+            opacity: 0.8;
         }
         
         body.light-mode .category {
@@ -597,13 +870,26 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
         }
         
         .comics-section {
-            margin-bottom: 50px;
+            margin-bottom: 60px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .section-title {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
             font-weight: 600;
+            color: #e94560;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            font-size: 1.4rem;
+            opacity: 0.9;
         }
         
         body.light-mode .section-title {
@@ -620,10 +906,12 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             display: flex;
             overflow-x: auto;
             scroll-behavior: smooth;
-            gap: 20px;
-            padding: 10px 5px;
+            gap: 25px;
+            padding: 20px 10px;
             scrollbar-width: thin;
             scrollbar-color: #e94560 rgba(255, 255, 255, 0.1);
+            -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+            mask-image: linear-gradient(to right, black 80%, transparent 100%);
         }
         
         .comics-carousel::-webkit-scrollbar {
@@ -679,14 +967,17 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
         
         .comic-card {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
+            border-radius: 15px;
             overflow: hidden;
             transition: all 0.3s ease;
             position: relative;
-            min-width: 200px;
+            min-width: 250px;
+            height: 420px;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         body.light-mode .comic-card {
@@ -731,22 +1022,26 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
         }
         
         .card-bottom {
-            padding: 15px;
+            padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             flex: 1;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.4));
+            backdrop-filter: blur(5px);
         }
         
         .title-meta {
             flex: 1;
+            color: #fff;
         }
         
         .comic-title {
             font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 0.95rem;
-            line-height: 1.3;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            line-height: 1.4;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
         .comic-meta {
@@ -809,8 +1104,10 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             bottom: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 6px;
             background: rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            z-index: 5;
         }
         
         body.light-mode .progress {
@@ -819,8 +1116,32 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
         
         .progress-bar {
             height: 100%;
-            background: #e94560;
-            transition: width 0.3s ease;
+            background: linear-gradient(to right, #e94560, #ff6b81);
+            transition: width 0.5s ease;
+            position: relative;
+            border-radius: 0 3px 3px 0;
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.3) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            animation: shine 2s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
         
         .continue-info {
@@ -890,16 +1211,19 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
         
         .user-dropdown {
             position: absolute;
-            top: 100%;
+            top: calc(100% + 10px);
             right: 0;
             background: rgba(26, 26, 46, 0.95);
             border-radius: 8px;
             padding: 10px 0;
-            min-width: 200px;
+            min-width: 220px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
             display: none;
             z-index: 1000;
             transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
         }
         
         body.light-mode .user-dropdown {
@@ -1270,13 +1594,27 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
         </header>
         
         <div class="categories">
-            <div class="category active" data-category="all">Todos</div> 
-            <div class="category" data-category="super-herois">Super-heróis</div>
-            <div class="category" data-category="manga">Mangá</div>
-            <div class="category" data-category="graphic-novels">Graphic Novels</div>
-            <div class="category" data-category="classicos">Clássicos</div>
-            <div class="category" data-category="indie">Indie</div>
-            <div class="category" data-category="favoritos">Favoritos</div>
+            <div class="category active" data-category="all">
+                <i class="fas fa-th-large"></i> Todos
+            </div> 
+            <div class="category" data-category="super-herois">
+                <i class="fas fa-mask"></i> Super-heróis
+            </div>
+            <div class="category" data-category="manga">
+                <i class="fas fa-book-open"></i> Mangá
+            </div>
+            <div class="category" data-category="graphic-novels">
+                <i class="fas fa-book"></i> Graphic Novels
+            </div>
+            <div class="category" data-category="classicos">
+                <i class="fas fa-star"></i> Clássicos
+            </div>
+            <div class="category" data-category="indie">
+                <i class="fas fa-paint-brush"></i> Indie
+            </div>
+            <div class="category" data-category="favoritos">
+                <i class="fas fa-heart"></i> Favoritos
+            </div>
         </div>
         
         <div class="comic-counter" id="comicCounter">Carregando quadrinhos...</div>
@@ -1418,7 +1756,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
                 {
                     id: 1,
                     title: "Homem-Aranha: A Última Caçada",
-                    cover: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9az9jtGfQoj20u_4hUEeTQXvXvX9i0W2KPKw&s",
+                    cover: "https://www.google.com/url?sa=i&url=http%3A%2F%2Fwww.guiadosquadrinhos.com%2Fedicao%2Fcolecao-oficial-de-graphic-novels-marvel-a-n-9%2Fgr007106%2F107146&psig=AOvVaw2A2kueuW1yzMHmXTwd_HSm&ust=1762656564743000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCNi1w8bF4ZADFQAAAAAdAAAAABAE",
                     meta: "Capítulo 3",
                     progress: 20,
                     categories: ["super-herois", "classicos"],
@@ -2359,6 +2697,395 @@ function createModalUserCard(user, currentUserId = null) {
         }
 
         document.addEventListener('DOMContentLoaded', initializePage);
+        // Funções de Busca
+        function toggleSearchModal() {
+            const modal = document.getElementById('searchModal');
+            modal.classList.toggle('active');
+            if (modal.classList.contains('active')) {
+                document.getElementById('searchInput').focus();
+            }
+        }
+
+        function handleSearch(event) {
+            if (event.key === 'Enter') {
+                const searchTerm = document.getElementById('searchInput').value.trim();
+                if (searchTerm) {
+                    performSearch(searchTerm);
+                }
+            }
+        }
+
+        function performSearch(term) {
+            fetch(`search_handler.php?q=${encodeURIComponent(term)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displaySearchResults(data);
+                })
+                .catch(error => {
+                    console.error('Erro na busca:', error);
+                });
+        }
+
+        function displaySearchResults(data) {
+            const comicsContainer = document.getElementById('searchResults');
+            const resultsCount = document.getElementById('resultsCount');
+            
+            if (!data.data || (!data.data.comics.length && !data.data.users.length)) {
+                resultsCount.textContent = 'Nenhum resultado encontrado';
+                comicsContainer.innerHTML = '<p class="no-results">Nenhum resultado encontrado para sua busca.</p>';
+                return;
+            }
+
+            const totalResults = data.data.comics.length + data.data.users.length;
+            resultsCount.textContent = `${totalResults} resultado(s) encontrado(s)`;
+            
+            let html = '';
+            
+            // Resultados de Quadrinhos
+            if (data.data.comics.length) {
+                html += '<div class="search-section"><h3>Quadrinhos</h3>';
+                data.data.comics.forEach(comic => {
+                    html += `
+                        <div class="comic-card">
+                            <img src="${comic.cover}" alt="${comic.title}">
+                            <div class="comic-info">
+                                <h4>${comic.title}</h4>
+                                <p>${comic.description}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            // Resultados de Usuários
+            if (data.data.users.length) {
+                html += '<div class="search-section"><h3>Usuários</h3>';
+                data.data.users.forEach(user => {
+                    html += `
+                        <div class="user-card">
+                            <img src="${user.avatar || 'default-avatar.png'}" alt="${user.username}">
+                            <div class="user-info">
+                                <h4>${user.username}</h4>
+                                <p>Quadrinhos: ${user.comics_count}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            comicsContainer.innerHTML = html;
+        }
+
+        // Sistema de Progresso de Leitura
+        function setupReadingProgress() {
+            // Carregar progresso salvo do localStorage
+            const savedProgress = JSON.parse(localStorage.getItem('hq-verso-reading-progress')) || {};
+            
+            // Atualizar dados dos quadrinhos com progresso salvo
+            comicsData.all.forEach(comic => {
+                if (savedProgress[comic.id]) {
+                    comic.progress = savedProgress[comic.id].progress;
+                    comic.lastRead = savedProgress[comic.id].lastRead;
+                    comic.currentPage = savedProgress[comic.id].currentPage;
+                }
+            });
+            
+            // Salvar progresso quando clicar em "Ler agora"
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.read-badge') || 
+                    (e.target.closest('#comicModalRead') && document.getElementById('comicModalRead'))) {
+                    
+                    let comicId;
+                    
+                    if (e.target.closest('.read-badge')) {
+                        comicId = parseInt(e.target.closest('.comic-card').getAttribute('data-id'));
+                    } else {
+                        // Do modal
+                        const activeComic = getActiveModalComic();
+                        if (activeComic) comicId = activeComic.id;
+                    }
+                    
+                    if (comicId) {
+                        saveReadingProgress(comicId, 10); // Inicia com 10% de progresso
+                        updateContinueReadingSection();
+                    }
+                }
+            });
+            
+            // Atualizar progresso quando navegar no leitor (simulação)
+            window.addEventListener('message', function(e) {
+                if (e.data && e.data.type === 'readingProgress') {
+                    saveReadingProgress(e.data.comicId, e.data.progress, e.data.currentPage);
+                    updateContinueReadingSection();
+                }
+            });
+        }
+
+        function saveReadingProgress(comicId, progress, currentPage = 1) {
+            const savedProgress = JSON.parse(localStorage.getItem('hq-verso-reading-progress')) || {};
+            
+            savedProgress[comicId] = {
+                progress: Math.min(progress, 100),
+                currentPage: currentPage,
+                lastRead: new Date().toISOString()
+            };
+            
+            localStorage.setItem('hq-verso-reading-progress', JSON.stringify(savedProgress));
+            
+            // Atualizar também nos dados em memória
+            const comic = comicsData.all.find(c => c.id === comicId);
+            if (comic) {
+                comic.progress = savedProgress[comicId].progress;
+                comic.currentPage = savedProgress[comicId].currentPage;
+                comic.lastRead = savedProgress[comicId].lastRead;
+            }
+            
+            console.log(`Progresso salvo: Quadrinho ${comicId} - ${progress}%`);
+        }
+
+        function getContinueReadingComics() {
+            const savedProgress = JSON.parse(localStorage.getItem('hq-verso-reading-progress')) || {};
+            
+            return comicsData.all
+                .filter(comic => savedProgress[comic.id] && savedProgress[comic.id].progress > 0 && savedProgress[comic.id].progress < 100)
+                .sort((a, b) => {
+                    const progressA = savedProgress[a.id] || { lastRead: '0' };
+                    const progressB = savedProgress[b.id] || { lastRead: '0' };
+                    return new Date(progressB.lastRead) - new Date(progressA.lastRead);
+                });
+        }
+
+        function updateContinueReadingSection() {
+            const continueReadingComics = getContinueReadingComics();
+            const continueSection = document.getElementById('continueReading');
+            const continueInfo = document.getElementById('continueInfo');
+            
+            if (continueReadingComics.length === 0) {
+                continueSection.innerHTML = '<div class="no-comics">Nenhum quadrinho em progresso</div>';
+                continueInfo.style.display = 'none';
+                return;
+            }
+            
+            // Renderizar quadrinhos em progresso
+            renderComicsInSection('continueReading', continueReadingComics.slice(0, 6), true);
+            
+            // Atualizar info do primeiro quadrinho
+            const firstComic = continueReadingComics[0];
+            updateContinueInfo(firstComic);
+        }
+
+        function updateContinueInfo(comic) {
+            const continueInfo = document.getElementById('continueInfo');
+            const infoTitle = document.getElementById('infoTitle');
+            const infoMeta = document.getElementById('infoMeta');
+            const infoProgress = document.getElementById('infoProgress');
+            
+            if (comic && comic.progress > 0) {
+                infoTitle.textContent = comic.title;
+                infoMeta.textContent = `${comic.progress}% lido • Continuar da página ${comic.currentPage || 1}`;
+                infoProgress.style.width = `${comic.progress}%`;
+                continueInfo.style.display = 'block';
+            } else {
+                continueInfo.style.display = 'none';
+            }
+        }
+
+        function getActiveModalComic() {
+            const modalTitle = document.getElementById('comicModalTitle');
+            if (!modalTitle) return null;
+            
+            const title = modalTitle.textContent;
+            return comicsData.all.find(comic => comic.title === title);
+        }
+
+        // Função para abrir o modal de detalhes do quadrinho
+        // Função para atualizar todas as seções da página
+        function updateAllSections(category) {
+            const filteredComics = filterComicsByCategory(category);
+            
+            // Usar quadrinhos com progresso real em vez de mock
+            const continueReadingComics = getContinueReadingComics();
+            
+            // Filtrar por categoria se necessário
+            const filteredContinueComics = continueReadingComics.filter(comic => 
+                category === 'all' || 
+                (category === 'favoritos' ? comicsData.favoritos.includes(comic.id) : 
+                 comicsData[category]?.includes(comic.id))
+            );
+            
+            renderComicsInSection('continueReading', filteredContinueComics.slice(0, 6), true);
+            
+            // Atualizar info se houver quadrinhos em progresso
+            if (filteredContinueComics.length > 0) {
+                updateContinueInfo(filteredContinueComics[0]);
+            } else {
+                document.getElementById('continueInfo').style.display = 'none';
+            }
+            
+            const recommendedComics = filteredComics.slice(0, 4);
+            renderComicsInSection('recommendedComics', recommendedComics);
+            
+            const dcComics = filteredComics.filter(comic => 
+                comic.categories.includes('super-herois') && 
+                (comic.title.includes('Batman') || comic.title.includes('Superman') || comic.title.includes('Liga'))
+            );
+            renderComicsInSection('dcClassics', dcComics.slice(0, 3));
+            
+            const mangaComics = filteredComics.filter(comic => 
+                comic.categories.includes('manga')
+            );
+            renderComicsInSection('popularManga', mangaComics.slice(0, 4));
+            
+            const graphicNovels = filteredComics.filter(comic => 
+                comic.categories.includes('graphic-novels')
+            );
+            renderComicsInSection('graphicNovels', graphicNovels.slice(0, 4));
+            
+            updateComicCount(filteredComics.length);
+        }
+
+        function openComicModal(comic) {
+            const overlay = document.getElementById('comicModalOverlay');
+            if (!overlay || !comic) return;
+            
+            const cover = document.getElementById('comicModalCover');
+            const title = document.getElementById('comicModalTitle');
+            const meta = document.getElementById('comicModalMeta');
+            const desc = document.getElementById('comicModalDescription');
+            const readBtn = document.getElementById('comicModalRead');
+            const addBtn = document.getElementById('comicModalAdd');
+            
+            cover.src = comic.cover || '';
+            cover.alt = `Capa do quadrinho ${comic.title || ''}`;
+            title.textContent = comic.title || '';
+            meta.textContent = comic.meta || '';
+            desc.textContent = comic.description || 'Sem sinopse disponível.';
+            
+            // Verificar se já tem progresso de leitura
+            const savedProgress = JSON.parse(localStorage.getItem('hq-verso-reading-progress')) || {};
+            const hasProgress = savedProgress[comic.id] && savedProgress[comic.id].progress > 0;
+            
+            // Atualizar texto do botão baseado no progresso
+            if (hasProgress) {
+                const progress = savedProgress[comic.id].progress;
+                readBtn.innerHTML = `<i class="fas fa-play"></i> Continuar Lendo (${progress}%)`;
+                readBtn.style.background = '#4CAF50'; // Verde para continuar
+            } else {
+                readBtn.innerHTML = `<i class="fas fa-play"></i> Ler agora`;
+                readBtn.style.background = ''; // Voltar ao padrão
+            }
+            
+            // ações dos botões
+            readBtn.onclick = function() {
+                // Salvar progresso antes de redirecionar
+                if (!hasProgress) {
+                    saveReadingProgress(comic.id, 10, 1); // Começa com 10% se for novo
+                }
+                window.location.href = `leitor.html?comic=${encodeURIComponent(comic.id)}&title=${encodeURIComponent(comic.title)}`;
+            };
+            
+            addBtn.onclick = function() {
+                addBtn.textContent = 'Adicionado';
+                addBtn.disabled = true;
+                // Aqui você pode adicionar à lista de favoritos
+            };
+            
+            overlay.style.display = 'flex';
+            overlay.setAttribute('aria-hidden', 'false');
+            
+            setTimeout(() => {
+                readBtn.focus();
+            }, 120);
+        }
+
+        // Adicione esta função auxiliar para simular progresso no leitor
+        function simulateReadingProgress(comicId, pagesRead, totalPages = 100) {
+            const progress = Math.min((pagesRead / totalPages) * 100, 100);
+            saveReadingProgress(comicId, progress, pagesRead);
+            updateContinueReadingSection();
+        }
+
+        // Função auxiliar para filtrar quadrinhos por categoria
+        function filterComicsByCategory(category) {
+            if (category === 'all') return comicsData.all;
+            return comicsData.all.filter(comic => 
+                category === 'favoritos' ? 
+                comicsData.favoritos.includes(comic.id) : 
+                comic.categories.includes(category)
+            );
+        }
+
+        // Função auxiliar para atualizar o contador de quadrinhos
+        function updateComicCount(count) {
+            const counter = document.getElementById('comicCounter');
+            if (counter) {
+                counter.textContent = count === 1 ? 
+                    '1 quadrinho encontrado' : 
+                    `${count} quadrinhos encontrados`;
+            }
+        }
+
+        // Função para renderizar quadrinhos em uma seção
+        function renderComicsInSection(sectionId, comics, showProgress = false) {
+            const section = document.getElementById(sectionId);
+            if (!section) return;
+
+            if (comics.length === 0) {
+                section.innerHTML = '<div class="no-comics">Nenhum quadrinho encontrado</div>';
+                return;
+            }
+
+            section.innerHTML = comics.map(comic => createComicCard(comic, showProgress)).join('');
+            
+            // Adicionar event listeners para os cards
+            section.querySelectorAll('.comic-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('.card-actions')) {
+                        const comicId = parseInt(card.getAttribute('data-id'));
+                        const comic = comicsData.all.find(c => c.id === comicId);
+                        if (comic) openComicModal(comic);
+                    }
+                });
+            });
+        }
+
+        function initializePage() {
+            setupTheme();
+            setupCategoryFilter();
+            setupModalSearch();
+            setupCarouselNavigation();
+            setupComicModalHandlers();
+            setupUserMenu();
+            setupReadingProgress(); // Adicionado o sistema de progresso
+            updateAllSections('all');
+            
+            console.log('Sistema de quadrinhos unificado inicializado!');
+        }
+
+        // Inicializar a página quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+        });
     </script>
+    
+    <!-- Modal de Busca -->
+    <div id="searchModal" class="search-modal">
+        <div class="search-modal-header">
+            <h3>Resultados da Busca</h3>
+            <button class="close-search" onclick="toggleSearchModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="search-modal-content">
+            <div class="search-stats">
+                <span id="resultsCount">0 resultados encontrados</span>
+            </div>
+            <div id="searchResults" class="search-results">
+                <!-- Os resultados da busca serão inseridos aqui -->
+            </div>
+        </div>
+    </div>
 </body>
 </html>
