@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 07/11/2025 às 22:41
+-- Tempo de geração: 10/11/2025 às 02:33
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -58,6 +58,31 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `save_user_progress` (IN `p_user_id`
 END$$
 
 DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `admin_notifications`
+--
+
+CREATE TABLE `admin_notifications` (
+  `id` int(11) NOT NULL,
+  `type` enum('user_report','system_alert','new_user','content_review') DEFAULT 'user_report',
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `related_id` int(11) DEFAULT NULL,
+  `related_type` varchar(50) DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `priority` enum('low','medium','high','urgent') DEFAULT 'medium',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `admin_notifications`
+--
+
+INSERT INTO `admin_notifications` (`id`, `type`, `title`, `message`, `related_id`, `related_type`, `is_read`, `priority`, `created_at`) VALUES
+(1, 'user_report', 'Novo usuário reportado', 'O usuário ID 6 foi reportado por ID 2', 6, 'user', 0, 'medium', '2025-11-10 00:58:14');
 
 -- --------------------------------------------------------
 
@@ -407,9 +432,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `avatar`, `avatar_file_name`, `avatar_file_size`, `avatar_mime_type`, `avatar_updated_at`, `bio`, `role`, `created_at`, `updated_at`) VALUES
-(2, 'Juan Taborda', 'taborda.mjuan@gmail.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', 'uploads/avatars/avatar_2_1762551496.png', 'avatar_4_1761095710.png', 427608, 'image/png', '2025-11-07 21:38:16', 'sou legal', 'user', '2025-10-20 23:21:30', '2025-11-07 21:38:16'),
-(4, 'admin', 'admin@hqverso.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-10-21 01:11:36', '2025-10-21 01:11:36'),
-(5, 'reza+', 'ghyslainemoraes@gmail.com', '$2y$10$Bl1YDtuy/P54grfdqfTcw.vV/Gt/gj8tBR562cgU3UqlaBArIswju', 'uploads/avatars/avatar_5_1762544145.png', '3tene_20250930220016.png', 91516, 'image/png', '2025-11-07 19:35:45', NULL, 'user', '2025-11-07 19:35:20', '2025-11-07 19:35:45');
+(2, 'Juan Taborda', 'taborda.mjuan@gmail.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', 'uploads/avatars/avatar_2_1762551937.png', 'avatar_4_1762435030.png', 10652, 'image/png', '2025-11-07 21:45:37', 'sou legal', 'user', '2025-10-20 23:21:30', '2025-11-07 21:45:37'),
+(4, 'admin', 'admin@hqverso.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-10-21 01:11:36', '2025-11-10 01:13:45'),
+(5, 'reza+', 'ghyslainemoraes@gmail.com', '$2y$10$Bl1YDtuy/P54grfdqfTcw.vV/Gt/gj8tBR562cgU3UqlaBArIswju', 'uploads/avatars/avatar_5_1762544145.png', '3tene_20250930220016.png', 91516, 'image/png', '2025-11-07 19:35:45', NULL, 'user', '2025-11-07 19:35:20', '2025-11-07 19:35:45'),
+(6, 'carro', 'a@a.com', '$2y$10$PbVOpLZio5Z1oPVbrHdZ7exgDYUYEamTRNVePFgSJOGNrYvysL8xO', NULL, NULL, NULL, NULL, NULL, NULL, 'user', '2025-11-07 23:10:41', '2025-11-07 23:10:41');
 
 -- --------------------------------------------------------
 
@@ -429,7 +455,8 @@ CREATE TABLE `user_follows` (
 --
 
 INSERT INTO `user_follows` (`id`, `follower_id`, `following_id`, `created_at`) VALUES
-(2, 2, 4, '2025-11-07 19:09:58');
+(2, 2, 4, '2025-11-07 19:09:58'),
+(7, 6, 2, '2025-11-07 23:10:41');
 
 -- --------------------------------------------------------
 
@@ -458,6 +485,32 @@ CREATE TABLE `user_progress` (
   `progress_pct` tinyint(4) NOT NULL DEFAULT 0,
   `last_read_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `user_reports`
+--
+
+CREATE TABLE `user_reports` (
+  `id` int(11) NOT NULL,
+  `reported_user_id` int(11) NOT NULL,
+  `reporter_user_id` int(11) NOT NULL,
+  `reason` text NOT NULL,
+  `description` text DEFAULT NULL,
+  `status` enum('pending','reviewed','resolved','dismissed') DEFAULT 'pending',
+  `admin_notes` text DEFAULT NULL,
+  `admin_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `user_reports`
+--
+
+INSERT INTO `user_reports` (`id`, `reported_user_id`, `reporter_user_id`, `reason`, `description`, `status`, `admin_notes`, `admin_id`, `created_at`, `updated_at`) VALUES
+(1, 6, 2, 'assedio', 'me chamou de gostosa', 'pending', NULL, NULL, '2025-11-10 00:58:14', '2025-11-10 00:58:14');
 
 -- --------------------------------------------------------
 
@@ -516,6 +569,16 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 -- Índices para tabelas despejadas
 --
+
+--
+-- Índices de tabela `admin_notifications`
+--
+ALTER TABLE `admin_notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_notifications_type` (`type`),
+  ADD KEY `idx_notifications_read` (`is_read`),
+  ADD KEY `idx_notifications_priority` (`priority`),
+  ADD KEY `idx_notifications_created` (`created_at`);
 
 --
 -- Índices de tabela `categories`
@@ -697,6 +760,17 @@ ALTER TABLE `user_progress`
   ADD KEY `ix_user` (`user_id`);
 
 --
+-- Índices de tabela `user_reports`
+--
+ALTER TABLE `user_reports`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_reports_reported_user` (`reported_user_id`),
+  ADD KEY `idx_reports_reporter_user` (`reporter_user_id`),
+  ADD KEY `idx_reports_status` (`status`),
+  ADD KEY `idx_reports_created` (`created_at`),
+  ADD KEY `user_reports_ibfk_3` (`admin_id`);
+
+--
 -- Índices de tabela `user_uploads`
 --
 ALTER TABLE `user_uploads`
@@ -707,6 +781,12 @@ ALTER TABLE `user_uploads`
 --
 -- AUTO_INCREMENT para tabelas despejadas
 --
+
+--
+-- AUTO_INCREMENT de tabela `admin_notifications`
+--
+ALTER TABLE `admin_notifications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de tabela `categories`
@@ -802,13 +882,13 @@ ALTER TABLE `transactions`
 -- AUTO_INCREMENT de tabela `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de tabela `user_follows`
 --
 ALTER TABLE `user_follows`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de tabela `user_library`
@@ -821,6 +901,12 @@ ALTER TABLE `user_library`
 --
 ALTER TABLE `user_progress`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `user_reports`
+--
+ALTER TABLE `user_reports`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de tabela `user_uploads`
@@ -943,6 +1029,14 @@ ALTER TABLE `user_library`
   ADD CONSTRAINT `user_library_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `user_library_ibfk_2` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `user_library_ibfk_3` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `user_reports`
+--
+ALTER TABLE `user_reports`
+  ADD CONSTRAINT `user_reports_ibfk_1` FOREIGN KEY (`reported_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `user_reports_ibfk_2` FOREIGN KEY (`reporter_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `user_reports_ibfk_3` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Restrições para tabelas `user_uploads`
