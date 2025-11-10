@@ -11,6 +11,115 @@ class Auth {
         $this->conn = $database->getConnection();
     }
 
+
+    // NOVA FUNÇÃO: Reportar usuário
+public function reportUser($reported_user_id, $reporter_user_id, $reason, $description = '') {
+    try {
+        // Verificar se não está reportando a si mesmo
+        if($reported_user_id == $reporter_user_id) {
+            return "Você não pode se reportar!";
+        }
+
+        // Verificar se já reportou este usuário recentemente (evitar spam)
+        $query = "SELECT id FROM user_reports 
+                 WHERE reporter_user_id = :reporter_id 
+                 AND reported_user_id = :reported_id 
+                 AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":reporter_id", $reporter_user_id);
+        $stmt->bindParam(":reported_id", $reported_user_id);
+        $stmt->execute();
+
+        if($stmt->rowCount() > 0) {
+            return "Você já reportou este usuário recentemente. Aguarde um pouco antes de reportar novamente.";
+        }
+
+        // Inserir report
+        $query = "INSERT INTO user_reports (reported_user_id, reporter_user_id, reason, description) 
+                 VALUES (:reported_id, :reporter_id, :reason, :description)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":reported_id", $reported_user_id);
+        $stmt->bindParam(":reporter_id", $reporter_user_id);
+        $stmt->bindParam(":reason", $reason);
+        $stmt->bindParam(":description", $description);
+
+        if($stmt->execute()) {
+            // Criar notificação para admin
+            $this->createAdminNotification(
+                'user_report', 
+                'Novo usuário reportado', 
+                "O usuário ID {$reported_user_id} foi reportado por ID {$reporter_user_id}",
+                $reported_user_id,
+                'user'
+            );
+            return true;
+        }
+        return "Erro ao reportar usuário!";
+
+    } catch(PDOException $exception) {
+        return "Erro: " . $exception->getMessage();
+    }
+}
+
+// NOVA FUNÇÃO: Criar notificação para admin
+public function createAdminNotification($type, $title, $message, $related_id = null, $related_type = null) {
+    try {
+        $query = "INSERT INTO admin_notifications (type, title, message, related_id, related_type) 
+                 VALUES (:type, :title, :message, :related_id, :related_type)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":type", $type);
+        $stmt->bindParam(":title", $title);
+        $stmt->bindParam(":message", $message);
+        $stmt->bindParam(":related_id", $related_id);
+        $stmt->bindParam(":related_type", $related_type);
+
+        return $stmt->execute();
+
+    } catch(PDOException $exception) {
+        return false;
+    }
+}
+
+// NOVA FUNÇÃO: Obter notificações não lidas para admin
+public function getUnreadAdminNotifications($limit = 10) {
+    try {
+        $query = "SELECT * FROM admin_notifications 
+                 WHERE is_read = 0 
+                 ORDER BY created_at DESC 
+                 LIMIT :limit";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    } catch(PDOException $exception) {
+        return [];
+    }
+}
+
+// NOVA FUNÇÃO: Obter todos os reports pendentes
+public function getPendingReports() {
+    try {
+        $query = "SELECT ur.*, 
+                         ru.username as reported_username,
+                         ru.email as reported_email,
+                         rep.username as reporter_username
+                  FROM user_reports ur
+                  JOIN users ru ON ur.reported_user_id = ru.id
+                  JOIN users rep ON ur.reporter_user_id = rep.id
+                  WHERE ur.status = 'pending'
+                  ORDER BY ur.created_at DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    } catch(PDOException $exception) {
+        return [];
+    }
+}
+
     // NOVA FUNÇÃO: Seguir usuário automaticamente após cadastro
     public function autoFollowAfterRegister($new_user_id, $target_username = 'Juan Taborda') {
         try {
