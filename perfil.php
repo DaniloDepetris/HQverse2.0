@@ -133,6 +133,24 @@ if($viewing_own_profile && $_POST && isset($_POST['delete_account'])) {
     }
     $active_tab = 'delete';
 }
+
+// Processar report de usuário
+if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
+    $reported_user_id = $_POST['reported_user_id'] ?? '';
+    $report_reason = $_POST['report_reason'] ?? '';
+    $report_description = $_POST['report_description'] ?? '';
+    
+    if(!empty($reported_user_id) && !empty($report_reason)) {
+        $result = $auth->reportUser($reported_user_id, $_SESSION['user_id'], $report_reason, $report_description);
+        if($result === true) {
+            $success = "Usuário reportado com sucesso! Os administradores irão revisar o caso.";
+        } else {
+            $error = $result;
+        }
+    } else {
+        $error = "Por favor, selecione um motivo para o report!";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -226,6 +244,8 @@ if($viewing_own_profile && $_POST && isset($_POST['delete_account'])) {
         .btn-outline:hover { background: rgba(233, 69, 96, 0.1); }
         .btn-danger { background: #dc3545; color: white; width: 100%; }
         .btn-sm { padding: 8px 15px; font-size: 14px; }
+        .btn-report { background: rgba(220, 53, 69, 0.1); border: 2px solid #dc3545; color: #dc3545; }
+        .btn-report:hover { background: rgba(220, 53, 69, 0.2); }
         
         .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; font-weight: 500; }
         .alert-success { background: rgba(76, 175, 80, 0.2); border: 1px solid #4caf50; color: #4caf50; }
@@ -257,6 +277,23 @@ if($viewing_own_profile && $_POST && isset($_POST['delete_account'])) {
         .follow-info p { font-size: 0.8rem; opacity: 0.7; margin: 0; }
         
         .follow-btn-container { margin-top: 20px; text-align: center; }
+        
+        /* Modal de Report */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: #1a1a2e; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        
+        body.light-mode .modal-content {
+            background: #fff;
+            color: #333;
+        }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { color: #e94560; font-size: 1.3rem; font-weight: 600; }
+        .close-modal { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+        
+        body.light-mode .close-modal {
+            color: #333;
+        }
         
         /* Botão do Tema */
         .theme-toggle {
@@ -358,6 +395,13 @@ if($viewing_own_profile && $_POST && isset($_POST['delete_account'])) {
                                 <?php echo $is_following ? 'Seguindo' : 'Seguir'; ?>
                             </button>
                         </form>
+                        
+                        <!-- Botão de Reportar Usuário -->
+                        <div style="margin-top: 10px;">
+                            <button type="button" class="btn btn-report btn-sm" onclick="openReportModal()">
+                                <i class="fas fa-flag"></i> Reportar Usuário
+                            </button>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -581,6 +625,55 @@ if($viewing_own_profile && $_POST && isset($_POST['delete_account'])) {
         </div>
     </div>
 
+    <!-- Modal de Report -->
+    <?php if(!$viewing_own_profile): ?>
+    <div class="modal" id="reportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-flag"></i> Reportar Usuário
+                </h3>
+                <button class="close-modal" onclick="closeReportModal()">&times;</button>
+            </div>
+            
+            <form method="POST" id="reportForm">
+                <input type="hidden" name="report_user" value="1">
+                <input type="hidden" name="reported_user_id" value="<?php echo $profile_user_id; ?>">
+                
+                <div class="form-group">
+                    <label for="report_reason">Motivo do Report *</label>
+                    <select id="report_reason" name="report_reason" required>
+                        <option value="">Selecione um motivo</option>
+                        <option value="conteudo_impropio">Conteúdo Impróprio</option>
+                        <option value="spam">Spam ou Propaganda</option>
+                        <option value="assedio">Assédio ou Bullying</option>
+                        <option value="comportamento_ofensivo">Comportamento Ofensivo</option>
+                        <option value="perfil_falso">Perfil Falso</option>
+                        <option value="roubo_conta">Roubo de Conta</option>
+                        <option value="violacao_termos">Violação dos Termos de Uso</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="report_description">Descrição (Opcional)</label>
+                    <textarea id="report_description" name="report_description" 
+                              placeholder="Forneça mais detalhes sobre o problema..."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn btn-outline" onclick="closeReportModal()" style="flex: 1;">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1; background: #dc3545; border-color: #dc3545;">
+                        <i class="fas fa-paper-plane"></i> Enviar Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <script>
         // SISTEMA DE TEMA
         function setupTheme() {
@@ -755,6 +848,37 @@ if($viewing_own_profile && $_POST && isset($_POST['delete_account'])) {
         function viewProfile(userId) {
             window.location.href = `perfil.php?user_id=${userId}`;
         }
+
+        // FUNÇÕES PARA O MODAL DE REPORT
+        function openReportModal() {
+            document.getElementById('reportModal').style.display = 'flex';
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('reportModal').addEventListener('click', function(e) {
+            if(e.target === this) {
+                closeReportModal();
+            }
+        });
+
+        // Processar formulário de report
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            const reason = document.getElementById('report_reason').value;
+            if(!reason) {
+                e.preventDefault();
+                alert('Por favor, selecione um motivo para o report!');
+                return false;
+            }
+            
+            if(!confirm('Tem certeza que deseja reportar este usuário? Esta ação será revisada pelos administradores.')) {
+                e.preventDefault();
+                return false;
+            }
+        });
 
         // INICIALIZAÇÃO
         document.addEventListener('DOMContentLoaded', function() {
