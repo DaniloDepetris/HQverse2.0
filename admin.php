@@ -46,6 +46,21 @@ if($_POST && isset($_POST['search_users'])) {
     }
 }
 
+// Processar atualização de status de report
+if($_POST && isset($_POST['update_report_status'])) {
+    $report_id = $_POST['report_id'] ?? '';
+    $status = $_POST['status'] ?? '';
+    
+    if(!empty($report_id) && !empty($status)) {
+        $result = updateReportStatus($report_id, $status, $_SESSION['user_id']);
+        if($result === true) {
+            $success = "Status do report atualizado com sucesso!";
+        } else {
+            $error = $result;
+        }
+    }
+}
+
 // Função para banir usuário (admin)
 function banUser($user_id, $banned_by, $reason = '') {
     require_once 'config_database.php';
@@ -87,6 +102,26 @@ if($_POST && isset($_POST['ban_user'])) {
         }
     } else {
         $error = "ID do usuário não especificado!";
+    }
+}
+
+// Função para atualizar status do report
+function updateReportStatus($report_id, $status, $admin_id) {
+    require_once 'config_database.php';
+    $database = new Database();
+    $conn = $database->getConnection();
+    
+    try {
+        $query = "UPDATE user_reports SET status = :status, admin_id = :admin_id, updated_at = NOW() WHERE id = :report_id";
+        $stmt = $conn->prepare($query);
+        $stmt->bindParam(":status", $status);
+        $stmt->bindParam(":admin_id", $admin_id);
+        $stmt->bindParam(":report_id", $report_id);
+        
+        return $stmt->execute();
+        
+    } catch(PDOException $e) {
+        return "Erro ao atualizar report: " . $e->getMessage();
     }
 }
 
@@ -182,11 +217,63 @@ function getComics() {
     }
 }
 
+function getPendingReports() {
+    require_once 'config_database.php';
+    $database = new Database();
+    $conn = $database->getConnection();
+    
+    try {
+        $query = "SELECT ur.*, 
+                         ru.username as reported_username,
+                         ru.email as reported_email,
+                         ru.role as reported_role,
+                         rep.username as reporter_username,
+                         rep.email as reporter_email
+                  FROM user_reports ur
+                  JOIN users ru ON ur.reported_user_id = ru.id
+                  JOIN users rep ON ur.reporter_user_id = rep.id
+                  WHERE ur.status = 'pending'
+                  ORDER BY ur.created_at DESC";
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch(PDOException $e) {
+        return [];
+    }
+}
+
+function getAllReports() {
+    require_once 'config_database.php';
+    $database = new Database();
+    $conn = $database->getConnection();
+    
+    try {
+        $query = "SELECT ur.*, 
+                         ru.username as reported_username,
+                         ru.email as reported_email,
+                         rep.username as reporter_username,
+                         u.username as admin_name
+                  FROM user_reports ur
+                  JOIN users ru ON ur.reported_user_id = ru.id
+                  JOIN users rep ON ur.reporter_user_id = rep.id
+                  LEFT JOIN users u ON ur.admin_id = u.id
+                  ORDER BY ur.created_at DESC";
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch(PDOException $e) {
+        return [];
+    }
+}
+
 $publishers = getPublishers();
 $categories = getCategories();
 $comics = getComics();
 $users = $auth->getAllUsersForAdmin();
 $banned_users = $auth->getBannedUsers();
+$pending_reports = getPendingReports();
+$all_reports = getAllReports();
+$unread_notifications = $auth->getUnreadAdminNotifications();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -342,12 +429,12 @@ $banned_users = $auth->getBannedUsers();
             background: #1a4a7a;
         }
         
-        .comics-list, .users-list, .banned-users-list {
+        .comics-list, .users-list, .banned-users-list, .reports-list {
             max-height: 400px;
             overflow-y: auto;
         }
         
-        .comic-item, .user-item, .banned-user-item {
+        .comic-item, .user-item, .banned-user-item, .report-item {
             background: rgba(255, 255, 255, 0.05);
             padding: 15px;
             margin-bottom: 10px;
@@ -364,7 +451,11 @@ $banned_users = $auth->getBannedUsers();
             border-left: 4px solid #dc3545;
         }
 
-        .user-item:hover, .banned-user-item:hover {
+        .report-item {
+            border-left: 4px solid #ffc107;
+        }
+
+        .user-item:hover, .banned-user-item:hover, .report-item:hover {
             background: rgba(255, 255, 255, 0.08);
         }
         
@@ -470,6 +561,22 @@ $banned_users = $auth->getBannedUsers();
             background: #c82333;
         }
 
+        .btn-warning {
+            background: #ffc107;
+            color: #000;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+
         .search-form {
             display: flex;
             gap: 10px;
@@ -486,6 +593,14 @@ $banned_users = $auth->getBannedUsers();
             background: rgba(220, 53, 69, 0.1);
             border-radius: 5px;
             border-left: 3px solid #dc3545;
+        }
+
+        .report-reason {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #ffc107;
         }
 
         .no-results {
@@ -507,6 +622,7 @@ $banned_users = $auth->getBannedUsers();
             transition: all 0.3s ease;
             font-weight: 600;
             border-bottom: 3px solid transparent;
+            position: relative;
         }
 
         .admin-tab.active {
@@ -521,6 +637,50 @@ $banned_users = $auth->getBannedUsers();
         .tab-content.active {
             display: block;
             animation: fadeIn 0.5s ease;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .report-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-pending {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .status-reviewed {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .status-resolved {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-dismissed {
+            background: #6c757d;
+            color: white;
         }
 
         @keyframes fadeIn {
@@ -540,6 +700,15 @@ $banned_users = $auth->getBannedUsers();
             .search-form {
                 flex-direction: column;
             }
+
+            .admin-tabs {
+                flex-wrap: wrap;
+            }
+
+            .admin-tab {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -547,12 +716,6 @@ $banned_users = $auth->getBannedUsers();
     <div class="admin-container">
         <div class="admin-header">
             <a href="comics.php" class="logo">HQ VERSO - ADMIN</a>
-            <a href="comics.php" class="back-btn">
-    <i class="fas fa-arrow-left"></i> Voltar para a Loja
-</a>
-<a href="comics.php" class="back-btn" style="margin-left: 10px;">
-    <i class="fas fa-home"></i> Voltar para o Início
-</a>
             <div class="admin-nav">
                 <a href="comics.php" class="nav-btn">
                     <i class="fas fa-arrow-left"></i> Voltar
@@ -585,8 +748,8 @@ $banned_users = $auth->getBannedUsers();
                 <div class="stat-label">Usuários Banidos</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number"><?php echo count($categories); ?></div>
-                <div class="stat-label">Categorias</div>
+                <div class="stat-number"><?php echo count($pending_reports); ?></div>
+                <div class="stat-label">Denúncias Pendentes</div>
             </div>
         </div>
 
@@ -595,6 +758,12 @@ $banned_users = $auth->getBannedUsers();
             <div class="admin-tab active" data-tab="comics">Gerenciar Quadrinhos</div>
             <div class="admin-tab" data-tab="users">Banir Usuários</div>
             <div class="admin-tab" data-tab="banned">Usuários Banidos</div>
+            <div class="admin-tab" data-tab="reports">
+                Denúncias
+                <?php if(count($pending_reports) > 0): ?>
+                    <span class="notification-badge"><?php echo count($pending_reports); ?></span>
+                <?php endif; ?>
+            </div>
         </div>
 
         <!-- Tab Quadrinhos -->
@@ -804,6 +973,121 @@ $banned_users = $auth->getBannedUsers();
                 </div>
             </div>
         </div>
+
+        <!-- Tab Denúncias -->
+        <div class="tab-content" id="reports">
+            <div class="admin-content">
+                <div class="form-section">
+                    <h2 class="section-title">Denúncias Pendentes</h2>
+                    <div class="reports-list">
+                        <?php if(empty($pending_reports)): ?>
+                            <p style="text-align: center; opacity: 0.7;">Nenhuma denúncia pendente.</p>
+                        <?php else: ?>
+                            <?php foreach($pending_reports as $report): ?>
+                                <div class="report-item">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                                        <div>
+                                            <h4 style="color: #ffc107; margin-bottom: 5px;">
+                                                <i class="fas fa-flag"></i> Denúncia #<?php echo $report['id']; ?>
+                                                <span class="report-status status-pending">PENDENTE</span>
+                                            </h4>
+                                            <p style="opacity: 0.8; font-size: 0.9rem;">
+                                                Reportado por: <strong><?php echo htmlspecialchars($report['reporter_username']); ?></strong>
+                                                (<?php echo htmlspecialchars($report['reporter_email']); ?>)
+                                                em <?php echo date('d/m/Y H:i', strtotime($report['created_at'])); ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 15px;">
+                                        <p><strong>Usuário Reportado:</strong> 
+                                           <a href="perfil.php?user_id=<?php echo $report['reported_user_id']; ?>" target="_blank" style="color: #e94560;">
+                                           <?php echo htmlspecialchars($report['reported_username']); ?>
+                                           </a>
+                                           (<?php echo htmlspecialchars($report['reported_email']); ?>)
+                                           <?php if($report['reported_role'] === 'admin'): ?>
+                                               <span style="background: #e94560; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-left: 5px;">ADMIN</span>
+                                           <?php endif; ?>
+                                        </p>
+                                        <p><strong>Motivo:</strong> <?php echo htmlspecialchars($report['reason']); ?></p>
+                                        <?php if($report['description']): ?>
+                                            <div class="report-reason">
+                                                <strong>Descrição:</strong> <?php echo nl2br(htmlspecialchars($report['description'])); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <button class="btn btn-primary btn-sm" 
+                                                onclick="viewUserProfile(<?php echo $report['reported_user_id']; ?>)">
+                                            <i class="fas fa-eye"></i> Ver Perfil
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" 
+                                                onclick="banReportedUser(<?php echo $report['id']; ?>, <?php echo $report['reported_user_id']; ?>, '<?php echo htmlspecialchars($report['reported_username']); ?>')">
+                                            <i class="fas fa-ban"></i> Banir
+                                        </button>
+                                        <button class="btn btn-warning btn-sm" 
+                                                onclick="markReportAsReviewed(<?php echo $report['id']; ?>)">
+                                            <i class="fas fa-check"></i> Marcar como Revisado
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm" 
+                                                onclick="dismissReport(<?php echo $report['id']; ?>)">
+                                            <i class="fas fa-times"></i> Ignorar
+                                        </button>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <div class="list-section">
+                    <h2 class="section-title">Todas as Denúncias</h2>
+                    <div class="reports-list">
+                        <?php if(empty($all_reports)): ?>
+                            <p style="text-align: center; opacity: 0.7;">Nenhuma denúncia registrada.</p>
+                        <?php else: ?>
+                            <?php foreach($all_reports as $report): ?>
+                                <div class="report-item">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                                        <div>
+                                            <h4 style="color: #ffc107; margin-bottom: 5px;">
+                                                <i class="fas fa-flag"></i> Denúncia #<?php echo $report['id']; ?>
+                                                <span class="report-status status-<?php echo $report['status']; ?>">
+                                                    <?php echo strtoupper($report['status']); ?>
+                                                </span>
+                                            </h4>
+                                            <p style="opacity: 0.8; font-size: 0.9rem;">
+                                                Reportado por: <strong><?php echo htmlspecialchars($report['reporter_username']); ?></strong>
+                                                em <?php echo date('d/m/Y H:i', strtotime($report['created_at'])); ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 15px;">
+                                        <p><strong>Usuário Reportado:</strong> 
+                                           <?php echo htmlspecialchars($report['reported_username']); ?>
+                                           (<?php echo htmlspecialchars($report['reported_email']); ?>)
+                                        </p>
+                                        <p><strong>Motivo:</strong> <?php echo htmlspecialchars($report['reason']); ?></p>
+                                        <?php if($report['description']): ?>
+                                            <div class="report-reason">
+                                                <strong>Descrição:</strong> <?php echo nl2br(htmlspecialchars($report['description'])); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if($report['admin_name']): ?>
+                                            <p style="font-size: 0.8rem; opacity: 0.7; margin-top: 5px;">
+                                                Processado por: <?php echo htmlspecialchars($report['admin_name']); ?>
+                                            </p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <a href="comics.php" class="back-btn">
             <i class="fas fa-arrow-left"></i> Voltar para a Loja
@@ -866,6 +1150,79 @@ $banned_users = $auth->getBannedUsers();
                 document.getElementById(tabName).classList.add('active');
             });
         });
+
+        // Funções para gerenciar denúncias
+        function viewUserProfile(userId) {
+            window.open(`perfil.php?user_id=${userId}`, '_blank');
+        }
+
+        function banReportedUser(reportId, userId, username) {
+            const reason = prompt(`Digite o motivo do banimento para ${username}:`);
+            if(reason !== null && reason.trim() !== '') {
+                if(confirm(`Banir permanentemente ${username}? Esta ação não pode ser desfeita.`)) {
+                    // Fazer requisição para banir o usuário
+                    const formData = new FormData();
+                    formData.append('ban_user', '1');
+                    formData.append('user_id', userId);
+                    formData.append('ban_reason', reason);
+                    
+                    fetch('admin.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(() => {
+                        // Marcar report como resolvido
+                        markReportAsResolved(reportId, 'resolved');
+                        alert('Usuário banido com sucesso!');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        alert('Erro ao banir usuário: ' + error);
+                    });
+                }
+            } else if(reason !== null) {
+                alert('Por favor, informe o motivo do banimento.');
+            }
+        }
+
+        function markReportAsReviewed(reportId) {
+            if(confirm('Marcar esta denúncia como revisada?')) {
+                updateReportStatus(reportId, 'reviewed');
+            }
+        }
+
+        function dismissReport(reportId) {
+            if(confirm('Ignorar esta denúncia?')) {
+                updateReportStatus(reportId, 'dismissed');
+            }
+        }
+
+        function markReportAsResolved(reportId, status = 'resolved') {
+            updateReportStatus(reportId, status);
+        }
+
+        function updateReportStatus(reportId, status) {
+            const formData = new FormData();
+            formData.append('update_report_status', '1');
+            formData.append('report_id', reportId);
+            formData.append('status', status);
+            
+            fetch('admin.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if(response.ok) {
+                    location.reload();
+                } else {
+                    alert('Erro ao atualizar status do report');
+                }
+            })
+            .catch(error => {
+                alert('Erro: ' + error);
+            });
+        }
         
         console.log('Painel Admin carregado com sucesso!');
     </script>
