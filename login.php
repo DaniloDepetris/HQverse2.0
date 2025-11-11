@@ -43,24 +43,61 @@ if($_POST) {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+body {
+    background: 
+        /* Overlay escuro estilo Netflix para melhor contraste */
+        linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.8) 0%,
+            rgba(0, 0, 0, 0.6) 50%,
+            rgba(0, 0, 0, 0.8) 100%
+        ),
+        /* Sua imagem do Superman */
+        url('tumblr_667a09c787f3da6959928538a675cc81_5c6dcbf7_1280.jpg') 
+        center/cover no-repeat fixed;
+    
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+}
+
+/* Efeito de brilho sutil para destacar o container */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(
+            ellipse at center,
+            rgba(233, 69, 96, 0.15) 0%,
+            rgba(15, 52, 96, 0.15) 50%,
+            transparent 70%
+        );
+    z-index: -1;
+    pointer-events: none;
+}
         
-        .auth-container {
-            background-color: rgba(26, 26, 46, 0.9);
-            border-radius: 10px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-            width: 100%;
-            max-width: 450px;
-            overflow: hidden;
-        }
+   .auth-container {
+    background-color: rgba(15, 15, 25, 0.92);
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+    width: 100%;
+    max-width: 450px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    z-index: 1;
+}
         
         .alert {
             padding: 15px;
@@ -464,4 +501,5 @@ if($_POST) {
         });
     </script>
 </body>
+
 </html>
