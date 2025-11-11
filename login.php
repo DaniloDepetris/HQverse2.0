@@ -1,7 +1,22 @@
 <?php
 require_once 'includes_auth.php';
 
-if($auth->isLoggedIn()) {
+// Ensure session is active
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+// Generate CSRF token if not present
+if (empty($_SESSION['csrf_token'])) {
+    try {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    } catch (Exception $e) {
+        // Fallback if random_bytes not available
+        $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+    }
+}
+
+if ($auth->isLoggedIn()) {
     header("Location: comics.php");
     exit();
 }
@@ -9,21 +24,48 @@ if($auth->isLoggedIn()) {
 $error = '';
 $success = '';
 
-if($_POST) {
-    if(isset($_POST['login'])) {
-        $result = $auth->login($_POST['email'], $_POST['password']);
-        if($result === true) {
-            header("Location: comics.php");
-            exit();
-        } else {
-            $error = $result;
-        }
-    } elseif(isset($_POST['signup'])) {
-        $result = $auth->register($_POST['name'], $_POST['email'], $_POST['password']);
-        if($result === true) {
-            $success = "Cadastro realizado com sucesso! Faça login para continuar.";
-        } else {
-            $error = $result;
+// Use explicit request method check
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Basic CSRF validation
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        $error = 'Requisição inválida (verificação de segurança falhou).';
+    } else {
+        if (isset($_POST['login'])) {
+            $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+            $email = filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : '';
+            $password = isset($_POST['password']) ? $_POST['password'] : '';
+
+            $result = $auth->login($email, $password);
+            if ($result === true) {
+                // Prevent session fixation
+                session_regenerate_id(true);
+                header("Location: comics.php");
+                exit();
+            } else {
+                $error = $result;
+            }
+        } elseif (isset($_POST['signup'])) {
+            $name = isset($_POST['name']) ? trim($_POST['name']) : '';
+            $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+            $email = filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : '';
+            $password = isset($_POST['password']) ? $_POST['password'] : '';
+            $confirm = isset($_POST['confirm_password']) ? $_POST['confirm_password'] : '';
+
+            // Server-side validation
+            if ($password !== $confirm) {
+                $error = 'As senhas não coincidem.';
+            } elseif (strlen($password) < 6) {
+                $error = 'A senha deve ter pelo menos 6 caracteres.';
+            } elseif (empty($email)) {
+                $error = 'Email inválido.';
+            } else {
+                $result = $auth->register($name, $email, $password);
+                if ($result === true) {
+                    $success = "Cadastro realizado com sucesso! Faça login para continuar.";
+                } else {
+                    $error = $result;
+                }
+            }
         }
     }
 }
@@ -52,9 +94,13 @@ body {
             rgba(0, 0, 0, 0.6) 50%,
             rgba(0, 0, 0, 0.8) 100%
         ),
-        /* Sua imagem do Superman */
-        url('tumblr_667a09c787f3da6959928538a675cc81_5c6dcbf7_1280.jpg') 
-        center/cover no-repeat fixed;
+        /* Nova imagem de fundo com quadrinhos */
+            url('uploads/fundo-logn-hqverse.jpg');
+        /* Garantir comportamento consistente do background e permitir "zoom" visual */
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover; /* cover preenche a área; para um efeito maior usar e.g. 120% */
+        background-attachment: fixed;
     
     color: #fff;
     min-height: 100vh;
@@ -339,11 +385,11 @@ body::before {
         </div>
         
         <?php if($error): ?>
-            <div class="alert alert-error"><?php echo $error; ?></div>
+            <div class="alert alert-error"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
         <?php endif; ?>
         
         <?php if($success): ?>
-            <div class="alert alert-success"><?php echo $success; ?></div>
+            <div class="alert alert-success"><?php echo htmlspecialchars($success, ENT_QUOTES, 'UTF-8'); ?></div>
         <?php endif; ?>
         
         <div class="tabs">
@@ -354,6 +400,7 @@ body::before {
         <div class="tab-content active" id="login">
             <form method="POST" id="loginForm">
                 <input type="hidden" name="login" value="1">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="form-group">
                     <label for="loginEmail">Email</label>
                     <input type="email" id="loginEmail" name="email" placeholder="seu@email.com" required>
@@ -390,6 +437,7 @@ body::before {
         <div class="tab-content" id="signup">
             <form method="POST" id="signupForm">
                 <input type="hidden" name="signup" value="1">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="form-group">
                     <label for="signupName">Nome de usuário</label>
                     <input type="text" id="signupName" name="name" placeholder="Seu nome de usuário" required>
@@ -408,7 +456,7 @@ body::before {
                 
                 <div class="form-group password-toggle">
                     <label for="signupConfirmPassword">Confirmar senha</label>
-                    <input type="password" id="signupConfirmPassword" placeholder="Digite sua senha novamente" required>
+                    <input type="password" id="signupConfirmPassword" name="confirm_password" placeholder="Digite sua senha novamente" required>
                     <i class="fas fa-eye" id="toggleSignupConfirmPassword"></i>
                 </div>
                 
