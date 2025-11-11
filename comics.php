@@ -16,33 +16,6 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
     <title>HQ Verso - Sua plataforma de quadrinhos online</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const themeToggle = document.getElementById('themeToggle');
-            const body = document.body;
-            
-            // Verificar tema salvo
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'light') {
-                body.classList.add('light-mode');
-                themeToggle.querySelector('i').classList.replace('fa-moon', 'fa-sun');
-            }
-            
-            // Alternar tema
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('light-mode');
-                const icon = themeToggle.querySelector('i');
-                
-                if (body.classList.contains('light-mode')) {
-                    icon.classList.replace('fa-moon', 'fa-sun');
-                    localStorage.setItem('theme', 'light');
-                } else {
-                    icon.classList.replace('fa-sun', 'fa-moon');
-                    localStorage.setItem('theme', 'dark');
-                }
-            });
-        });
-    </script>
     <style>
         /* Estilos unificados - mantendo o melhor de cada arquivo */
         * {
@@ -59,7 +32,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             min-height: 100vh;
             padding: 0;
             margin: 0;
-            overflow-x: hidden; /* Prevenir scroll horizontal indesejado */
+            overflow-x: hidden;
         }
         
         /* Modo Claro */
@@ -166,7 +139,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             color: #e94560;
         }
         
-        /* Container de Busca */
+        /* Container de Busca MELHORADA */
         .search-container {
             position: relative;
         }
@@ -175,9 +148,11 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             display: flex;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 25px;
-            padding: 8px 15px;
+            padding: 10px 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
+            align-items: center;
+            min-width: 350px;
         }
         
         body.light-mode .search-bar {
@@ -185,13 +160,24 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             border: 1px solid #e2e8f0;
         }
         
+        .search-bar:focus-within {
+            border-color: #e94560;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.2);
+        }
+        
+        body.light-mode .search-bar:focus-within {
+            background: rgba(0, 0, 0, 0.08);
+        }
+        
         .search-bar input {
             background: transparent;
             border: none;
             color: white;
             padding: 5px 10px;
-            width: 300px;
+            width: 100%;
             outline: none;
+            font-size: 16px;
         }
         
         body.light-mode .search-bar input {
@@ -206,57 +192,22 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             color: #718096;
         }
 
-        /* Estilos das seções */
-        .section-title {
-            color: #e94560;
-            font-size: 1.8rem;
-            margin-bottom: 25px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-title i {
-            font-size: 1.4rem;
-            opacity: 0.9;
-        }
-
-        .section-title {
-            color: #fff;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e94560;
-            padding-bottom: 10px;
-            display: inline-block;
-        }
-
-        .comics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 25px;
-            margin: 30px 0;
-            padding: 10px;
-        }
-
-        .no-comics {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.5);
-            padding: 30px;
-            font-size: 1.1rem;
-            grid-column: 1 / -1;
-        }
-        
         .search-bar button {
             background: transparent;
             border: none;
-            color: rgba(255, 255, 255, 0.7);
+            color: #e94560;
             cursor: pointer;
             padding: 5px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
         }
-        
-        body.light-mode .search-bar button {
-            color: #718096;
+
+        .search-bar button:hover {
+            background: rgba(233, 69, 96, 0.2);
+            transform: scale(1.1);
         }
 
         /* Modal de Busca */
@@ -287,6 +238,11 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             background: rgba(26, 26, 46, 0.95);
         }
 
+        body.light-mode .search-modal-header {
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
         .search-modal-header h3 {
             color: #e94560;
             margin: 0;
@@ -309,6 +265,10 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             transition: background 0.3s ease;
         }
 
+        body.light-mode .close-search {
+            color: #333;
+        }
+
         .close-search:hover {
             background: rgba(233, 69, 96, 0.2);
         }
@@ -322,6 +282,47 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             flex-direction: column;
         }
 
+        /* Campo de busca no modal MELHORADO */
+        .search-modal-input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-modal-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode .search-modal-input {
+            background: rgba(0, 0, 0, 0.05);
+            border: 2px solid #e2e8f0;
+            color: #333;
+        }
+
+        .search-modal-input:focus {
+            border-color: #e94560;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        body.light-mode .search-modal-input:focus {
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        .search-modal-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        body.light-mode .search-modal-input::placeholder {
+            color: #718096;
+        }
+
         /* Estatísticas e Abas */
         .search-stats {
             display: flex;
@@ -330,6 +331,10 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             margin-bottom: 20px;
             padding: 15px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        body.light-mode .search-stats {
+            border-bottom: 1px solid #e2e8f0;
         }
 
         #resultsCount {
@@ -351,6 +356,12 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             cursor: pointer;
             font-size: 0.9rem;
             transition: all 0.3s ease;
+        }
+
+        body.light-mode .tab-btn {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            color: #333;
         }
 
         .tab-btn.active {
@@ -415,10 +426,22 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             cursor: pointer;
         }
 
+        body.light-mode .search-comic-card, 
+        body.light-mode .search-user-card {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #e2e8f0;
+        }
+
         .search-comic-card:hover, .search-user-card:hover {
             background: rgba(255, 255, 255, 0.1);
             transform: translateY(-3px);
             border-color: rgba(233, 69, 96, 0.3);
+        }
+
+        body.light-mode .search-comic-card:hover,
+        body.light-mode .search-user-card:hover {
+            background: white;
+            border-color: #e94560;
         }
 
         .search-comic-card {
@@ -444,6 +467,10 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             margin-bottom: 5px;
             font-size: 1rem;
             color: white;
+        }
+
+        body.light-mode .search-comic-title {
+            color: #333;
         }
 
         .search-comic-meta {
@@ -493,6 +520,10 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             font-weight: 600;
             margin-bottom: 3px;
             color: white;
+        }
+
+        body.light-mode .search-user-name {
+            color: #333;
         }
 
         .search-user-email {
@@ -557,6 +588,10 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             margin-top: 20px;
         }
 
+        body.light-mode .search-footer {
+            border-top: 1px solid #e2e8f0;
+        }
+
         .advanced-search-link {
             color: #e94560;
             text-decoration: none;
@@ -594,184 +629,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             100% { transform: rotate(360deg); }
         }
 
-        /* Responsividade */
-        @media (max-width: 1200px) {
-            .container {
-                padding: 0 15px;
-            }
-            
-            .comics-grid {
-                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-                gap: 20px;
-            }
-            
-            .comic-card {
-                min-width: 220px;
-                height: 400px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .featured-comic {
-                height: 400px;
-            }
-            
-            .featured-title {
-                font-size: 2rem;
-            }
-            
-            .featured-description {
-                font-size: 1rem;
-            }
-            
-            .comics-grid {
-                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-                gap: 15px;
-            }
-            
-            .comic-card {
-                min-width: 180px;
-                height: 350px;
-            }
-            
-            .section-title {
-                font-size: 1.5rem;
-            }
-            
-            .categories {
-                padding: 10px;
-                gap: 8px;
-            }
-            
-            .category {
-                padding: 8px 15px;
-                font-size: 13px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            header {
-                padding: 15px;
-            }
-            
-            .header-right {
-                margin-right: 10px;
-            }
-
-            .user-dropdown {
-                right: -10px;
-                min-width: 280px;
-            }
-
-            .search-bar input {
-                width: 200px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            header {
-                padding: 10px;
-            }
-
-            .header-right {
-                gap: 10px;
-            }
-
-            .search-bar input {
-                width: 150px;
-            }
-
-            .comics-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                gap: 12px;
-            }
-
-            .user-dropdown {
-                right: -5px;
-                min-width: 260px;
-                max-width: calc(100vw - 40px);
-            }
-            
-            .comic-card {
-                min-width: 150px;
-                height: 300px;
-            }
-            
-            .card-bottom {
-                padding: 15px;
-            }
-            
-            .comic-title {
-                font-size: 0.9rem;
-            }
-            
-            .comic-meta {
-                font-size: 0.75rem;
-            }
-            
-            .featured-title {
-                font-size: 1.5rem;
-            }
-            
-            .featured-description {
-                font-size: 0.9rem;
-            }
-        }
-
-        /* Modo Claro para o Modal */
-        body.light-mode .search-modal {
-            background: rgba(255, 255, 255, 0.95);
-        }
-
-        body.light-mode .search-modal-header {
-            background: rgba(255, 255, 255, 0.95);
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        body.light-mode .search-modal-header h3 {
-            color: #e94560;
-        }
-
-        body.light-mode .close-search {
-            color: #333;
-        }
-
-        body.light-mode .close-search:hover {
-            background: rgba(233, 69, 96, 0.1);
-        }
-
-        body.light-mode .search-stats {
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        body.light-mode .tab-btn {
-            background: rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-            color: #333;
-        }
-
-        body.light-mode .search-comic-card, 
-        body.light-mode .search-user-card {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid #e2e8f0;
-            color: #333;
-        }
-
-        body.light-mode .search-comic-card:hover,
-        body.light-mode .search-user-card:hover {
-            background: white;
-            border-color: #e94560;
-        }
-
-        body.light-mode .search-comic-title,
-        body.light-mode .search-user-name {
-            color: #333;
-        }
-
-        body.light-mode .search-footer {
-            border-top: 1px solid #e2e8f0;
-        }
-        
+        /* Categorias */
         .categories {
             display: flex;
             gap: 12px;
@@ -797,14 +655,14 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             gap: 8px;
         }
         
-        .category i {
-            font-size: 1.1em;
-            opacity: 0.8;
-        }
-        
         body.light-mode .category {
             background: rgba(0, 0, 0, 0.05);
             color: #4a5568;
+        }
+        
+        .category i {
+            font-size: 1.1em;
+            opacity: 0.8;
         }
         
         .category.active {
@@ -822,7 +680,6 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             font-size: 14px;
             opacity: 0.8;
             font-weight: 500;
-            transition: all 0.3s ease;
         }
         
         body.light-mode .comic-counter {
@@ -887,16 +744,16 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             gap: 10px;
         }
         
+        body.light-mode .section-title {
+            color: #2d3748;
+        }
+        
         .section-title i {
             font-size: 1.4rem;
             opacity: 0.9;
         }
         
-        body.light-mode .section-title {
-            color: #2d3748;
-        }
-        
-        /* Carrossel Container - do comics.php */
+        /* Carrossel Container */
         .carousel-container {
             position: relative;
             margin-bottom: 20px;
@@ -1332,7 +1189,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             font-style: italic;
         }
 
-        /* Modal de detalhe do quadrinho - do comics.php */
+        /* Modal de detalhe do quadrinho */
         .comic-modal-overlay{
             position:fixed;
             inset:0;
@@ -1433,8 +1290,8 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
                 justify-content: space-between;
             }
             
-            .search-bar input {
-                width: 200px;
+            .search-bar {
+                min-width: 250px;
             }
             
             .search-modal-content {
@@ -1495,9 +1352,21 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
                 height: 35px;
             }
         }
+
+        @media (max-width: 480px) {
+            .search-bar {
+                min-width: 200px;
+            }
+            
+            .search-modal-input {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Botão do Tema MANTIDO -->
     <button class="theme-toggle" id="themeToggle">
         <i class="fas fa-moon"></i>
     </button>
@@ -1516,7 +1385,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
                         </button>
                     </div>
                     
-                    <!-- Modal de Busca Atualizado -->
+                    <!-- Modal de Busca MELHORADO -->
                     <div class="search-modal" id="searchModal">
                         <div class="search-modal-header">
                             <h3>Resultados da Busca</h3>
@@ -1525,6 +1394,15 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
                             </button>
                         </div>
                         <div class="search-modal-content">
+                            <!-- Campo de busca adicionado no modal -->
+                            <div class="search-modal-input-container">
+                                <input type="text" 
+                                       class="search-modal-input" 
+                                       id="searchModalInput" 
+                                       placeholder="Digite para buscar quadrinhos, usuários, autores..."
+                                       autocomplete="off">
+                            </div>
+                            
                             <div class="search-stats" id="searchStats">
                                 <span id="resultsCount">Digite para buscar</span>
                                 <div class="search-tabs" id="searchTabs">
@@ -1634,7 +1512,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             </div>
         </div>
         
-        <!-- Seção Continuar Lendo - com carrossel do comics.php -->
+        <!-- Seção Continuar Lendo -->
         <div class="comics-section continue-row">
             <h3 class="section-title">Continuar Lendo</h3>
             <div class="carousel-container">
@@ -1732,7 +1610,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
         <i class="fas fa-info-circle"></i> Info Navegador
     </a>
 
-    <!-- Modal de detalhe do quadrinho - do comics.php -->
+    <!-- Modal de detalhe do quadrinho -->
     <div id="comicModalOverlay" class="comic-modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="comicModalTitle">
         <div class="comic-modal" role="document">
             <button class="comic-modal-close" id="comicModalClose" aria-label="Fechar">&times;</button>
@@ -1750,7 +1628,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
     </div>
 
     <script>
-        // Dados completos dos quadrinhos - do ss.php e comics.php
+        // Dados completos dos quadrinhos
         const comicsData = {
             "all": [
                 {
@@ -1982,7 +1860,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             "favoritos": [1, 3, 5, 8, 11, 14, 16]
         };
 
-        // Dados de usuários para busca - do ss.php
+        // Dados de usuários para busca
         const usersData = [
             {
                 id: 1,
@@ -2036,7 +1914,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             }
         ];
 
-        // Função para criar card de quadrinho - do comics.php
+        // Função para criar card de quadrinho
         function createComicCard(comic, showProgress = false) {
             const placeholder = `https://via.placeholder.com/200x300/1a1a2e/e94560?text=${encodeURIComponent(comic.title.substring(0, 15))}`;
             
@@ -2063,7 +1941,7 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             `;
         }
 
-        // Função para criar card de quadrinho do banco de dados - do ss.php
+        // Função para criar card de quadrinho do banco de dados
         function createModalComicCard(comic) {
             const placeholder = `https://via.placeholder.com/80x120/1a1a2e/e94560?text=${encodeURIComponent(comic.title.substring(0, 10))}`;
             
@@ -2082,39 +1960,39 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             `;
         }
 
-        // Função para criar card de usuário no modal - CORRIGIDA
-function createModalUserCard(user, currentUserId = null) {
-    const initial = user.username ? user.username.charAt(0).toUpperCase() : 'U';
-    const isFollowing = user.is_following == 1 || user.is_following === true;
-    const canFollow = currentUserId && currentUserId != user.id;
-    
-    return `
-        <div class="search-user-card" data-id="${user.id}" data-type="user">
-            <div class="search-user-avatar">
-                ${user.avatar ? `<img src="${user.avatar}" alt="${user.username}">` : `<span>${initial}</span>`}
-            </div>
-            <div class="search-user-info">
-                <div class="search-user-name">${user.username}</div>
-                <div class="search-user-email">${user.email}</div>
-                <div class="search-user-stats">
-                    ${user.comics_count || 0} comics • ${user.followers_count || 0} seguidores
+        // Função para criar card de usuário no modal
+        function createModalUserCard(user, currentUserId = null) {
+            const initial = user.username ? user.username.charAt(0).toUpperCase() : 'U';
+            const isFollowing = user.is_following == 1 || user.is_following === true;
+            const canFollow = currentUserId && currentUserId != user.id;
+            
+            return `
+                <div class="search-user-card" data-id="${user.id}" data-type="user">
+                    <div class="search-user-avatar">
+                        ${user.avatar ? `<img src="${user.avatar}" alt="${user.username}">` : `<span>${initial}</span>`}
+                    </div>
+                    <div class="search-user-info">
+                        <div class="search-user-name">${user.username}</div>
+                        <div class="search-user-email">${user.email}</div>
+                        <div class="search-user-stats">
+                            ${user.comics_count || 0} comics • ${user.followers_count || 0} seguidores
+                        </div>
+                        <div class="search-user-role">${user.role}</div>
+                        ${canFollow ? `
+                        <div class="search-user-actions">
+                            <button class="btn-follow ${isFollowing ? 'following' : ''}" 
+                                    data-user-id="${user.id}"
+                                    onclick="toggleFollow(${user.id}, this)">
+                                ${isFollowing ? '<i class="fas fa-user-check"></i> Seguindo' : '<i class="fas fa-user-plus"></i> Seguir'}
+                            </button>
+                        </div>
+                        ` : ''}
+                    </div>
                 </div>
-                <div class="search-user-role">${user.role}</div>
-                ${canFollow ? `
-                <div class="search-user-actions">
-                    <button class="btn-follow ${isFollowing ? 'following' : ''}" 
-                            data-user-id="${user.id}"
-                            onclick="toggleFollow(${user.id}, this)">
-                        ${isFollowing ? '<i class="fas fa-user-check"></i> Seguindo' : '<i class="fas fa-user-plus"></i> Seguir'}
-                    </button>
-                </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-}
+            `;
+        }
 
-        // Função para seguir/deseguir usuário - NOVA
+        // Função para seguir/deseguir usuário
         function toggleFollow(userId, button) {
             const isFollowing = button.classList.contains('following');
             
@@ -2145,21 +2023,34 @@ function createModalUserCard(user, currentUserId = null) {
             });
         }
 
-        // Sistema de Busca Modal - do ss.php (ATUALIZADO)
+        // Sistema de Busca Modal MELHORADO
         function setupModalSearch() {
             const searchInput = document.getElementById('searchInput');
             const searchButton = document.getElementById('searchButton');
             const searchModal = document.getElementById('searchModal');
             const closeSearch = document.getElementById('closeSearch');
+            const searchModalInput = document.getElementById('searchModalInput');
             const searchTabs = document.querySelectorAll('.tab-btn');
             const resultsSections = document.querySelectorAll('.results-section');
             
             let currentResults = { comics: [], users: [] };
             let searchTimeout = null;
+            let currentTab = 'all';
             
             // Abrir modal ao clicar no botão de busca ou no input
             searchButton.addEventListener('click', openSearchModal);
             searchInput.addEventListener('click', openSearchModal);
+            
+            // Busca por Enter no input principal
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    openSearchModal();
+                    if (this.value.trim()) {
+                        searchModalInput.value = this.value;
+                        performModalSearch(this.value);
+                    }
+                }
+            });
             
             // Fechar modal
             closeSearch.addEventListener('click', closeSearchModal);
@@ -2178,26 +2069,8 @@ function createModalUserCard(user, currentUserId = null) {
                 }
             });
             
-            // Input dentro do modal
-            const modalInput = document.createElement('input');
-            modalInput.type = 'text';
-            modalInput.placeholder = 'Digite para buscar...';
-            modalInput.style.width = '100%';
-            modalInput.style.padding = '15px 20px';
-            modalInput.style.fontSize = '16px';
-            modalInput.style.background = 'rgba(255, 255, 255, 0.1)';
-            modalInput.style.border = '2px solid #e94560';
-            modalInput.style.borderRadius = '10px';
-            modalInput.style.color = 'white';
-            modalInput.style.outline = 'none';
-            modalInput.style.marginBottom = '20px';
-            
-            // Adicionar input ao modal
-            const searchStats = document.getElementById('searchStats');
-            searchStats.parentNode.insertBefore(modalInput, searchStats);
-            
             // Busca em tempo real no modal
-            modalInput.addEventListener('input', function() {
+            searchModalInput.addEventListener('input', function() {
                 const searchTerm = this.value.trim();
                 
                 clearTimeout(searchTimeout);
@@ -2215,53 +2088,70 @@ function createModalUserCard(user, currentUserId = null) {
                 }, 500);
             });
             
+            // Busca por Enter no modal
+            searchModalInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const searchTerm = this.value.trim();
+                    if (searchTerm.length >= 2) {
+                        clearTimeout(searchTimeout);
+                        showLoadingState();
+                        performModalSearch(searchTerm);
+                    }
+                }
+            });
+            
             function openSearchModal() {
                 searchModal.classList.add('active');
                 document.body.style.overflow = 'hidden';
                 setTimeout(() => {
-                    modalInput.focus();
+                    searchModalInput.focus();
+                    // Copiar valor do input principal se existir
+                    if (searchInput.value.trim()) {
+                        searchModalInput.value = searchInput.value;
+                        performModalSearch(searchInput.value);
+                    }
                 }, 100);
             }
             
             function closeSearchModal() {
                 searchModal.classList.remove('active');
                 document.body.style.overflow = '';
-                modalInput.value = '';
+                searchModalInput.value = '';
                 showEmptyState();
             }
             
             function performModalSearch(searchTerm) {
-    // Buscar quadrinhos
-    const comicResults = comicsData.all.filter(comic => 
-        comic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        comic.meta.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        comic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        comic.categories.some(cat => cat.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-    
-    // Buscar usuários VIA AJAX (agora busca do banco real)
-    fetch(`search_users.php?q=${encodeURIComponent(searchTerm)}`)
-        .then(response => response.json())
-        .then(userResults => {
-            currentResults = { comics: comicResults, users: userResults };
-            displayModalResults(currentResults, searchTerm);
-        })
-        .catch(error => {
-            console.error('Erro na busca de usuários:', error);
-            // Fallback para dados mockados em caso de erro
-            const userResults = usersData.filter(user =>
-                user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.role.toLowerCase().includes(searchTerm.toLowerCase())
-            ).map(user => ({
-                ...user,
-                is_following: false,
-            }));
-            
-            currentResults = { comics: comicResults, users: userResults };
-            displayModalResults(currentResults, searchTerm);
-        });
-}
+                // Buscar quadrinhos
+                const comicResults = comicsData.all.filter(comic => 
+                    comic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    comic.meta.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    comic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    comic.categories.some(cat => cat.toLowerCase().includes(searchTerm.toLowerCase()))
+                );
+                
+                // Buscar usuários VIA AJAX
+                fetch(`search_users.php?q=${encodeURIComponent(searchTerm)}`)
+                    .then(response => response.json())
+                    .then(userResults => {
+                        currentResults = { comics: comicResults, users: userResults };
+                        displayModalResults(currentResults, searchTerm);
+                    })
+                    .catch(error => {
+                        console.error('Erro na busca de usuários:', error);
+                        // Fallback para dados mockados em caso de erro
+                        const userResults = usersData.filter(user =>
+                            user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            user.role.toLowerCase().includes(searchTerm.toLowerCase())
+                        ).map(user => ({
+                            ...user,
+                            is_following: false,
+                        }));
+                        
+                        currentResults = { comics: comicResults, users: userResults };
+                        displayModalResults(currentResults, searchTerm);
+                    });
+            }
             
             function displayModalResults(results, searchTerm) {
                 const totalResults = results.comics.length + results.users.length;
@@ -2271,7 +2161,7 @@ function createModalUserCard(user, currentUserId = null) {
                     `${totalResults} resultados para "${searchTerm}"`;
                 
                 // Atualizar todas as abas
-                updateResultsDisplay('all');
+                updateResultsDisplay(currentTab);
             }
             
             function updateResultsDisplay(activeTab) {
@@ -2325,27 +2215,27 @@ function createModalUserCard(user, currentUserId = null) {
             }
             
             function addCardEventListeners() {
-    // Event listeners para cards de quadrinhos
-    document.querySelectorAll('.search-comic-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const comicId = this.getAttribute('data-id');
-            const comic = currentResults.comics.find(c => c.id == comicId);
-            if (comic) {
-                closeSearchModal();
-                window.location.href = `leitor.html?comic=${comicId}&title=${encodeURIComponent(comic.title)}`;
+                // Event listeners para cards de quadrinhos
+                document.querySelectorAll('.search-comic-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const comicId = this.getAttribute('data-id');
+                        const comic = currentResults.comics.find(c => c.id == comicId);
+                        if (comic) {
+                            closeSearchModal();
+                            window.location.href = `leitor.html?comic=${comicId}&title=${encodeURIComponent(comic.title)}`;
+                        }
+                    });
+                });
+                
+                // Event listeners para cards de usuários
+                document.querySelectorAll('.search-user-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const userId = this.getAttribute('data-id');
+                        closeSearchModal();
+                        window.location.href = `perfil.php?user_id=${userId}`;
+                    });
+                });
             }
-        });
-    });
-    
-    // Event listeners para cards de usuários
-    document.querySelectorAll('.search-user-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const userId = this.getAttribute('data-id');
-            closeSearchModal();
-            window.location.href = `perfil.php?user_id=${userId}`;
-        });
-    });
-}
             
             function showEmptyState() {
                 document.getElementById('resultsCount').textContent = 'Digite para buscar';
@@ -2369,6 +2259,7 @@ function createModalUserCard(user, currentUserId = null) {
             searchTabs.forEach(tab => {
                 tab.addEventListener('click', function() {
                     const tabName = this.getAttribute('data-tab');
+                    currentTab = tabName;
                     
                     // Atualizar aba ativa
                     searchTabs.forEach(t => t.classList.remove('active'));
@@ -2387,7 +2278,41 @@ function createModalUserCard(user, currentUserId = null) {
             });
         }
 
-        // Sistema de carrossel e filtros - do comics.php
+        // Sistema de Tema
+        function setupTheme() {
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            
+            // Verificar tema salvo
+            const savedTheme = localStorage.getItem('theme') || localStorage.getItem('hq-verso-theme');
+            
+            if (savedTheme === 'light') {
+                body.classList.add('light-mode');
+                // Atualizar ícone
+                const icon = themeToggle.querySelector('i');
+                if (icon) {
+                    icon.classList.replace('fa-moon', 'fa-sun');
+                }
+            }
+            
+            // Alternar tema
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('light-mode');
+                const icon = themeToggle.querySelector('i');
+                
+                if (body.classList.contains('light-mode')) {
+                    icon.classList.replace('fa-moon', 'fa-sun');
+                    localStorage.setItem('theme', 'light');
+                    localStorage.setItem('hq-verso-theme', 'light');
+                } else {
+                    icon.classList.replace('fa-sun', 'fa-moon');
+                    localStorage.setItem('theme', 'dark');
+                    localStorage.setItem('hq-verso-theme', 'dark');
+                }
+            });
+        }
+
+        // Sistema de carrossel e filtros
         function filterComicsByCategory(category) {
             const allComics = comicsData.all;
             let filteredComics = [];
@@ -2476,31 +2401,7 @@ function createModalUserCard(user, currentUserId = null) {
             });
         }
 
-        // Sistema de Tema - do ss.php
-        function setupTheme() {
-            const themeToggle = document.getElementById('themeToggle');
-            const body = document.body;
-            
-            const savedTheme = localStorage.getItem('hq-verso-theme');
-            if (savedTheme === 'light') {
-                body.classList.add('light-mode');
-                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-            }
-            
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('light-mode');
-                
-                if (body.classList.contains('light-mode')) {
-                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-                    localStorage.setItem('hq-verso-theme', 'light');
-                } else {
-                    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-                    localStorage.setItem('hq-verso-theme', 'dark');
-                }
-            });
-        }
-
-        // Sistema de navegação do carrossel - do comics.php
+        // Sistema de navegação do carrossel
         function setupCarouselNavigation() {
             document.querySelectorAll('.carousel-container').forEach(container => {
                 const carousel = container.querySelector('.comics-carousel');
@@ -2566,7 +2467,7 @@ function createModalUserCard(user, currentUserId = null) {
             }
         }
 
-        // Modal de detalhe do quadrinho - do comics.php
+        // Modal de detalhe do quadrinho
         function openComicModal(comic) {
             const overlay = document.getElementById('comicModalOverlay');
             if (!overlay || !comic) return;
@@ -2583,21 +2484,18 @@ function createModalUserCard(user, currentUserId = null) {
             meta.textContent = comic.meta || '';
             desc.textContent = comic.description || 'Sem sinopse disponível.';
             
-            // ações dos botões (simples handlers, podem ser expandidos)
+            // ações dos botões
             readBtn.onclick = function() {
-                // redirecionar para o leitor (página estática) com id do quadrinho
                 window.location.href = `leitor.html?comic=${encodeURIComponent(comic.id)}`;
             };
             
             addBtn.onclick = function() {
-                // ação de adicionar à lista (apenas feedback visual aqui)
                 addBtn.textContent = 'Adicionado';
                 addBtn.disabled = true;
             };
             
             overlay.style.display = 'flex';
             overlay.setAttribute('aria-hidden', 'false');
-            // foco para acessibilidade
             setTimeout(() => {
                 readBtn.focus();
             }, 120);
@@ -2655,7 +2553,7 @@ function createModalUserCard(user, currentUserId = null) {
             });
         }
 
-        // Sistema de menu do usuário por clique - NOVO
+        // Sistema de menu do usuário por clique
         function setupUserMenu() {
             const userAvatar = document.getElementById('userAvatar');
             const userDropdown = document.getElementById('userDropdown');
@@ -2681,101 +2579,6 @@ function createModalUserCard(user, currentUserId = null) {
                     userDropdown.classList.remove('active');
                 }
             });
-        }
-
-        // Inicialização completa
-        function initializePage() {
-            setupTheme();
-            setupCategoryFilter();
-            setupModalSearch();
-            setupCarouselNavigation();
-            setupComicModalHandlers();
-            setupUserMenu(); // Adicionado aqui
-            updateAllSections('all');
-            
-            console.log('Sistema de quadrinhos unificado inicializado!');
-        }
-
-        document.addEventListener('DOMContentLoaded', initializePage);
-        // Funções de Busca
-        function toggleSearchModal() {
-            const modal = document.getElementById('searchModal');
-            modal.classList.toggle('active');
-            if (modal.classList.contains('active')) {
-                document.getElementById('searchInput').focus();
-            }
-        }
-
-        function handleSearch(event) {
-            if (event.key === 'Enter') {
-                const searchTerm = document.getElementById('searchInput').value.trim();
-                if (searchTerm) {
-                    performSearch(searchTerm);
-                }
-            }
-        }
-
-        function performSearch(term) {
-            fetch(`search_handler.php?q=${encodeURIComponent(term)}`)
-                .then(response => response.json())
-                .then(data => {
-                    displaySearchResults(data);
-                })
-                .catch(error => {
-                    console.error('Erro na busca:', error);
-                });
-        }
-
-        function displaySearchResults(data) {
-            const comicsContainer = document.getElementById('searchResults');
-            const resultsCount = document.getElementById('resultsCount');
-            
-            if (!data.data || (!data.data.comics.length && !data.data.users.length)) {
-                resultsCount.textContent = 'Nenhum resultado encontrado';
-                comicsContainer.innerHTML = '<p class="no-results">Nenhum resultado encontrado para sua busca.</p>';
-                return;
-            }
-
-            const totalResults = data.data.comics.length + data.data.users.length;
-            resultsCount.textContent = `${totalResults} resultado(s) encontrado(s)`;
-            
-            let html = '';
-            
-            // Resultados de Quadrinhos
-            if (data.data.comics.length) {
-                html += '<div class="search-section"><h3>Quadrinhos</h3>';
-                data.data.comics.forEach(comic => {
-                    html += `
-                        <div class="comic-card">
-                            <img src="${comic.cover}" alt="${comic.title}">
-                            <div class="comic-info">
-                                <h4>${comic.title}</h4>
-                                <p>${comic.description}</p>
-                            </div>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-            }
-            
-            // Resultados de Usuários
-            if (data.data.users.length) {
-                html += '<div class="search-section"><h3>Usuários</h3>';
-                data.data.users.forEach(user => {
-                    html += `
-                        <div class="user-card">
-                            <img src="${user.avatar || 'default-avatar.png'}" alt="${user.username}">
-                            <div class="user-info">
-                                <h4>${user.username}</h4>
-                                <p>Quadrinhos: ${user.comics_count}</p>
-                            </div>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-            }
-            
-            comicsContainer.innerHTML = html;
         }
 
         // Sistema de Progresso de Leitura
@@ -2900,157 +2703,7 @@ function createModalUserCard(user, currentUserId = null) {
             return comicsData.all.find(comic => comic.title === title);
         }
 
-        // Função para abrir o modal de detalhes do quadrinho
-        // Função para atualizar todas as seções da página
-        function updateAllSections(category) {
-            const filteredComics = filterComicsByCategory(category);
-            
-            // Usar quadrinhos com progresso real em vez de mock
-            const continueReadingComics = getContinueReadingComics();
-            
-            // Filtrar por categoria se necessário
-            const filteredContinueComics = continueReadingComics.filter(comic => 
-                category === 'all' || 
-                (category === 'favoritos' ? comicsData.favoritos.includes(comic.id) : 
-                 comicsData[category]?.includes(comic.id))
-            );
-            
-            renderComicsInSection('continueReading', filteredContinueComics.slice(0, 6), true);
-            
-            // Atualizar info se houver quadrinhos em progresso
-            if (filteredContinueComics.length > 0) {
-                updateContinueInfo(filteredContinueComics[0]);
-            } else {
-                document.getElementById('continueInfo').style.display = 'none';
-            }
-            
-            const recommendedComics = filteredComics.slice(0, 4);
-            renderComicsInSection('recommendedComics', recommendedComics);
-            
-            const dcComics = filteredComics.filter(comic => 
-                comic.categories.includes('super-herois') && 
-                (comic.title.includes('Batman') || comic.title.includes('Superman') || comic.title.includes('Liga'))
-            );
-            renderComicsInSection('dcClassics', dcComics.slice(0, 3));
-            
-            const mangaComics = filteredComics.filter(comic => 
-                comic.categories.includes('manga')
-            );
-            renderComicsInSection('popularManga', mangaComics.slice(0, 4));
-            
-            const graphicNovels = filteredComics.filter(comic => 
-                comic.categories.includes('graphic-novels')
-            );
-            renderComicsInSection('graphicNovels', graphicNovels.slice(0, 4));
-            
-            updateComicCount(filteredComics.length);
-        }
-
-        function openComicModal(comic) {
-            const overlay = document.getElementById('comicModalOverlay');
-            if (!overlay || !comic) return;
-            
-            const cover = document.getElementById('comicModalCover');
-            const title = document.getElementById('comicModalTitle');
-            const meta = document.getElementById('comicModalMeta');
-            const desc = document.getElementById('comicModalDescription');
-            const readBtn = document.getElementById('comicModalRead');
-            const addBtn = document.getElementById('comicModalAdd');
-            
-            cover.src = comic.cover || '';
-            cover.alt = `Capa do quadrinho ${comic.title || ''}`;
-            title.textContent = comic.title || '';
-            meta.textContent = comic.meta || '';
-            desc.textContent = comic.description || 'Sem sinopse disponível.';
-            
-            // Verificar se já tem progresso de leitura
-            const savedProgress = JSON.parse(localStorage.getItem('hq-verso-reading-progress')) || {};
-            const hasProgress = savedProgress[comic.id] && savedProgress[comic.id].progress > 0;
-            
-            // Atualizar texto do botão baseado no progresso
-            if (hasProgress) {
-                const progress = savedProgress[comic.id].progress;
-                readBtn.innerHTML = `<i class="fas fa-play"></i> Continuar Lendo (${progress}%)`;
-                readBtn.style.background = '#4CAF50'; // Verde para continuar
-            } else {
-                readBtn.innerHTML = `<i class="fas fa-play"></i> Ler agora`;
-                readBtn.style.background = ''; // Voltar ao padrão
-            }
-            
-            // ações dos botões
-            readBtn.onclick = function() {
-                // Salvar progresso antes de redirecionar
-                if (!hasProgress) {
-                    saveReadingProgress(comic.id, 10, 1); // Começa com 10% se for novo
-                }
-                window.location.href = `leitor.html?comic=${encodeURIComponent(comic.id)}&title=${encodeURIComponent(comic.title)}`;
-            };
-            
-            addBtn.onclick = function() {
-                addBtn.textContent = 'Adicionado';
-                addBtn.disabled = true;
-                // Aqui você pode adicionar à lista de favoritos
-            };
-            
-            overlay.style.display = 'flex';
-            overlay.setAttribute('aria-hidden', 'false');
-            
-            setTimeout(() => {
-                readBtn.focus();
-            }, 120);
-        }
-
-        // Adicione esta função auxiliar para simular progresso no leitor
-        function simulateReadingProgress(comicId, pagesRead, totalPages = 100) {
-            const progress = Math.min((pagesRead / totalPages) * 100, 100);
-            saveReadingProgress(comicId, progress, pagesRead);
-            updateContinueReadingSection();
-        }
-
-        // Função auxiliar para filtrar quadrinhos por categoria
-        function filterComicsByCategory(category) {
-            if (category === 'all') return comicsData.all;
-            return comicsData.all.filter(comic => 
-                category === 'favoritos' ? 
-                comicsData.favoritos.includes(comic.id) : 
-                comic.categories.includes(category)
-            );
-        }
-
-        // Função auxiliar para atualizar o contador de quadrinhos
-        function updateComicCount(count) {
-            const counter = document.getElementById('comicCounter');
-            if (counter) {
-                counter.textContent = count === 1 ? 
-                    '1 quadrinho encontrado' : 
-                    `${count} quadrinhos encontrados`;
-            }
-        }
-
-        // Função para renderizar quadrinhos em uma seção
-        function renderComicsInSection(sectionId, comics, showProgress = false) {
-            const section = document.getElementById(sectionId);
-            if (!section) return;
-
-            if (comics.length === 0) {
-                section.innerHTML = '<div class="no-comics">Nenhum quadrinho encontrado</div>';
-                return;
-            }
-
-            section.innerHTML = comics.map(comic => createComicCard(comic, showProgress)).join('');
-            
-            // Adicionar event listeners para os cards
-            section.querySelectorAll('.comic-card').forEach(card => {
-                card.addEventListener('click', (e) => {
-                    if (!e.target.closest('.card-actions')) {
-                        const comicId = parseInt(card.getAttribute('data-id'));
-                        const comic = comicsData.all.find(c => c.id === comicId);
-                        if (comic) openComicModal(comic);
-                    }
-                });
-            });
-        }
-
+        // Inicialização completa
         function initializePage() {
             setupTheme();
             setupCategoryFilter();
@@ -3058,10 +2711,10 @@ function createModalUserCard(user, currentUserId = null) {
             setupCarouselNavigation();
             setupComicModalHandlers();
             setupUserMenu();
-            setupReadingProgress(); // Adicionado o sistema de progresso
+            setupReadingProgress();
             updateAllSections('all');
             
-            console.log('Sistema de quadrinhos unificado inicializado!');
+            console.log('Sistema de quadrinhos inicializado!');
         }
 
         // Inicializar a página quando o DOM estiver carregado
@@ -3069,23 +2722,5 @@ function createModalUserCard(user, currentUserId = null) {
             initializePage();
         });
     </script>
-    
-    <!-- Modal de Busca -->
-    <div id="searchModal" class="search-modal">
-        <div class="search-modal-header">
-            <h3>Resultados da Busca</h3>
-            <button class="close-search" onclick="toggleSearchModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="search-modal-content">
-            <div class="search-stats">
-                <span id="resultsCount">0 resultados encontrados</span>
-            </div>
-            <div id="searchResults" class="search-results">
-                <!-- Os resultados da busca serão inseridos aqui -->
-            </div>
-        </div>
-    </div>
 </body>
 </html>
