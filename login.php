@@ -1,7 +1,22 @@
 <?php
 require_once 'includes_auth.php';
 
-if($auth->isLoggedIn()) {
+// Ensure session is active
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+// Generate CSRF token if not present
+if (empty($_SESSION['csrf_token'])) {
+    try {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    } catch (Exception $e) {
+        // Fallback if random_bytes not available
+        $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+    }
+}
+
+if ($auth->isLoggedIn()) {
     header("Location: comics.php");
     exit();
 }
@@ -9,21 +24,48 @@ if($auth->isLoggedIn()) {
 $error = '';
 $success = '';
 
-if($_POST) {
-    if(isset($_POST['login'])) {
-        $result = $auth->login($_POST['email'], $_POST['password']);
-        if($result === true) {
-            header("Location: comics.php");
-            exit();
-        } else {
-            $error = $result;
-        }
-    } elseif(isset($_POST['signup'])) {
-        $result = $auth->register($_POST['name'], $_POST['email'], $_POST['password']);
-        if($result === true) {
-            $success = "Cadastro realizado com sucesso! Faça login para continuar.";
-        } else {
-            $error = $result;
+// Use explicit request method check
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Basic CSRF validation
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        $error = 'Requisição inválida (verificação de segurança falhou).';
+    } else {
+        if (isset($_POST['login'])) {
+            $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+            $email = filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : '';
+            $password = isset($_POST['password']) ? $_POST['password'] : '';
+
+            $result = $auth->login($email, $password);
+            if ($result === true) {
+                // Prevent session fixation
+                session_regenerate_id(true);
+                header("Location: comics.php");
+                exit();
+            } else {
+                $error = $result;
+            }
+        } elseif (isset($_POST['signup'])) {
+            $name = isset($_POST['name']) ? trim($_POST['name']) : '';
+            $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+            $email = filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : '';
+            $password = isset($_POST['password']) ? $_POST['password'] : '';
+            $confirm = isset($_POST['confirm_password']) ? $_POST['confirm_password'] : '';
+
+            // Server-side validation
+            if ($password !== $confirm) {
+                $error = 'As senhas não coincidem.';
+            } elseif (strlen($password) < 6) {
+                $error = 'A senha deve ter pelo menos 6 caracteres.';
+            } elseif (empty($email)) {
+                $error = 'Email inválido.';
+            } else {
+                $result = $auth->register($name, $email, $password);
+                if ($result === true) {
+                    $success = "Cadastro realizado com sucesso! Faça login para continuar.";
+                } else {
+                    $error = $result;
+                }
+            }
         }
     }
 }
@@ -43,24 +85,65 @@ if($_POST) {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+body {
+    background: 
+        /* Overlay escuro estilo Netflix para melhor contraste */
+        linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.8) 0%,
+            rgba(0, 0, 0, 0.6) 50%,
+            rgba(0, 0, 0, 0.8) 100%
+        ),
+        /* Nova imagem de fundo com quadrinhos */
+            url('uploads/fundo-logn-hqverse.jpg');
+        /* Garantir comportamento consistente do background e permitir "zoom" visual */
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover; /* cover preenche a área; para um efeito maior usar e.g. 120% */
+        background-attachment: fixed;
+    
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+}
+
+/* Efeito de brilho sutil para destacar o container */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(
+            ellipse at center,
+            rgba(233, 69, 96, 0.15) 0%,
+            rgba(15, 52, 96, 0.15) 50%,
+            transparent 70%
+        );
+    z-index: -1;
+    pointer-events: none;
+}
         
-        .auth-container {
-            background-color: rgba(26, 26, 46, 0.9);
-            border-radius: 10px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-            width: 100%;
-            max-width: 450px;
-            overflow: hidden;
-        }
+   .auth-container {
+    background-color: rgba(15, 15, 25, 0.92);
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+    width: 100%;
+    max-width: 450px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    z-index: 1;
+}
         
         .alert {
             padding: 15px;
@@ -302,11 +385,11 @@ if($_POST) {
         </div>
         
         <?php if($error): ?>
-            <div class="alert alert-error"><?php echo $error; ?></div>
+            <div class="alert alert-error"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
         <?php endif; ?>
         
         <?php if($success): ?>
-            <div class="alert alert-success"><?php echo $success; ?></div>
+            <div class="alert alert-success"><?php echo htmlspecialchars($success, ENT_QUOTES, 'UTF-8'); ?></div>
         <?php endif; ?>
         
         <div class="tabs">
@@ -317,6 +400,7 @@ if($_POST) {
         <div class="tab-content active" id="login">
             <form method="POST" id="loginForm">
                 <input type="hidden" name="login" value="1">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="form-group">
                     <label for="loginEmail">Email</label>
                     <input type="email" id="loginEmail" name="email" placeholder="seu@email.com" required>
@@ -353,6 +437,7 @@ if($_POST) {
         <div class="tab-content" id="signup">
             <form method="POST" id="signupForm">
                 <input type="hidden" name="signup" value="1">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="form-group">
                     <label for="signupName">Nome de usuário</label>
                     <input type="text" id="signupName" name="name" placeholder="Seu nome de usuário" required>
@@ -371,7 +456,7 @@ if($_POST) {
                 
                 <div class="form-group password-toggle">
                     <label for="signupConfirmPassword">Confirmar senha</label>
-                    <input type="password" id="signupConfirmPassword" placeholder="Digite sua senha novamente" required>
+                    <input type="password" id="signupConfirmPassword" name="confirm_password" placeholder="Digite sua senha novamente" required>
                     <i class="fas fa-eye" id="toggleSignupConfirmPassword"></i>
                 </div>
                 
@@ -464,4 +549,5 @@ if($_POST) {
         });
     </script>
 </body>
+
 </html>
