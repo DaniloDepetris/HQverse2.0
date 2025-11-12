@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 10/11/2025 às 02:33
+-- Tempo de geração: 13/11/2025 às 00:31
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -83,6 +83,22 @@ CREATE TABLE `admin_notifications` (
 
 INSERT INTO `admin_notifications` (`id`, `type`, `title`, `message`, `related_id`, `related_type`, `is_read`, `priority`, `created_at`) VALUES
 (1, 'user_report', 'Novo usuário reportado', 'O usuário ID 6 foi reportado por ID 2', 6, 'user', 0, 'medium', '2025-11-10 00:58:14');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `banned_users`
+--
+
+CREATE TABLE `banned_users` (
+  `id` int(11) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `reason` text DEFAULT NULL,
+  `banned_by` int(11) NOT NULL,
+  `banned_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `is_permanent` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -239,6 +255,27 @@ CREATE TABLE `comic_stats` (
 -- --------------------------------------------------------
 
 --
+-- Estrutura para tabela `conversations`
+--
+
+CREATE TABLE `conversations` (
+  `id` int(11) NOT NULL,
+  `user1_id` int(11) NOT NULL,
+  `user2_id` int(11) NOT NULL,
+  `last_message_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `conversations`
+--
+
+INSERT INTO `conversations` (`id`, `user1_id`, `user2_id`, `last_message_at`, `created_at`) VALUES
+(1, 2, 7, '2025-11-10 04:01:12', '2025-11-10 04:01:12');
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura para tabela `favorites`
 --
 
@@ -273,6 +310,21 @@ INSERT INTO `forums` (`id`, `name`, `description`, `category_id`, `created_at`) 
 (3, 'Reviews', 'Análises e críticas de quadrinhos', NULL, '2025-10-20 23:04:36'),
 (4, 'Dúvidas', 'Tire suas dúvidas sobre quadrinhos', NULL, '2025-10-20 23:04:36'),
 (5, 'Criação', 'Discussões sobre criação de HQs', NULL, '2025-10-20 23:04:36');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `messages`
+--
+
+CREATE TABLE `messages` (
+  `id` int(11) NOT NULL,
+  `conversation_id` int(11) NOT NULL,
+  `sender_id` int(11) NOT NULL,
+  `content` text NOT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -424,18 +476,23 @@ CREATE TABLE `users` (
   `bio` text DEFAULT NULL,
   `role` enum('user','creator','moderator','admin') DEFAULT 'user',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `favorite_hero` varchar(20) DEFAULT 'batman',
+  `nationality` varchar(50) DEFAULT NULL,
+  `age` int(11) DEFAULT NULL,
+  `pronouns` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Despejando dados para a tabela `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `password`, `avatar`, `avatar_file_name`, `avatar_file_size`, `avatar_mime_type`, `avatar_updated_at`, `bio`, `role`, `created_at`, `updated_at`) VALUES
-(2, 'Juan Taborda', 'taborda.mjuan@gmail.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', 'uploads/avatars/avatar_2_1762551937.png', 'avatar_4_1762435030.png', 10652, 'image/png', '2025-11-07 21:45:37', 'sou legal', 'user', '2025-10-20 23:21:30', '2025-11-07 21:45:37'),
-(4, 'admin', 'admin@hqverso.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', NULL, NULL, NULL, NULL, NULL, NULL, 'admin', '2025-10-21 01:11:36', '2025-11-10 01:13:45'),
-(5, 'reza+', 'ghyslainemoraes@gmail.com', '$2y$10$Bl1YDtuy/P54grfdqfTcw.vV/Gt/gj8tBR562cgU3UqlaBArIswju', 'uploads/avatars/avatar_5_1762544145.png', '3tene_20250930220016.png', 91516, 'image/png', '2025-11-07 19:35:45', NULL, 'user', '2025-11-07 19:35:20', '2025-11-07 19:35:45'),
-(6, 'carro', 'a@a.com', '$2y$10$PbVOpLZio5Z1oPVbrHdZ7exgDYUYEamTRNVePFgSJOGNrYvysL8xO', NULL, NULL, NULL, NULL, NULL, NULL, 'user', '2025-11-07 23:10:41', '2025-11-07 23:10:41');
+INSERT INTO `users` (`id`, `username`, `email`, `password`, `avatar`, `avatar_file_name`, `avatar_file_size`, `avatar_mime_type`, `avatar_updated_at`, `bio`, `role`, `created_at`, `updated_at`, `favorite_hero`, `nationality`, `age`, `pronouns`) VALUES
+(2, 'Juan Taborda', 'taborda.mjuan@gmail.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', 'uploads/avatars/avatar_2_1762812275.png', '3tene_20250930220016.png', 91516, 'image/png', '2025-11-10 22:04:35', 'sou legal', 'user', '2025-10-20 23:21:30', '2025-11-10 22:04:35', 'batman', NULL, NULL, NULL),
+(4, 'admin', 'admin@hqverso.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', 'uploads/avatars/avatar_4_1762988992.png', 'avatar_4_1762435030.png', 10652, 'image/png', '2025-11-12 23:09:52', 'sou bilola', 'admin', '2025-10-21 01:11:36', '2025-11-12 23:09:52', 'batman', NULL, NULL, NULL),
+(5, 'reza+', 'ghyslainemoraes@gmail.com', '$2y$10$Bl1YDtuy/P54grfdqfTcw.vV/Gt/gj8tBR562cgU3UqlaBArIswju', 'uploads/avatars/avatar_5_1762544145.png', '3tene_20250930220016.png', 91516, 'image/png', '2025-11-07 19:35:45', NULL, 'user', '2025-11-07 19:35:20', '2025-11-07 19:35:45', 'batman', NULL, NULL, NULL),
+(6, 'carro', 'a@a.com', '$2y$10$PbVOpLZio5Z1oPVbrHdZ7exgDYUYEamTRNVePFgSJOGNrYvysL8xO', NULL, NULL, NULL, NULL, NULL, NULL, 'user', '2025-11-07 23:10:41', '2025-11-07 23:10:41', 'batman', NULL, NULL, NULL),
+(7, 'souchato', 'souchato@gmail.com', '$2y$10$y14kdrgtyszdqo5ifsaoBOiQCCMPwIU5tk6Ud6.IBfBq3D/QgMmae', NULL, NULL, NULL, NULL, NULL, NULL, 'user', '2025-11-10 03:45:40', '2025-11-10 03:45:40', 'batman', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -456,7 +513,9 @@ CREATE TABLE `user_follows` (
 
 INSERT INTO `user_follows` (`id`, `follower_id`, `following_id`, `created_at`) VALUES
 (2, 2, 4, '2025-11-07 19:09:58'),
-(7, 6, 2, '2025-11-07 23:10:41');
+(7, 6, 2, '2025-11-07 23:10:41'),
+(9, 7, 2, '2025-11-10 03:45:40'),
+(10, 4, 2, '2025-11-12 01:21:08');
 
 -- --------------------------------------------------------
 
@@ -486,6 +545,20 @@ CREATE TABLE `user_progress` (
   `last_read_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Despejando dados para a tabela `user_progress`
+--
+
+INSERT INTO `user_progress` (`id`, `user_id`, `comic_id`, `progress_pct`, `last_read_at`) VALUES
+(1, 2, 3, 25, '2025-11-10 16:47:01'),
+(3, 2, 12, 25, '2025-11-10 17:05:35'),
+(5, 2, 2, 50, '2025-11-11 01:31:55'),
+(7, 2, 10, 25, '2025-11-10 17:29:08'),
+(13, 2, 9, 25, '2025-11-11 01:23:56'),
+(17, 4, 2, 50, '2025-11-12 23:29:26'),
+(19, 4, 3, 75, '2025-11-12 23:29:36'),
+(21, 4, 9, 100, '2025-11-12 23:29:49');
+
 -- --------------------------------------------------------
 
 --
@@ -510,7 +583,7 @@ CREATE TABLE `user_reports` (
 --
 
 INSERT INTO `user_reports` (`id`, `reported_user_id`, `reporter_user_id`, `reason`, `description`, `status`, `admin_notes`, `admin_id`, `created_at`, `updated_at`) VALUES
-(1, 6, 2, 'assedio', 'me chamou de gostosa', 'pending', NULL, NULL, '2025-11-10 00:58:14', '2025-11-10 00:58:14');
+(1, 6, 2, 'assedio', 'me chamou de gostosa', 'resolved', NULL, 4, '2025-11-10 00:58:14', '2025-11-12 22:46:12');
 
 -- --------------------------------------------------------
 
@@ -581,6 +654,16 @@ ALTER TABLE `admin_notifications`
   ADD KEY `idx_notifications_created` (`created_at`);
 
 --
+-- Índices de tabela `banned_users`
+--
+ALTER TABLE `banned_users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD KEY `idx_banned_by` (`banned_by`),
+  ADD KEY `idx_banned_at` (`banned_at`);
+
+--
 -- Índices de tabela `categories`
 --
 ALTER TABLE `categories`
@@ -641,6 +724,15 @@ ALTER TABLE `comic_pages`
   ADD KEY `idx_pages_number` (`page_number`);
 
 --
+-- Índices de tabela `conversations`
+--
+ALTER TABLE `conversations`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_conversation` (`user1_id`,`user2_id`),
+  ADD KEY `idx_conversation_user1` (`user1_id`),
+  ADD KEY `idx_conversation_user2` (`user2_id`);
+
+--
 -- Índices de tabela `favorites`
 --
 ALTER TABLE `favorites`
@@ -655,6 +747,15 @@ ALTER TABLE `favorites`
 ALTER TABLE `forums`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_forums_category` (`category_id`);
+
+--
+-- Índices de tabela `messages`
+--
+ALTER TABLE `messages`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_messages_conversation` (`conversation_id`),
+  ADD KEY `idx_messages_sender` (`sender_id`),
+  ADD KEY `idx_messages_created` (`created_at`);
 
 --
 -- Índices de tabela `posts`
@@ -789,6 +890,12 @@ ALTER TABLE `admin_notifications`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT de tabela `banned_users`
+--
+ALTER TABLE `banned_users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de tabela `categories`
 --
 ALTER TABLE `categories`
@@ -825,6 +932,12 @@ ALTER TABLE `comic_pages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de tabela `conversations`
+--
+ALTER TABLE `conversations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT de tabela `favorites`
 --
 ALTER TABLE `favorites`
@@ -835,6 +948,12 @@ ALTER TABLE `favorites`
 --
 ALTER TABLE `forums`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT de tabela `messages`
+--
+ALTER TABLE `messages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de tabela `posts`
@@ -882,13 +1001,13 @@ ALTER TABLE `transactions`
 -- AUTO_INCREMENT de tabela `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de tabela `user_follows`
 --
 ALTER TABLE `user_follows`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de tabela `user_library`
@@ -900,7 +1019,7 @@ ALTER TABLE `user_library`
 -- AUTO_INCREMENT de tabela `user_progress`
 --
 ALTER TABLE `user_progress`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT de tabela `user_reports`
@@ -917,6 +1036,12 @@ ALTER TABLE `user_uploads`
 --
 -- Restrições para tabelas despejadas
 --
+
+--
+-- Restrições para tabelas `banned_users`
+--
+ALTER TABLE `banned_users`
+  ADD CONSTRAINT `banned_users_ibfk_1` FOREIGN KEY (`banned_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Restrições para tabelas `comics`
@@ -960,6 +1085,13 @@ ALTER TABLE `comic_pages`
   ADD CONSTRAINT `comic_pages_ibfk_1` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE;
 
 --
+-- Restrições para tabelas `conversations`
+--
+ALTER TABLE `conversations`
+  ADD CONSTRAINT `conversations_ibfk_1` FOREIGN KEY (`user1_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `conversations_ibfk_2` FOREIGN KEY (`user2_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
 -- Restrições para tabelas `favorites`
 --
 ALTER TABLE `favorites`
@@ -971,6 +1103,13 @@ ALTER TABLE `favorites`
 --
 ALTER TABLE `forums`
   ADD CONSTRAINT `forums_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL;
+
+--
+-- Restrições para tabelas `messages`
+--
+ALTER TABLE `messages`
+  ADD CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`conversation_id`) REFERENCES `conversations` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Restrições para tabelas `posts`
