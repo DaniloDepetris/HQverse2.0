@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 13/11/2025 às 00:31
+-- Tempo de geração: 13/11/2025 às 07:36
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -154,6 +154,39 @@ CREATE TABLE `comics` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- Despejando dados para a tabela `comics`
+--
+
+INSERT INTO `comics` (`id`, `title`, `author_id`, `publisher_id`, `cover`, `description`, `price`, `is_published`, `is_premium`, `status`, `release_date`, `page_count`, `views`, `created_at`, `updated_at`) VALUES
+(1, 'Homem-Aranha: A Última Caçada', 2, NULL, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9az9jtGfQoj20u_4hUEeTQXvXvX9i0W2KPKw&s', 'A clássica história onde o Homem-Aranha enfrenta seu maior desafio.', 0.00, 1, 0, 'published', NULL, 120, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(2, 'Watchmen', 2, NULL, 'https://upload.wikimedia.org/wikipedia/pt/d/d0/Watchmen.jpg', 'A revolucionária graphic novel que questiona a natureza dos super-heróis.', 0.00, 1, 0, 'published', NULL, 180, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(3, 'Sandman: Prelúdios e Noturnos', 2, NULL, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcReNzUJRFsrqKb-Y4UIxg-jUSPYg-4ermAT3w&s', 'A primeira coleção da aclamada série de Neil Gaiman.', 0.00, 1, 0, 'published', NULL, 160, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(4, 'V de Vingança', 2, NULL, 'https://m.media-amazon.com/images/I/711dLCQ6kuL._UF1000,1000_QL80_.jpg', 'A distópica graphic novel sobre anarquia e liberdade.', 0.00, 1, 0, 'published', NULL, 140, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(5, 'Maus', 2, NULL, 'https://m.media-amazon.com/images/I/916IgqQ-54L.jpg', 'A premiada graphic novel sobre o Holocausto.', 0.00, 1, 0, 'published', NULL, 160, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(6, 'Persépolis', 2, NULL, 'https://m.media-amazon.com/images/I/814zhAWOKBL._UF1000,1000_QL80_.jpg', 'A autobiografia em quadrinhos sobre o Irã revolucionário.', 0.00, 1, 0, 'published', NULL, 150, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(7, 'Hellboy: Caçada Selvagem', 2, NULL, 'https://images.tcdn.com.br/img/img_prod/1119494/hellboy_omnibus_vol_3_1709745_1_a6e86cfa8f53f219f4d0d0b0c4f79558.jpg', 'As primeiras aventuras do demônio herói.', 0.00, 1, 0, 'published', NULL, 130, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(8, 'Saga', 2, NULL, 'https://m.media-amazon.com/images/I/81s49EEptML.jpg', 'A épica space opera de ficção científica.', 0.00, 1, 0, 'published', NULL, 170, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(9, 'Superman: Terra Um', 2, NULL, 'https://m.media-amazon.com/images/I/91wpPruCKrL._UF1000,1000_QL80_.jpg', 'Uma reinterpretação moderna do Homem de Aço.', 0.00, 1, 0, 'published', NULL, 110, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(10, 'Liga da Justiça: A Torre de Babel', 2, NULL, 'https://super.abril.com.br/wp-content/uploads/2018/07/torredebabel.jpg', 'Quando Batman se torna a maior ameaça da Liga.', 0.00, 1, 0, 'published', NULL, 140, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(11, 'Akira', 2, NULL, 'https://m.media-amazon.com/images/I/81K1+Z+Yf+L.jpg', 'A épica cyberpunk que revolucionou os mangás.', 0.00, 1, 0, 'published', NULL, 220, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(12, 'Death Note', 2, NULL, 'https://m.media-amazon.com/images/I/81MZ6eFQsfL.jpg', 'Um estudante genius encontra um caderno que pode matar pessoas.', 0.00, 1, 0, 'published', NULL, 180, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(13, 'Attack on Titan', 2, NULL, 'https://m.media-amazon.com/images/I/81d6e+kN5+L.jpg', 'Humanidade luta pela sobrevivência contra titãs gigantes.', 0.00, 1, 0, 'published', NULL, 190, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(14, 'One-Punch Man', 2, NULL, 'https://m.media-amazon.com/images/I/81I1+-+0R0L.jpg', 'Um herói tão forte que derrota qualquer inimigo com um só soco.', 0.00, 1, 0, 'published', NULL, 160, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(15, 'Scott Pilgrim', 2, NULL, 'https://m.media-amazon.com/images/I/81K1+Z+Yf+L.jpg', 'Um baixista deve derrotar os 7 ex-namorados malvados de sua amada.', 0.00, 1, 0, 'published', NULL, 120, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(16, 'Batman: Ano Um', 2, NULL, 'https://m.media-amazon.com/images/I/81zK5OjR5aL.jpg', 'A origem definitiva do Cavaleiro das Trevas.', 0.00, 1, 0, 'published', NULL, 100, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(17, 'X-Men: Fênix Negra', 2, NULL, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmC8oS-dR6n1EW5YxEnvL0mPaz13taAKsbvQ&s', 'A épica saga onde Jean Grey se torna a Fênix Negra.', 0.00, 1, 0, 'published', NULL, 150, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(18, 'Monstress', 2, NULL, 'https://m.media-amazon.com/images/I/81bGs636lzL.jpg', 'Fantasia sombria em um mundo de guerra e monstros.', 0.00, 1, 0, 'published', NULL, 160, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(19, 'Homem de Ferro: Extremis', 2, NULL, 'https://m.media-amazon.com/images/I/81bGs636lzL.jpg', 'A história que redefiniu o Homem de Ferro moderno.', 0.00, 1, 0, 'published', NULL, 110, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(20, 'Capitão América: O Soldado Invernal', 2, NULL, 'https://m.media-amazon.com/images/I/611wcUISMmL._UF1000,1000_QL80_.jpg', 'Um thriller político que coloca o Capitão América contra inimigos internos.', 0.00, 1, 0, 'published', NULL, 130, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(21, 'Thor: Deus do Trovão', 2, NULL, 'https://m.media-amazon.com/images/I/91JTRo6EFcL._UF1000,1000_QL80_.jpg', 'Uma saga épica do Deus do Trovão através dos tempos.', 0.00, 1, 0, 'published', NULL, 140, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(22, 'Doutor Estranho: O Juramento', 2, NULL, 'https://m.media-amazon.com/images/I/91DcEu1b-rL.jpg', 'Uma história íntima e sombria do Mago Supremo.', 0.00, 1, 0, 'published', NULL, 120, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(23, 'Pantera Negra: Rei do Wakanda', 2, NULL, 'https://d14d9vp3wdof84.cloudfront.net/image/589816272436/image_v8bl17fqv95mf8v1jd9k8lrp5r/-S897-FWEBP', 'A jornada do rei e herói de Wakanda.', 0.00, 1, 0, 'published', NULL, 130, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(24, 'Batman: Silêncio', 2, NULL, 'https://lh3.googleusercontent.com/proxy/9y2rp6F2x4dSCvFkZoz847oXtBE8IP0mscS0W0SkYpRtdub4qCQRCzj-Qwfgd4BWQq6EtqSmr7edCB_rNckNCs8pGT8jFx0HdMknRmb_1EmPWIb5zuujbw', 'Uma intensa história de Batman escrita por Jeph Loeb.', 0.00, 1, 0, 'published', NULL, 150, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(25, 'Mulher-Maravilha: Deuses e Mortais', 2, NULL, 'https://cdn.awsli.com.br/600x450/1668/1668242/produto/162790896905299a6a0.jpg', 'A reinvenção da origem da Mulher-Maravilha por George Pérez.', 0.00, 1, 0, 'published', NULL, 140, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(26, 'Flashpoint', 2, NULL, 'https://m.media-amazon.com/images/I/91dXNvO2fML.jpg', 'Uma linha temporal alternativa que altera o universo DC.', 0.00, 1, 0, 'published', NULL, 160, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(27, 'Arqueiro Verde: Ano Um', 2, NULL, 'https://rika.vtexassets.com/arquivos/ids/219835/-herois_panini-arqueiro-verde-ano-um.jpg?v=635316153891630000', 'A origem moderna do Arqueiro Verde.', 0.00, 1, 0, 'published', NULL, 110, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28');
+
+--
 -- Acionadores `comics`
 --
 DELIMITER $$
@@ -173,6 +206,60 @@ CREATE TABLE `comic_categories` (
   `comic_id` int(11) NOT NULL,
   `category_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `comic_categories`
+--
+
+INSERT INTO `comic_categories` (`comic_id`, `category_id`) VALUES
+(1, 1),
+(1, 4),
+(2, 1),
+(2, 3),
+(2, 4),
+(3, 3),
+(3, 4),
+(4, 3),
+(4, 4),
+(5, 3),
+(5, 4),
+(6, 3),
+(6, 4),
+(7, 1),
+(7, 5),
+(8, 3),
+(8, 5),
+(9, 1),
+(9, 4),
+(10, 1),
+(10, 4),
+(11, 2),
+(11, 4),
+(12, 2),
+(13, 2),
+(14, 1),
+(14, 2),
+(15, 3),
+(15, 5),
+(16, 1),
+(16, 4),
+(17, 1),
+(17, 4),
+(18, 3),
+(18, 5),
+(19, 1),
+(20, 1),
+(21, 1),
+(22, 1),
+(23, 1),
+(24, 1),
+(24, 4),
+(25, 1),
+(25, 4),
+(26, 1),
+(26, 4),
+(27, 1),
+(27, 4);
 
 -- --------------------------------------------------------
 
@@ -198,11 +285,21 @@ CREATE TABLE `comic_comments` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `comic_id` int(11) NOT NULL,
-  `page_number` int(11) DEFAULT NULL,
-  `content` text NOT NULL,
+  `comment` text NOT NULL,
   `parent_comment_id` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `contains_spoilers` tinyint(1) DEFAULT 0,
+  `is_approved` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `comic_comments`
+--
+
+INSERT INTO `comic_comments` (`id`, `user_id`, `comic_id`, `comment`, `parent_comment_id`, `contains_spoilers`, `is_approved`, `created_at`, `updated_at`) VALUES
+(1, 2, 7, 'salve', NULL, 0, 1, '2025-11-13 06:10:30', '2025-11-13 06:10:30'),
+(2, 2, 7, 'salve', 1, 0, 1, '2025-11-13 06:17:43', '2025-11-13 06:17:43');
 
 -- --------------------------------------------------------
 
@@ -234,6 +331,144 @@ CREATE TABLE `comic_pages` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Despejando dados para a tabela `comic_pages`
+--
+
+INSERT INTO `comic_pages` (`id`, `comic_id`, `page_number`, `image_url`, `title`, `created_at`) VALUES
+(1, 1, 1, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9az9jtGfQoj20u_4hUEeTQXvXvX9i0W2KPKw&s', 'Capa', '2025-11-13 05:34:12'),
+(2, 1, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Homem-Aranha+Página+1', 'Peter Parker em ação', '2025-11-13 05:34:12'),
+(3, 1, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Homem-Aranha+Página+2', 'O vilão aparece', '2025-11-13 05:34:12'),
+(4, 1, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Homem-Aranha+Página+3', 'Confronto épico', '2025-11-13 05:34:12'),
+(5, 1, 5, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Homem-Aranha+Página+4', 'Reviravolta final', '2025-11-13 05:34:12'),
+(6, 2, 1, 'https://upload.wikimedia.org/wikipedia/pt/d/d0/Watchmen.jpg', 'Capa', '2025-11-13 05:34:12'),
+(7, 2, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Watchmen+Página+1', 'Rorschach investiga', '2025-11-13 05:34:12'),
+(8, 2, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Watchmen+Página+2', 'Dr. Manhattan', '2025-11-13 05:34:12'),
+(9, 2, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Watchmen+Página+3', 'Ozymandias planeja', '2025-11-13 05:34:12'),
+(10, 2, 5, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Watchmen+Página+4', 'Confronto final', '2025-11-13 05:34:12'),
+(11, 3, 1, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcReNzUJRFsrqKb-Y4UIxg-jUSPYg-4ermAT3w&s', 'Capa', '2025-11-13 05:34:12'),
+(12, 3, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Sandman+Página+1', 'Morpheus aprisionado', '2025-11-13 05:34:12'),
+(13, 3, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Sandman+Página+2', 'A fuga', '2025-11-13 05:34:12'),
+(14, 3, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Sandman+Página+3', 'Busca pelos artefatos', '2025-11-13 05:34:12'),
+(15, 4, 1, 'https://m.media-amazon.com/images/I/711dLCQ6kuL._UF1000,1000_QL80_.jpg', 'Capa', '2025-11-13 05:34:12'),
+(16, 4, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=V+Vingança+Página+1', 'V aparece', '2025-11-13 05:34:12'),
+(17, 4, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=V+Vingança+Página+2', 'Evey capturada', '2025-11-13 05:34:12'),
+(18, 4, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=V+Vingança+Página+3', 'Revelações', '2025-11-13 05:34:12'),
+(19, 5, 1, 'https://m.media-amazon.com/images/I/916IgqQ-54L.jpg', 'Capa', '2025-11-13 05:34:12'),
+(20, 5, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Maus+Página+1', 'História do pai', '2025-11-13 05:34:12'),
+(21, 5, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Maus+Página+2', 'Guerra começa', '2025-11-13 05:34:12'),
+(22, 5, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Maus+Página+3', 'Sobrevivência', '2025-11-13 05:34:12'),
+(23, 6, 1, 'https://m.media-amazon.com/images/I/814zhAWOKBL._UF1000,1000_QL80_.jpg', 'Capa', '2025-11-13 05:34:12'),
+(24, 6, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Persépolis+Página+1', 'Infância no Irã', '2025-11-13 05:34:12'),
+(25, 6, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Persépolis+Página+2', 'Revolução', '2025-11-13 05:34:12'),
+(26, 6, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Persépolis+Página+3', 'Mudança para Europa', '2025-11-13 05:34:12'),
+(27, 7, 1, 'https://images.tcdn.com.br/img/img_prod/1119494/hellboy_omnibus_vol_3_1709745_1_a6e86cfa8f53f219f4d0d0b0c4f79558.jpg', 'Capa', '2025-11-13 05:34:12'),
+(28, 7, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Hellboy+Página+1', 'Hellboy em ação', '2025-11-13 05:34:12'),
+(29, 7, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Hellboy+Página+2', 'Criaturas sobrenaturais', '2025-11-13 05:34:12'),
+(30, 7, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Hellboy+Página+3', 'Confronto épico', '2025-11-13 05:34:12'),
+(31, 8, 1, 'https://m.media-amazon.com/images/I/81s49EEptML.jpg', 'Capa', '2025-11-13 05:34:12'),
+(32, 8, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Saga+Página+1', 'Nascimento de Hazel', '2025-11-13 05:34:12'),
+(33, 8, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Saga+Página+2', 'Fuga pelos planetas', '2025-11-13 05:34:12'),
+(34, 8, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Saga+Página+3', 'Encontro com aliados', '2025-11-13 05:34:12'),
+(35, 9, 1, 'https://m.media-amazon.com/images/I/91wpPruCKrL._UF1000,1000_QL80_.jpg', 'Capa', '2025-11-13 05:34:12'),
+(36, 9, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Superman+Página+1', 'Clark em Smallville', '2025-11-13 05:34:12'),
+(37, 9, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Superman+Página+2', 'Chegada em Metropolis', '2025-11-13 05:34:12'),
+(38, 9, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Superman+Página+3', 'Primeiro voo', '2025-11-13 05:34:12'),
+(39, 10, 1, 'https://super.abril.com.br/wp-content/uploads/2018/07/torredebabel.jpg', 'Capa', '2025-11-13 05:34:12'),
+(40, 10, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Torre+Babel+Página+1', 'Batman vigiando', '2025-11-13 05:34:12'),
+(41, 10, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Torre+Babel+Página+2', 'Planos roubados', '2025-11-13 05:34:12'),
+(42, 10, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Torre+Babel+Página+3', 'Liga atacada', '2025-11-13 05:34:12'),
+(43, 11, 1, 'https://m.media-amazon.com/images/I/81K1+Z+Yf+L.jpg', 'Capa', '2025-11-13 05:34:12'),
+(44, 11, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Akira+Página+1', 'Neo-Tóquio', '2025-11-13 05:34:12'),
+(45, 11, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Akira+Página+2', 'Kaneda e a gangue', '2025-11-13 05:34:12'),
+(46, 11, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Akira+Página+3', 'Poderes psíquicos', '2025-11-13 05:34:12'),
+(47, 12, 1, 'https://m.media-amazon.com/images/I/81MZ6eFQsfL.jpg', 'Capa', '2025-11-13 05:34:12'),
+(48, 12, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Death+Note+Página+1', 'Light encontra Death Note', '2025-11-13 05:34:12'),
+(49, 12, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Death+Note+Página+2', 'Ryuk aparece', '2025-11-13 05:34:12'),
+(50, 12, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Death+Note+Página+3', 'L inicia investigação', '2025-11-13 05:34:12'),
+(51, 13, 1, 'https://m.media-amazon.com/images/I/81d6e+kN5+L.jpg', 'Capa', '2025-11-13 05:34:12'),
+(52, 13, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Attack+Titan+Página+1', 'Muralha é quebrada', '2025-11-13 05:34:12'),
+(53, 13, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Attack+Titan+Página+2', 'Eren transforma', '2025-11-13 05:34:12'),
+(54, 13, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Attack+Titan+Página+3', 'Batalha contra titãs', '2025-11-13 05:34:12'),
+(55, 14, 1, 'https://m.media-amazon.com/images/I/81I1+-+0R0L.jpg', 'Capa', '2025-11-13 05:34:12'),
+(56, 14, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=One-Punch+Página+1', 'Saitama entediado', '2025-11-13 05:34:12'),
+(57, 14, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=One-Punch+Página+2', 'Monstro aparece', '2025-11-13 05:34:12'),
+(58, 14, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=One-Punch+Página+3', 'Um soco só', '2025-11-13 05:34:12'),
+(59, 15, 1, 'https://m.media-amazon.com/images/I/81K1+Z+Yf+L.jpg', 'Capa', '2025-11-13 05:34:12'),
+(60, 15, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Scott+Pilgrim+Página+1', 'Scott conhece Ramona', '2025-11-13 05:34:12'),
+(61, 15, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Scott+Pilgrim+Página+2', 'Primeiro ex-namorado', '2025-11-13 05:34:12'),
+(62, 15, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Scott+Pilgrim+Página+3', 'Batalha musical', '2025-11-13 05:34:12'),
+(63, 16, 1, 'https://m.media-amazon.com/images/I/81zK5OjR5aL.jpg', 'Capa', '2025-11-13 05:34:12'),
+(64, 16, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Batman+Ano+Um+Página+1', 'Bruce volta para Gotham', '2025-11-13 05:34:12'),
+(65, 16, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Batman+Ano+Um+Página+2', 'Primeira aparição', '2025-11-13 05:34:12'),
+(66, 16, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Batman+Ano+Um+Página+3', 'Jim Gordon chega', '2025-11-13 05:34:12'),
+(67, 17, 1, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmC8oS-dR6n1EW5YxEnvL0mPaz13taAKsbvQ&s', 'Capa', '2025-11-13 05:34:12'),
+(68, 17, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Fênix+Negra+Página+1', 'Jean Grey como Fênix', '2025-11-13 05:34:12'),
+(69, 17, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Fênix+Negra+Página+2', 'Poderes descontrolados', '2025-11-13 05:34:12'),
+(70, 17, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Fênix+Negra+Página+3', 'X-Men confrontam Jean', '2025-11-13 05:34:12'),
+(71, 18, 1, 'https://m.media-amazon.com/images/I/81bGs636lzL.jpg', 'Capa', '2025-11-13 05:34:12'),
+(72, 18, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Monstress+Página+1', 'Maika Halfwolf', '2025-11-13 05:34:12'),
+(73, 18, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Monstress+Página+2', 'Mundo de guerra', '2025-11-13 05:34:12'),
+(74, 18, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Monstress+Página+3', 'Monstro interior', '2025-11-13 05:34:12'),
+(75, 19, 1, 'https://m.media-amazon.com/images/I/81bGs636lzL.jpg', 'Capa', '2025-11-13 05:34:12'),
+(76, 19, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Extremis+Página+1', 'Tony Stark ferido', '2025-11-13 05:34:12'),
+(77, 19, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Extremis+Página+2', 'Tecnologia Extremis', '2025-11-13 05:34:12'),
+(78, 19, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Extremis+Página+3', 'Nova armadura', '2025-11-13 05:34:12'),
+(79, 20, 1, 'https://m.media-amazon.com/images/I/611wcUISMmL._UF1000,1000_QL80_.jpg', 'Capa', '2025-11-13 05:34:12'),
+(80, 20, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Soldado+Invernal+Página+1', 'Steve Rogers em ação', '2025-11-13 05:34:12'),
+(81, 20, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Soldado+Invernal+Página+2', 'Soldado Invernal aparece', '2025-11-13 05:34:12'),
+(82, 20, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Soldado+Invernal+Página+3', 'Revelação chocante', '2025-11-13 05:34:12'),
+(83, 21, 1, 'https://m.media-amazon.com/images/I/91JTRo6EFcL._UF1000,1000_QL80_.jpg', 'Capa', '2025-11-13 05:34:12'),
+(84, 21, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Thor+Página+1', 'Thor através dos tempos', '2025-11-13 05:34:12'),
+(85, 21, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Thor+Página+2', 'Gorr o Carniceiro', '2025-11-13 05:34:12'),
+(86, 21, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Thor+Página+3', 'Batalha épica', '2025-11-13 05:34:12'),
+(87, 22, 1, 'https://m.media-amazon.com/images/I/91DcEu1b-rL.jpg', 'Capa', '2025-11-13 05:34:12'),
+(88, 22, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Doutor+Estranho+Página+1', 'Stephen Strange doente', '2025-11-13 05:34:12'),
+(89, 22, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Doutor+Estranho+Página+2', 'Busca pela cura', '2025-11-13 05:34:12'),
+(90, 22, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Doutor+Estranho+Página+3', 'Magia e medicina', '2025-11-13 05:34:12'),
+(91, 23, 1, 'https://d14d9vp3wdof84.cloudfront.net/image/589816272436/image_v8bl17fqv95mf8v1jd9k8lrp5r/-S897-FWEBP', 'Capa', '2025-11-13 05:34:12'),
+(92, 23, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Pantera+Negra+Página+1', 'TChalla como rei', '2025-11-13 05:34:12'),
+(93, 23, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Pantera+Negra+Página+2', 'Wakanda revelada', '2025-11-13 05:34:12'),
+(94, 23, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Pantera+Negra+Página+3', 'Desafio ao trono', '2025-11-13 05:34:12'),
+(95, 24, 1, 'https://lh3.googleusercontent.com/proxy/9y2rp6F2x4dSCvFkZoz847oXtBE8IP0mscS0W0SkYpRtdub4qCQRCzj-Qwfgd4BWQq6EtqSmr7edCB_rNckNCs8pGT8jFx0HdMknRmb_1EmPWIb5zuujbw', 'Capa', '2025-11-13 05:34:12'),
+(96, 24, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Silêncio+Página+1', 'Batman investiga', '2025-11-13 05:34:12'),
+(97, 24, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Silêncio+Página+2', 'Hush aparece', '2025-11-13 05:34:12'),
+(98, 24, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Silêncio+Página+3', 'Identidade revelada', '2025-11-13 05:34:12'),
+(99, 25, 1, 'https://cdn.awsli.com.br/600x450/1668/1668242/produto/162790896905299a6a0.jpg', 'Capa', '2025-11-13 05:34:12'),
+(100, 25, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Mulher+Maravilha+Página+1', 'Themyscira', '2025-11-13 05:34:12'),
+(101, 25, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Mulher+Maravilha+Página+2', 'Diana chega ao mundo', '2025-11-13 05:34:12'),
+(102, 25, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Mulher+Maravilha+Página+3', 'Primeira missão', '2025-11-13 05:34:12'),
+(103, 26, 1, 'https://m.media-amazon.com/images/I/91dXNvO2fML.jpg', 'Capa', '2025-11-13 05:34:12'),
+(104, 26, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Flashpoint+Página+1', 'Barry acorda em novo mundo', '2025-11-13 05:34:12'),
+(105, 26, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Flashpoint+Página+2', 'Realidade alternativa', '2025-11-13 05:34:12'),
+(106, 26, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Flashpoint+Página+3', 'Guerra Atlante-Amazona', '2025-11-13 05:34:12'),
+(107, 27, 1, 'https://rika.vtexassets.com/arquivos/ids/219835/-herois_panini-arqueiro-verde-ano-um.jpg?v=635316153891630000', 'Capa', '2025-11-13 05:34:12'),
+(108, 27, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Arqueiro+Verde+Página+1', 'Oliver Queen naufraga', '2025-11-13 05:34:12'),
+(109, 27, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Arqueiro+Verde+Página+2', 'Ilha deserta', '2025-11-13 05:34:12'),
+(110, 27, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Arqueiro+Verde+Página+3', 'Retorno a Star City', '2025-11-13 05:34:12');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `comic_ratings`
+--
+
+CREATE TABLE `comic_ratings` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `comic_id` int(11) NOT NULL,
+  `rating` tinyint(4) NOT NULL CHECK (`rating` >= 1 and `rating` <= 5),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `comic_ratings`
+--
+
+INSERT INTO `comic_ratings` (`id`, `user_id`, `comic_id`, `rating`, `created_at`, `updated_at`) VALUES
+(1, 2, 7, 5, '2025-11-13 06:05:00', '2025-11-13 06:05:00');
+
 -- --------------------------------------------------------
 
 --
@@ -255,6 +490,27 @@ CREATE TABLE `comic_stats` (
 -- --------------------------------------------------------
 
 --
+-- Estrutura para tabela `comment_likes`
+--
+
+CREATE TABLE `comment_likes` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `comment_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `comment_likes`
+--
+
+INSERT INTO `comment_likes` (`id`, `user_id`, `comment_id`, `created_at`) VALUES
+(1, 2, 1, '2025-11-13 06:26:00'),
+(2, 2, 2, '2025-11-13 06:26:06');
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura para tabela `conversations`
 --
 
@@ -271,7 +527,9 @@ CREATE TABLE `conversations` (
 --
 
 INSERT INTO `conversations` (`id`, `user1_id`, `user2_id`, `last_message_at`, `created_at`) VALUES
-(1, 2, 7, '2025-11-10 04:01:12', '2025-11-10 04:01:12');
+(1, 2, 7, '2025-11-13 02:39:55', '2025-11-10 04:01:12'),
+(2, 4, 5, '2025-11-13 00:48:32', '2025-11-13 00:47:45'),
+(3, 2, 5, '2025-11-13 02:40:11', '2025-11-13 01:00:07');
 
 -- --------------------------------------------------------
 
@@ -323,6 +581,60 @@ CREATE TABLE `messages` (
   `sender_id` int(11) NOT NULL,
   `content` text NOT NULL,
   `is_read` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `messages`
+--
+
+INSERT INTO `messages` (`id`, `conversation_id`, `sender_id`, `content`, `is_read`, `created_at`) VALUES
+(1, 2, 4, 'e ai macho', 1, '2025-11-13 00:47:55'),
+(2, 2, 5, 'salve doido', 0, '2025-11-13 00:48:32'),
+(3, 3, 5, 'carro', 1, '2025-11-13 01:00:15'),
+(4, 3, 5, 'odeio esse cara', 1, '2025-11-13 01:02:30'),
+(5, 1, 2, 'oxe baitola oq que tu quer?', 0, '2025-11-13 02:39:55'),
+(6, 3, 2, 'eu tbm me chamou de gostosa', 0, '2025-11-13 02:40:11');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `page_comments`
+--
+
+CREATE TABLE `page_comments` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `comic_id` int(11) NOT NULL,
+  `page_number` int(11) NOT NULL,
+  `comment` text NOT NULL,
+  `parent_comment_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Acionadores `page_comments`
+--
+DELIMITER $$
+CREATE TRIGGER `before_page_comment_update` BEFORE UPDATE ON `page_comments` FOR EACH ROW BEGIN
+    SET NEW.updated_at = CURRENT_TIMESTAMP;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `page_ratings`
+--
+
+CREATE TABLE `page_ratings` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `comic_id` int(11) NOT NULL,
+  `page_number` int(11) NOT NULL,
+  `rating` tinyint(1) NOT NULL CHECK (`rating` >= 1 and `rating` <= 5),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -417,7 +729,8 @@ CREATE TABLE `reviews` (
   `content` text DEFAULT NULL,
   `is_verified_purchase` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `contains_spoilers` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -490,7 +803,7 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `avatar`, `avatar_file_name`, `avatar_file_size`, `avatar_mime_type`, `avatar_updated_at`, `bio`, `role`, `created_at`, `updated_at`, `favorite_hero`, `nationality`, `age`, `pronouns`) VALUES
 (2, 'Juan Taborda', 'taborda.mjuan@gmail.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', 'uploads/avatars/avatar_2_1762812275.png', '3tene_20250930220016.png', 91516, 'image/png', '2025-11-10 22:04:35', 'sou legal', 'user', '2025-10-20 23:21:30', '2025-11-10 22:04:35', 'batman', NULL, NULL, NULL),
 (4, 'admin', 'admin@hqverso.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', 'uploads/avatars/avatar_4_1762988992.png', 'avatar_4_1762435030.png', 10652, 'image/png', '2025-11-12 23:09:52', 'sou bilola', 'admin', '2025-10-21 01:11:36', '2025-11-12 23:09:52', 'batman', NULL, NULL, NULL),
-(5, 'reza+', 'ghyslainemoraes@gmail.com', '$2y$10$Bl1YDtuy/P54grfdqfTcw.vV/Gt/gj8tBR562cgU3UqlaBArIswju', 'uploads/avatars/avatar_5_1762544145.png', '3tene_20250930220016.png', 91516, 'image/png', '2025-11-07 19:35:45', NULL, 'user', '2025-11-07 19:35:20', '2025-11-07 19:35:45', 'batman', NULL, NULL, NULL),
+(5, 'reza+', 'ghyslainemoraes@gmail.com', '$2y$10$Bl1YDtuy/P54grfdqfTcw.vV/Gt/gj8tBR562cgU3UqlaBArIswju', 'uploads/avatars/avatar_5_1763000965.gif', 'bob-esponja-dançando.gif', 925657, 'image/gif', '2025-11-13 02:29:25', NULL, 'user', '2025-11-07 19:35:20', '2025-11-13 02:29:25', 'batman', NULL, NULL, NULL),
 (6, 'carro', 'a@a.com', '$2y$10$PbVOpLZio5Z1oPVbrHdZ7exgDYUYEamTRNVePFgSJOGNrYvysL8xO', NULL, NULL, NULL, NULL, NULL, NULL, 'user', '2025-11-07 23:10:41', '2025-11-07 23:10:41', 'batman', NULL, NULL, NULL),
 (7, 'souchato', 'souchato@gmail.com', '$2y$10$y14kdrgtyszdqo5ifsaoBOiQCCMPwIU5tk6Ud6.IBfBq3D/QgMmae', NULL, NULL, NULL, NULL, NULL, NULL, 'user', '2025-11-10 03:45:40', '2025-11-10 03:45:40', 'batman', NULL, NULL, NULL);
 
@@ -550,14 +863,19 @@ CREATE TABLE `user_progress` (
 --
 
 INSERT INTO `user_progress` (`id`, `user_id`, `comic_id`, `progress_pct`, `last_read_at`) VALUES
-(1, 2, 3, 25, '2025-11-10 16:47:01'),
-(3, 2, 12, 25, '2025-11-10 17:05:35'),
-(5, 2, 2, 50, '2025-11-11 01:31:55'),
-(7, 2, 10, 25, '2025-11-10 17:29:08'),
+(1, 2, 3, 25, '2025-11-13 05:30:58'),
+(3, 2, 12, 75, '2025-11-13 05:39:46'),
+(5, 2, 2, 100, '2025-11-13 05:40:32'),
+(7, 2, 10, 25, '2025-11-13 04:35:51'),
 (13, 2, 9, 25, '2025-11-11 01:23:56'),
-(17, 4, 2, 50, '2025-11-12 23:29:26'),
+(17, 4, 2, 50, '2025-11-13 00:16:01'),
 (19, 4, 3, 75, '2025-11-12 23:29:36'),
-(21, 4, 9, 100, '2025-11-12 23:29:49');
+(21, 4, 9, 100, '2025-11-12 23:29:49'),
+(25, 5, 2, 50, '2025-11-13 00:49:08'),
+(34, 2, 11, 25, '2025-11-13 05:07:36'),
+(38, 2, 7, 75, '2025-11-13 05:19:46'),
+(41, 2, 5, 100, '2025-11-13 05:31:39'),
+(84, 2, 13, 75, '2025-11-13 05:39:25');
 
 -- --------------------------------------------------------
 
@@ -704,9 +1022,9 @@ ALTER TABLE `comic_collaborators`
 --
 ALTER TABLE `comic_comments`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_comments_user` (`user_id`),
-  ADD KEY `idx_comments_comic` (`comic_id`),
-  ADD KEY `idx_comments_parent` (`parent_comment_id`);
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `comic_id` (`comic_id`),
+  ADD KEY `idx_comic_comments_parent_id` (`parent_comment_id`);
 
 --
 -- Índices de tabela `comic_drafts`
@@ -722,6 +1040,22 @@ ALTER TABLE `comic_pages`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_pages_comic` (`comic_id`),
   ADD KEY `idx_pages_number` (`page_number`);
+
+--
+-- Índices de tabela `comic_ratings`
+--
+ALTER TABLE `comic_ratings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_comic_rating` (`user_id`,`comic_id`),
+  ADD KEY `idx_comic_ratings_comic_id` (`comic_id`);
+
+--
+-- Índices de tabela `comment_likes`
+--
+ALTER TABLE `comment_likes`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_comment_like` (`user_id`,`comment_id`),
+  ADD KEY `idx_comment_likes_comment_id` (`comment_id`);
 
 --
 -- Índices de tabela `conversations`
@@ -756,6 +1090,25 @@ ALTER TABLE `messages`
   ADD KEY `idx_messages_conversation` (`conversation_id`),
   ADD KEY `idx_messages_sender` (`sender_id`),
   ADD KEY `idx_messages_created` (`created_at`);
+
+--
+-- Índices de tabela `page_comments`
+--
+ALTER TABLE `page_comments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_page_comments_user` (`user_id`),
+  ADD KEY `idx_page_comments_comic` (`comic_id`),
+  ADD KEY `idx_page_comments_page` (`page_number`),
+  ADD KEY `idx_page_comments_parent` (`parent_comment_id`);
+
+--
+-- Índices de tabela `page_ratings`
+--
+ALTER TABLE `page_ratings`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_comic_page_rating` (`user_id`,`comic_id`,`page_number`),
+  ADD KEY `idx_page_ratings_comic` (`comic_id`),
+  ADD KEY `idx_page_ratings_user` (`user_id`);
 
 --
 -- Índices de tabela `posts`
@@ -905,7 +1258,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT de tabela `comics`
 --
 ALTER TABLE `comics`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT de tabela `comic_collaborators`
@@ -917,7 +1270,7 @@ ALTER TABLE `comic_collaborators`
 -- AUTO_INCREMENT de tabela `comic_comments`
 --
 ALTER TABLE `comic_comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de tabela `comic_drafts`
@@ -929,13 +1282,25 @@ ALTER TABLE `comic_drafts`
 -- AUTO_INCREMENT de tabela `comic_pages`
 --
 ALTER TABLE `comic_pages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=111;
+
+--
+-- AUTO_INCREMENT de tabela `comic_ratings`
+--
+ALTER TABLE `comic_ratings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de tabela `comment_likes`
+--
+ALTER TABLE `comment_likes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de tabela `conversations`
 --
 ALTER TABLE `conversations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de tabela `favorites`
@@ -953,6 +1318,18 @@ ALTER TABLE `forums`
 -- AUTO_INCREMENT de tabela `messages`
 --
 ALTER TABLE `messages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT de tabela `page_comments`
+--
+ALTER TABLE `page_comments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `page_ratings`
+--
+ALTER TABLE `page_ratings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -1019,7 +1396,7 @@ ALTER TABLE `user_library`
 -- AUTO_INCREMENT de tabela `user_progress`
 --
 ALTER TABLE `user_progress`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
 
 --
 -- AUTO_INCREMENT de tabela `user_reports`
@@ -1083,6 +1460,20 @@ ALTER TABLE `comic_drafts`
 --
 ALTER TABLE `comic_pages`
   ADD CONSTRAINT `comic_pages_ibfk_1` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `comic_ratings`
+--
+ALTER TABLE `comic_ratings`
+  ADD CONSTRAINT `comic_ratings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `comic_ratings_ibfk_2` FOREIGN KEY (`comic_id`) REFERENCES `comics` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `comment_likes`
+--
+ALTER TABLE `comment_likes`
+  ADD CONSTRAINT `comment_likes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `comment_likes_ibfk_2` FOREIGN KEY (`comment_id`) REFERENCES `comic_comments` (`id`) ON DELETE CASCADE;
 
 --
 -- Restrições para tabelas `conversations`
