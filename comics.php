@@ -1322,6 +1322,19 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
                 gap: 15px;
                 text-align: center;
             }
+
+            /* Adicione isso no final do CSS existente */
+
+.comments-btn {
+    padding: 6px 8px !important;
+    font-size: 0.8rem !important;
+    margin-left: 5px;
+}
+
+.card-actions {
+    display: flex;
+    gap: 5px;
+}
             
             .featured-comic {
                 height: 300px;
@@ -1611,21 +1624,26 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
     </a>
 
     <!-- Modal de detalhe do quadrinho -->
-    <div id="comicModalOverlay" class="comic-modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="comicModalTitle">
-        <div class="comic-modal" role="document">
-            <button class="comic-modal-close" id="comicModalClose" aria-label="Fechar">&times;</button>
-            <img src="" alt="Capa" class="modal-cover" id="comicModalCover">
-            <div class="modal-body">
-                <h2 id="comicModalTitle" class="modal-title">Título do Quadrinho</h2>
-                <div id="comicModalMeta" class="modal-meta">Meta / Autor / Ano</div>
-                <p id="comicModalDescription" class="modal-description">Sinopse do quadrinho será exibida aqui.</p>
-                <div class="modal-actions">
-                    <button id="comicModalRead" class="btn btn-primary">Ler agora</button>
-                    <button id="comicModalAdd" class="btn btn-outline">Adicionar à minha lista</button>
-                </div>
+    <!-- Modal de detalhe do quadrinho - ATUALIZADO -->
+<div id="comicModalOverlay" class="comic-modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="comicModalTitle">
+    <div class="comic-modal" role="document">
+        <button class="comic-modal-close" id="comicModalClose" aria-label="Fechar">&times;</button>
+        <img src="" alt="Capa" class="modal-cover" id="comicModalCover">
+        <div class="modal-body">
+            <h2 id="comicModalTitle" class="modal-title">Título do Quadrinho</h2>
+            <div id="comicModalMeta" class="modal-meta">Meta / Autor / Ano</div>
+            <p id="comicModalDescription" class="modal-description">Sinopse do quadrinho será exibida aqui.</p>
+            <div class="modal-actions">
+                <button id="comicModalRead" class="btn btn-primary">Ler agora</button>
+                <button id="comicModalAdd" class="btn btn-outline">Adicionar à minha lista</button>
+                <!-- NOVO BOTÃO DE COMENTÁRIOS -->
+                <button id="comicModalComments" class="btn btn-outline" style="display: none;">
+                    <i class="fas fa-comments"></i> Ver Comentários
+                </button>
             </div>
         </div>
     </div>
+</div>
 
     <script>
     // Dados de usuários para busca (fallback)
@@ -1702,31 +1720,36 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
     let allComics = [];
 
     // Função para criar card de quadrinho
-    function createComicCard(comic, showProgress = false) {
-        const placeholder = `https://via.placeholder.com/200x300/1a1a2e/e94560?text=${encodeURIComponent(comic.title.substring(0, 15))}`;
-        
-        return `
-            <div class="comic-card" data-id="${comic.id}" data-categories="${comic.categories ? comic.categories.join(',') : 'all'}">
-                <span class="read-badge">Ler agora</span>
-                <img src="${comic.cover}" 
-                     alt="Capa do quadrinho ${comic.title}" 
-                     class="comic-cover"
-                     onerror="this.src='${placeholder}'">
-                <div class="card-bottom">
-                    <div class="title-meta">
-                        <div class="comic-title">${comic.title}</div>
-                        <div class="comic-meta">${comic.meta || 'Quadrinho'}</div>
-                    </div>
-                    <div class="card-actions">
-                        <button class="btn btn-outline add-list" title="Adicionar à lista">+</button>
-                    </div>
+    // Função para criar card de quadrinho - ATUALIZADA
+function createComicCard(comic, showProgress = false) {
+    const placeholder = `https://via.placeholder.com/200x300/1a1a2e/e94560?text=${encodeURIComponent(comic.title.substring(0, 15))}`;
+    
+    return `
+        <div class="comic-card" data-id="${comic.id}" data-categories="${comic.categories ? comic.categories.join(',') : 'all'}">
+            <span class="read-badge">Ler agora</span>
+            <img src="${comic.cover}" 
+                 alt="Capa do quadrinho ${comic.title}" 
+                 class="comic-cover"
+                 onerror="this.src='${placeholder}'">
+            <div class="card-bottom">
+                <div class="title-meta">
+                    <div class="comic-title">${comic.title}</div>
+                    <div class="comic-meta">${comic.meta || 'Quadrinho'}</div>
                 </div>
-                ${showProgress && comic.progress ? `
-                <div class="progress"><div class="progress-bar" style="width:${comic.progress}%"></div></div>
-                ` : ''}
+                <div class="card-actions">
+                    <button class="btn btn-outline add-list" title="Adicionar à lista">+</button>
+                    <!-- NOVO: Ícone de comentários -->
+                    <button class="btn btn-outline comments-btn" title="Ver comentários" onclick="event.stopPropagation(); window.location.href='comentarios.php?comic_id=${comic.id}'">
+                        <i class="fas fa-comments"></i>
+                    </button>
+                </div>
             </div>
-        `;
-    }
+            ${showProgress && comic.progress ? `
+            <div class="progress"><div class="progress-bar" style="width:${comic.progress}%"></div></div>
+            ` : ''}
+        </div>
+    `;
+}
 
     // Função para criar card de quadrinho do banco de dados
     function createModalComicCard(comic) {
@@ -2426,40 +2449,50 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
     }
 
     // Modal de detalhe do quadrinho
-    function openComicModal(comic) {
-        const overlay = document.getElementById('comicModalOverlay');
-        if (!overlay || !comic) return;
-        const cover = document.getElementById('comicModalCover');
-        const title = document.getElementById('comicModalTitle');
-        const meta = document.getElementById('comicModalMeta');
-        const desc = document.getElementById('comicModalDescription');
-        const readBtn = document.getElementById('comicModalRead');
-        const addBtn = document.getElementById('comicModalAdd');
-        
-        cover.src = comic.cover || '';
-        cover.alt = `Capa do quadrinho ${comic.title || ''}`;
-        title.textContent = comic.title || '';
-        meta.textContent = comic.meta || '';
-        desc.textContent = comic.description || 'Sem sinopse disponível.';
-        
-        // ações dos botões
-        readBtn.onclick = function() {
-            saveReadingProgress(comic.id, 10); // Iniciar com 10% de progresso
-            window.location.href = `leitor.html?comic=${encodeURIComponent(comic.id)}&title=${encodeURIComponent(comic.title)}`;
+    // Modal de detalhe do quadrinho - ATUALIZADO
+function openComicModal(comic) {
+    const overlay = document.getElementById('comicModalOverlay');
+    if (!overlay || !comic) return;
+    const cover = document.getElementById('comicModalCover');
+    const title = document.getElementById('comicModalTitle');
+    const meta = document.getElementById('comicModalMeta');
+    const desc = document.getElementById('comicModalDescription');
+    const readBtn = document.getElementById('comicModalRead');
+    const addBtn = document.getElementById('comicModalAdd');
+    
+    cover.src = comic.cover || '';
+    cover.alt = `Capa do quadrinho ${comic.title || ''}`;
+    title.textContent = comic.title || '';
+    meta.textContent = comic.meta || '';
+    desc.textContent = comic.description || 'Sem sinopse disponível.';
+    
+    // ações dos botões
+    readBtn.onclick = function() {
+        saveReadingProgress(comic.id, 10); // Iniciar com 10% de progresso
+        window.location.href = `leitor.html?comic=${encodeURIComponent(comic.id)}&title=${encodeURIComponent(comic.title)}`;
+    };
+    
+    addBtn.onclick = function() {
+        addBtn.textContent = 'Adicionado';
+        addBtn.disabled = true;
+        // Aqui você pode adicionar lógica para adicionar à lista
+    };
+    
+    // NOVO: Botão de comentários
+    const commentsBtn = document.getElementById('comicModalComments');
+    if (commentsBtn) {
+        commentsBtn.onclick = function() {
+            window.location.href = `comentarios.php?comic_id=${comic.id}`;
         };
-        
-        addBtn.onclick = function() {
-            addBtn.textContent = 'Adicionado';
-            addBtn.disabled = true;
-            // Aqui você pode adicionar lógica para adicionar à lista
-        };
-        
-        overlay.style.display = 'flex';
-        overlay.setAttribute('aria-hidden', 'false');
-        setTimeout(() => {
-            readBtn.focus();
-        }, 120);
+        commentsBtn.style.display = 'block';
     }
+    
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden', 'false');
+    setTimeout(() => {
+        readBtn.focus();
+    }, 120);
+}
     
     function closeComicModal() {
         const overlay = document.getElementById('comicModalOverlay');
