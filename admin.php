@@ -11,25 +11,21 @@ $error = '';
 $search_results = [];
 $search_term = '';
 
-// Processar formulário de adicionar quadrinho
-if($_POST && isset($_POST['add_comic'])) {
-    $title = $_POST['title'] ?? '';
-    $description = $_POST['description'] ?? '';
-    $cover_url = $_POST['cover_url'] ?? '';
-    $price = $_POST['price'] ?? 0;
-    $page_count = $_POST['page_count'] ?? 0;
-    $publisher_id = $_POST['publisher_id'] ?? 1;
-    $categories = $_POST['categories'] ?? [];
-
-    if(!empty($title) && !empty($description)) {
-        $result = addComic($title, $description, $cover_url, $price, $page_count, $publisher_id, $categories);
-        if($result) {
-            $success = "Quadrinho adicionado com sucesso!";
+// Processar remoção de quadrinho
+if($_POST && isset($_POST['delete_comic'])) {
+    $comic_id = $_POST['comic_id'] ?? '';
+    
+    if(!empty($comic_id)) {
+        $result = deleteComic($comic_id, $_SESSION['user_id']);
+        if($result === true) {
+            $success = "Quadrinho removido com sucesso!";
+            // Recarregar a lista de quadrinhos
+            $comics = getComics();
         } else {
-            $error = "Erro ao adicionar quadrinho!";
+            $error = $result;
         }
     } else {
-        $error = "Preencha todos os campos obrigatórios!";
+        $error = "ID do quadrinho não especificado!";
     }
 }
 
@@ -123,6 +119,25 @@ function banUser($user_id, $banned_by, $reason = '') {
     }
 }
 
+// Função para deletar quadrinho
+function deleteComic($comic_id, $admin_id) {
+    require_once 'config_database.php';
+    $database = new Database();
+    $conn = $database->getConnection();
+    
+    try {
+        // Usar a função do Auth para deletar o quadrinho
+        require_once 'includes_auth.php';
+        $auth = new Auth();
+        $result = $auth->deleteComic($comic_id, $admin_id);
+        
+        return $result;
+        
+    } catch(PDOException $e) {
+        return "Erro ao remover quadrinho: " . $e->getMessage();
+    }
+}
+
 // Função para atualizar status do report
 function updateReportStatus($report_id, $status, $admin_id) {
     require_once 'config_database.php';
@@ -140,76 +155,6 @@ function updateReportStatus($report_id, $status, $admin_id) {
         
     } catch(PDOException $e) {
         return "Erro ao atualizar report: " . $e->getMessage();
-    }
-}
-
-// Função para adicionar quadrinho
-function addComic($title, $description, $cover_url, $price, $page_count, $publisher_id, $categories) {
-    require_once 'config_database.php';
-    $database = new Database();
-    $conn = $database->getConnection();
-
-    try {
-        // Inserir o quadrinho
-        $query = "INSERT INTO comics (title, author_id, publisher_id, cover, description, price, page_count, is_published, status) 
-                  VALUES (:title, :author_id, :publisher_id, :cover, :description, :price, :page_count, TRUE, 'published')";
-        
-        $stmt = $conn->prepare($query);
-        $stmt->bindParam(":title", $title);
-        $stmt->bindParam(":author_id", $_SESSION['user_id']);
-        $stmt->bindParam(":publisher_id", $publisher_id);
-        $stmt->bindParam(":cover", $cover_url);
-        $stmt->bindParam(":description", $description);
-        $stmt->bindParam(":price", $price);
-        $stmt->bindParam(":page_count", $page_count);
-        
-        if($stmt->execute()) {
-            $comic_id = $conn->lastInsertId();
-            
-            // Adicionar categorias
-            if(!empty($categories)) {
-                foreach($categories as $category_id) {
-                    $cat_query = "INSERT INTO comic_categories (comic_id, category_id) VALUES (:comic_id, :category_id)";
-                    $cat_stmt = $conn->prepare($cat_query);
-                    $cat_stmt->bindParam(":comic_id", $comic_id);
-                    $cat_stmt->bindParam(":category_id", $category_id);
-                    $cat_stmt->execute();
-                }
-            }
-            
-            return true;
-        }
-    } catch(PDOException $e) {
-        error_log("Erro ao adicionar quadrinho: " . $e->getMessage());
-    }
-    
-    return false;
-}
-
-// Buscar dados para os selects
-function getPublishers() {
-    require_once 'config_database.php';
-    $database = new Database();
-    $conn = $database->getConnection();
-    
-    try {
-        $stmt = $conn->query("SELECT id, name FROM publishers ORDER BY name");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch(PDOException $e) {
-        return [];
-    }
-}
-
-function getCategories() {
-    require_once 'config_database.php';
-    $database = new Database();
-    $conn = $database->getConnection();
-    
-    try {
-        $stmt = $conn->query("SELECT id, name FROM categories ORDER BY name");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch(PDOException $e) {
-        return [];
     }
 }
 
@@ -337,8 +282,6 @@ function getSystemStats() {
     }
 }
 
-$publishers = getPublishers();
-$categories = getCategories();
 $comics = getComics();
 $users = $auth->getAllUsersForAdmin();
 $banned_users = $auth->getBannedUsers();
@@ -1097,9 +1040,6 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
 
                     <h3 style="margin: 20px 0 10px 0; color: #e94560;">Ações Rápidas</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <button class="btn btn-primary" onclick="switchTab('comics')">
-                            <i class="fas fa-plus"></i> Adicionar Quadrinho
-                        </button>
                         <button class="btn btn-warning" onclick="switchTab('reports')">
                             <i class="fas fa-flag"></i> Ver Denúncias
                         </button>
@@ -1108,6 +1048,9 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
                         </button>
                         <button class="btn btn-secondary" onclick="switchTab('users')">
                             <i class="fas fa-search"></i> Pesquisar Usuários
+                        </button>
+                        <button class="btn btn-primary" onclick="switchTab('comics')">
+                            <i class="fas fa-book"></i> Gerenciar Quadrinhos
                         </button>
                     </div>
                 </div>
@@ -1186,86 +1129,34 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
 
         <!-- Tab Quadrinhos -->
         <div class="tab-content" id="comics">
-            <div class="admin-content">
-                <div class="form-section">
-                    <h2 class="section-title">Adicionar Novo Quadrinho</h2>
-                    <form method="POST">
-                        <input type="hidden" name="add_comic" value="1">
-                        
-                        <div class="form-group">
-                            <label for="title">Título do Quadrinho *</label>
-                            <input type="text" id="title" name="title" required placeholder="Ex: Batman: O Cavaleiro das Trevas">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="description">Descrição *</label>
-                            <textarea id="description" name="description" required placeholder="Descrição do quadrinho..."></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="cover_url">URL da Capa</label>
-                            <input type="url" id="cover_url" name="cover_url" placeholder="https://exemplo.com/capa.jpg">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="publisher_id">Editora</label>
-                            <select id="publisher_id" name="publisher_id">
-                                <?php foreach($publishers as $publisher): ?>
-                                    <option value="<?php echo $publisher['id']; ?>"><?php echo htmlspecialchars($publisher['name']); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="price">Preço (R$)</label>
-                            <input type="number" id="price" name="price" step="0.01" min="0" value="29.90">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="page_count">Número de Páginas</label>
-                            <input type="number" id="page_count" name="page_count" min="1" value="100">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Categorias</label>
-                            <div class="checkbox-group">
-                                <?php foreach($categories as $category): ?>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" id="cat_<?php echo $category['id']; ?>" 
-                                               name="categories[]" value="<?php echo $category['id']; ?>">
-                                        <label for="cat_<?php echo $category['id']; ?>"><?php echo htmlspecialchars($category['name']); ?></label>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Adicionar Quadrinho
-                        </button>
-                    </form>
-                </div>
-                
-                <div class="list-section">
-                    <h2 class="section-title">Quadrinhos Cadastrados</h2>
-                    <div class="comics-list">
-                        <?php if(empty($comics)): ?>
-                            <p style="text-align: center; opacity: 0.7;">Nenhum quadrinho cadastrado ainda.</p>
-                        <?php else: ?>
-                            <?php foreach($comics as $comic): ?>
-                                <div class="comic-item">
-                                    <div class="comic-title"><?php echo htmlspecialchars($comic['title']); ?></div>
-                                    <div class="comic-meta">
-                                        por <?php echo htmlspecialchars($comic['author_name']); ?> | 
-                                        R$ <?php echo number_format($comic['price'], 2, ',', '.'); ?> | 
-                                        <?php echo $comic['page_count']; ?> páginas
-                                    </div>
-                                    <div class="comic-categories">
-                                        Categorias: <?php echo $comic['categories'] ? htmlspecialchars($comic['categories']) : 'Nenhuma'; ?>
-                                    </div>
+            <div class="list-section" style="grid-column: 1 / -1;">
+                <h2 class="section-title">Quadrinhos Cadastrados</h2>
+                <div class="comics-list">
+                    <?php if(empty($comics)): ?>
+                        <p style="text-align: center; opacity: 0.7;">Nenhum quadrinho cadastrado ainda.</p>
+                    <?php else: ?>
+                        <?php foreach($comics as $comic): ?>
+                            <div class="comic-item">
+                                <div class="comic-title"><?php echo htmlspecialchars($comic['title']); ?></div>
+                                <div class="comic-meta">
+                                    por <?php echo htmlspecialchars($comic['author_name']); ?> | 
+                                    R$ <?php echo number_format($comic['price'], 2, ',', '.'); ?> | 
+                                    <?php echo $comic['page_count']; ?> páginas
                                 </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
+                                <div class="comic-categories">
+                                    Categorias: <?php echo $comic['categories'] ? htmlspecialchars($comic['categories']) : 'Nenhuma'; ?>
+                                </div>
+                                <!-- BOTÃO DE REMOÇÃO -->
+                                <form method="POST" style="margin-top: 10px;" 
+                                      onsubmit="return confirmDeleteComic('<?php echo htmlspecialchars($comic['title']); ?>')">
+                                    <input type="hidden" name="comic_id" value="<?php echo $comic['id']; ?>">
+                                    <button type="submit" name="delete_comic" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i> Remover Quadrinho
+                                    </button>
+                                </form>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1664,26 +1555,6 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
                 iconElement.title = 'Modo Claro';
             }
         }
-
-        // Preview da capa
-        document.getElementById('cover_url').addEventListener('input', function(e) {
-            const url = e.target.value;
-            if(url) {
-                console.log('URL da capa:', url);
-            }
-        });
-        
-        // Validação do formulário
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const title = document.getElementById('title').value.trim();
-            const description = document.getElementById('description').value.trim();
-            
-            if(!title || !description) {
-                e.preventDefault();
-                alert('Por favor, preencha todos os campos obrigatórios!');
-                return false;
-            }
-        });
         
         // Confirmação para banir usuário
         function confirmBanUser(username, form) {
@@ -1699,6 +1570,20 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
                 message += `Motivo: ${reason}\n\n`;
             }
             
+            message += `Tem certeza que deseja continuar?`;
+            
+            return confirm(message);
+        }
+
+        // Confirmação para deletar quadrinho
+        function confirmDeleteComic(comicTitle) {
+            let message = `ATENÇÃO: Você está prestes a REMOVER PERMANENTEMENTE o quadrinho "${comicTitle}".\n\n`;
+            message += `Esta ação:\n`;
+            message += `• Excluirá permanentemente o quadrinho\n`;
+            message += `• Removerá todas as páginas e capa\n`;
+            message += `• Excluirá todos os comentários e avaliações\n`;
+            message += `• Removerá de todas as bibliotecas de usuários\n`;
+            message += `• Não poderá ser desfeita\n\n`;
             message += `Tem certeza que deseja continuar?`;
             
             return confirm(message);
