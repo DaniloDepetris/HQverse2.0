@@ -11,6 +11,8 @@ class Auth {
         $this->conn = $database->getConnection();
     }
 
+
+    
 // NOVA FUNÇÃO: Iniciar ou obter conversa
 public function getOrCreateConversation($user1_id, $user2_id) {
     try {
@@ -945,6 +947,613 @@ public function getPendingReports() {
             return false;
         }
     }
+
+        /**
+     * Solicitar conta de criador
+     */
+    public function requestCreatorAccount($user_id, $cpf, $address, $age) {
+        try {
+            // Validar dados
+            if (empty($cpf) || empty($address) || empty($age)) {
+                return "Todos os campos são obrigatórios!";
+            }
+
+            // Validar CPF
+            if (!$this->validateCPF($cpf)) {
+                return "CPF inválido!";
+            }
+
+            // Validar idade (mínimo 18 anos)
+            if ($age < 18) {
+                return "É necessário ter pelo menos 18 anos para ser criador!";
+            }
+
+            // Verificar se já existe solicitação pendente
+            $check_query = "SELECT id FROM creator_requests WHERE user_id = :user_id AND status = 'pending'";
+            $check_stmt = $this->conn->prepare($check_query);
+            $check_stmt->bindParam(":user_id", $user_id);
+            $check_stmt->execute();
+
+            if ($check_stmt->rowCount() > 0) {
+                return "Você já tem uma solicitação de conta criador pendente!";
+            }
+
+            // Verificar se CPF já está em uso
+            $cpf_query = "SELECT id FROM creator_requests WHERE cpf = :cpf AND status = 'approved'";
+            $cpf_stmt = $this->conn->prepare($cpf_query);
+            $cpf_stmt->bindParam(":cpf", $cpf);
+            $cpf_stmt->execute();
+
+            if ($cpf_stmt->rowCount() > 0) {
+                return "Este CPF já está associado a uma conta criador ativa!";
+            }
+
+            // Inserir solicitação
+            $query = "INSERT INTO creator_requests (user_id, cpf, address, age, status, requested_at) 
+                      VALUES (:user_id, :cpf, :address, :age, 'pending', NOW())";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->bindParam(":cpf", $cpf);
+            $stmt->bindParam(":address", $address);
+            $stmt->bindParam(":age", $age);
+
+            if ($stmt->execute()) {
+                // Criar notificação para admin
+                $this->createAdminNotification(
+                    'new_creator_request',
+                    'Nova solicitação de conta criador',
+                    "O usuário ID $user_id solicitou uma conta de criador",
+                    $user_id,
+                    'user'
+                );
+
+                return true;
+            }
+
+            return "Erro ao processar solicitação!";
+
+        } catch(PDOException $e) {
+            error_log("Erro ao solicitar conta criador: " . $e->getMessage());
+            return "Erro interno do sistema!";
+        }
+    }
+
+    /**
+     * Validar CPF
+     */
+    private function validateCPF($cpf) {
+        // Remove caracteres não numéricos
+        $cpf = preg_replace('/[^0-9]/', '', $cpf);
+        
+        // Verifica se tem 11 dígitos
+        if (strlen($cpf) != 11) {
+            return false;
+        }
+        
+        // Verifica se não é uma sequência de números iguais
+        if (preg_match('/(\d)\1{10}/', $cpf)) {
+            return false;
+        }
+        
+        // Calcula e verifica primeiro dígito verificador
+        for ($t = 9; $t < 11; $t++) {
+            for ($d = 0, $c = 0; $c < $t; $c++) {
+                $d += $cpf[$c] * (($t + 1) - $c);
+            }
+            $d = ((10 * $d) % 11) % 10;
+            if ($cpf[$c] != $d) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Obter status da solicitação de criador
+     */
+    public function getCreatorRequestStatus($user_id) {
+        try {
+            $query = "SELECT status, admin_notes, processed_at 
+                      FROM creator_requests 
+                      WHERE user_id = :user_id 
+                      ORDER BY requested_at DESC 
+                      LIMIT 1";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->execute();
+
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+
+        } catch(PDOException $e) {
+            error_log("Erro ao obter status da solicitação: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Obter todas as solicitações de criador pendentes (para admin)
+     */
+    public function getPendingCreatorRequests() {
+        try {
+            $query = "SELECT cr.*, u.username, u.email 
+                      FROM creator_requests cr
+                      JOIN users u ON cr.user_id = u.id
+                      WHERE cr.status = 'pending'
+                      ORDER BY cr.requested_at DESC";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch(PDOException $e) {
+            error_log("Erro ao obter solicitações pendentes: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Aprovar ou rejeitar solicitação de criador (admin)
+     */
+    public function processCreatorRequest($request_id, $status, $admin_id, $admin_notes = '') {
+        try {
+            // Obter dados da solicitação
+            $query = "SELECT user_id FROM creator_requests WHERE id = :request_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":request_id", $request_id);
+            $stmt->execute();
+            
+            $request = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$request) {
+                return "Solicitação não encontrada!";
+            }
+
+            $user_id = $request['user_id'];
+
+            // Atualizar status da solicitação
+            $update_query = "UPDATE creator_requests 
+                            SET status = :status, admin_id = :admin_id, 
+                                admin_notes = :admin_notes, processed_at = NOW()
+                            WHERE id = :request_id";
+            
+            $update_stmt = $this->conn->prepare($update_query);
+            $update_stmt->bindParam(":status", $status);
+            $update_stmt->bindParam(":admin_id", $admin_id);
+            $update_stmt->bindParam(":admin_notes", $admin_notes);
+            $update_stmt->bindParam(":request_id", $request_id);
+
+            if (!$update_stmt->execute()) {
+                return "Erro ao atualizar solicitação!";
+            }
+
+            // Se aprovado, atualizar role do usuário
+            if ($status === 'approved') {
+                $user_query = "UPDATE users SET role = 'creator' WHERE id = :user_id";
+                $user_stmt = $this->conn->prepare($user_query);
+                $user_stmt->bindParam(":user_id", $user_id);
+                
+                if (!$user_stmt->execute()) {
+                    return "Erro ao atualizar role do usuário!";
+                }
+            }
+
+            return true;
+
+        } catch(PDOException $e) {
+            error_log("Erro ao processar solicitação de criador: " . $e->getMessage());
+            return "Erro interno do sistema!";
+        }
+    }
+
+    
+    public function getAllCreatorRequests() {
+        try {
+            $query = "SELECT cr.*, u.username, u.email, 
+                             admin.username as admin_name
+                      FROM creator_requests cr
+                      JOIN users u ON cr.user_id = u.id
+                      LEFT JOIN users admin ON cr.admin_id = admin.id
+                      ORDER BY cr.requested_at DESC";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch(PDOException $e) {
+            error_log("Erro ao obter todas as solicitações: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+public function isCreator($user_id) {
+    try {
+        $query = "SELECT role FROM users WHERE id = :user_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":user_id", $user_id);
+        $stmt->execute();
+
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $user && ($user['role'] === 'creator' || $user['role'] === 'admin');
+
+    } catch(PDOException $e) {
+        error_log("Erro ao verificar role: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Obter todas as categorias
+ */
+public function getAllCategories() {
+    try {
+        $query = "SELECT id, name, description FROM categories ORDER BY name";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch(PDOException $e) {
+        error_log("Erro ao obter categorias: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Upload da capa do quadrinho
+ */
+public function uploadComicCover($file, $user_id) {
+    try {
+        $upload_dir = "uploads/covers/";
+        
+        // Criar diretório se não existir
+        if(!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+        
+        // Validar tipo de arquivo
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if(!in_array($file['type'], $allowed_types)) {
+            return ['success' => false, 'message' => 'Tipo de arquivo não suportado! Use apenas JPG, PNG, GIF ou WebP.'];
+        }
+        
+        // Validar tamanho (5MB)
+        if($file['size'] > 5 * 1024 * 1024) {
+            return ['success' => false, 'message' => 'Arquivo muito grande! Máximo 5MB.'];
+        }
+        
+        // Gerar nome único
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = "cover_" . $user_id . "_" . time() . "." . $extension;
+        $filepath = $upload_dir . $filename;
+        
+        if(move_uploaded_file($file['tmp_name'], $filepath)) {
+            return ['success' => true, 'path' => $filepath, 'filename' => $filename];
+        } else {
+            return ['success' => false, 'message' => 'Erro ao fazer upload da capa!'];
+        }
+        
+    } catch(PDOException $e) {
+        error_log("Erro no upload da capa: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Erro interno no upload!'];
+    }
+}
+
+/**
+ * Upload das páginas do quadrinho
+ */
+public function uploadComicPages($files, $comic_id, $user_id) {
+    try {
+        $upload_dir = "uploads/pages/";
+        
+        // Criar diretório se não existir
+        if(!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+        
+        $uploaded_pages = 0;
+        $errors = [];
+        
+        // Processar cada arquivo
+        for($i = 0; $i < count($files['name']); $i++) {
+            if($files['error'][$i] === UPLOAD_ERR_OK) {
+                // Validar tipo de arquivo
+                $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if(!in_array($files['type'][$i], $allowed_types)) {
+                    $errors[] = "Página " . ($i + 1) . ": Tipo de arquivo não suportado";
+                    continue;
+                }
+                
+                // Validar tamanho (5MB)
+                if($files['size'][$i] > 5 * 1024 * 1024) {
+                    $errors[] = "Página " . ($i + 1) . ": Arquivo muito grande (Máx. 5MB)";
+                    continue;
+                }
+                
+                // Gerar nome único
+                $extension = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
+                $filename = "page_" . $comic_id . "_" . ($i + 1) . "_" . time() . "." . $extension;
+                $filepath = $upload_dir . $filename;
+                
+                if(move_uploaded_file($files['tmp_name'][$i], $filepath)) {
+                    // Inserir página no banco
+                    $page_number = $i + 1;
+                    $stmt = $this->conn->prepare("INSERT INTO comic_pages (comic_id, page_number, image_url, title) VALUES (?, ?, ?, ?)");
+                    $title = "Página " . $page_number;
+                    $stmt->bindParam(1, $comic_id);
+                    $stmt->bindParam(2, $page_number);
+                    $stmt->bindParam(3, $filepath);
+                    $stmt->bindParam(4, $title);
+                    
+                    if($stmt->execute()) {
+                        $uploaded_pages++;
+                    } else {
+                        $errors[] = "Página " . ($i + 1) . ": Erro ao salvar no banco";
+                        // Remover arquivo se falhou ao salvar no banco
+                        if(file_exists($filepath)) {
+                            unlink($filepath);
+                        }
+                    }
+                } else {
+                    $errors[] = "Página " . ($i + 1) . ": Erro no upload";
+                }
+            } else {
+                $errors[] = "Página " . ($i + 1) . ": Erro no arquivo (Código: " . $files['error'][$i] . ")";
+            }
+        }
+        
+        if($uploaded_pages > 0) {
+            $message = $uploaded_pages . " página(s) carregada(s) com sucesso!";
+            if(!empty($errors)) {
+                $message .= " Erros: " . implode(", ", $errors);
+            }
+            return ['success' => true, 'page_count' => $uploaded_pages, 'message' => $message];
+        } else {
+            return ['success' => false, 'message' => "Nenhuma página foi carregada. Erros: " . implode(", ", $errors)];
+        }
+        
+    } catch(PDOException $e) {
+        error_log("Erro no upload das páginas: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Erro interno no upload das páginas!'];
+    }
+}
+
+/**
+ * Criar quadrinho no banco de dados
+ */
+public function createComic($data) {
+    $this->conn->beginTransaction();
+    
+    try {
+        // Inserir quadrinho
+        $stmt = $this->conn->prepare("
+            INSERT INTO comics (title, author_id, description, cover, is_premium, price, page_count, status, is_published, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'published', 1, NOW(), NOW())
+        ");
+        $stmt->bindParam(1, $data['title']);
+        $stmt->bindParam(2, $data['author_id']);
+        $stmt->bindParam(3, $data['description']);
+        $stmt->bindParam(4, $data['cover']);
+        $stmt->bindParam(5, $data['is_premium']);
+        $stmt->bindParam(6, $data['price']);
+        $stmt->bindParam(7, $data['page_count']);
+        
+        if(!$stmt->execute()) {
+            throw new Exception("Erro ao criar quadrinho: " . $stmt->errorInfo()[2]);
+        }
+        
+        $comic_id = $this->conn->lastInsertId();
+        
+        // Inserir categorias
+        foreach($data['categories'] as $category_id) {
+            $stmt = $this->conn->prepare("INSERT INTO comic_categories (comic_id, category_id) VALUES (?, ?)");
+            $stmt->bindParam(1, $comic_id);
+            $stmt->bindParam(2, $category_id);
+            if(!$stmt->execute()) {
+                throw new Exception("Erro ao adicionar categorias: " . $stmt->errorInfo()[2]);
+            }
+        }
+        
+        $this->conn->commit();
+        return ['success' => true, 'comic_id' => $comic_id];
+        
+    } catch (Exception $e) {
+        $this->conn->rollback();
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+}
+
+/**
+ * Atualizar contagem de páginas do quadrinho
+ */
+public function updateComicPageCount($comic_id, $page_count) {
+    try {
+        $stmt = $this->conn->prepare("UPDATE comics SET page_count = ?, updated_at = NOW() WHERE id = ?");
+        $stmt->bindParam(1, $page_count);
+        $stmt->bindParam(2, $comic_id);
+        return $stmt->execute();
+        
+    } catch(PDOException $e) {
+        error_log("Erro ao atualizar contagem de páginas: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Obter quadrinhos do usuário
+ */
+public function getUserComics($user_id, $limit = 20) {
+    try {
+        $query = "SELECT c.*, 
+                         COUNT(DISTINCT cp.id) as actual_page_count,
+                         COUNT(DISTINCT f.id) as favorites_count,
+                         COUNT(DISTINCT r.id) as reviews_count,
+                         COALESCE(AVG(r.rating), 0) as avg_rating
+                  FROM comics c
+                  LEFT JOIN comic_pages cp ON c.id = cp.comic_id
+                  LEFT JOIN favorites f ON c.id = f.comic_id
+                  LEFT JOIN reviews r ON c.id = r.comic_id
+                  WHERE c.author_id = :user_id
+                  GROUP BY c.id
+                  ORDER BY c.created_at DESC
+                  LIMIT :limit";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":user_id", $user_id);
+        $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch(PDOException $e) {
+        error_log("Erro ao obter quadrinhos do usuário: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Obter dados do quadrinho
+ */
+public function getComicData($comic_id) {
+    try {
+        $query = "SELECT c.*, u.username as author_name, u.avatar as author_avatar,
+                         COUNT(DISTINCT cp.id) as actual_page_count,
+                         COUNT(DISTINCT f.id) as favorites_count,
+                         COUNT(DISTINCT r.id) as reviews_count,
+                         COALESCE(AVG(r.rating), 0) as avg_rating
+                  FROM comics c
+                  JOIN users u ON c.author_id = u.id
+                  LEFT JOIN comic_pages cp ON c.id = cp.comic_id
+                  LEFT JOIN favorites f ON c.id = f.comic_id
+                  LEFT JOIN reviews r ON c.id = r.comic_id
+                  WHERE c.id = :comic_id
+                  GROUP BY c.id";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":comic_id", $comic_id);
+        $stmt->execute();
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+        
+    } catch(PDOException $e) {
+        error_log("Erro ao obter dados do quadrinho: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Obter páginas do quadrinho
+ */
+public function getComicPages($comic_id) {
+    try {
+        $query = "SELECT * FROM comic_pages WHERE comic_id = :comic_id ORDER BY page_number";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":comic_id", $comic_id);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch(PDOException $e) {
+        error_log("Erro ao obter páginas do quadrinho: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Obter categorias do quadrinho
+ */
+public function getComicCategories($comic_id) {
+    try {
+        $query = "SELECT c.id, c.name 
+                  FROM categories c
+                  JOIN comic_categories cc ON c.id = cc.category_id
+                  WHERE cc.comic_id = :comic_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":comic_id", $comic_id);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch(PDOException $e) {
+        error_log("Erro ao obter categorias do quadrinho: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Deletar quadrinho
+ */
+public function deleteComic($comic_id, $user_id) {
+    $this->conn->beginTransaction();
+    
+    try {
+        // Verificar se o usuário é o autor
+        $check_stmt = $this->conn->prepare("SELECT author_id FROM comics WHERE id = ?");
+        $check_stmt->bindParam(1, $comic_id);
+        $check_stmt->execute();
+        
+        $comic = $check_stmt->fetch(PDO::FETCH_ASSOC);
+        if(!$comic || $comic['author_id'] != $user_id) {
+            throw new Exception("Você não tem permissão para excluir este quadrinho!");
+        }
+        
+        // Obter caminhos dos arquivos para exclusão
+        $pages_stmt = $this->conn->prepare("SELECT image_url FROM comic_pages WHERE comic_id = ?");
+        $pages_stmt->bindParam(1, $comic_id);
+        $pages_stmt->execute();
+        $pages = $pages_stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Obter capa
+        $cover_stmt = $this->conn->prepare("SELECT cover FROM comics WHERE id = ?");
+        $cover_stmt->bindParam(1, $comic_id);
+        $cover_stmt->execute();
+        $cover = $cover_stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Deletar registros relacionados
+        $tables = [
+            'comic_categories' => 'comic_id',
+            'comic_pages' => 'comic_id',
+            'favorites' => 'comic_id',
+            'reviews' => 'comic_id',
+            'reading_progress' => 'comic_id',
+            'comic_comments' => 'comic_id'
+        ];
+        
+        foreach($tables as $table => $column) {
+            $delete_stmt = $this->conn->prepare("DELETE FROM $table WHERE $column = ?");
+            $delete_stmt->bindParam(1, $comic_id);
+            $delete_stmt->execute();
+        }
+        
+        // Deletar quadrinho
+        $delete_comic_stmt = $this->conn->prepare("DELETE FROM comics WHERE id = ?");
+        $delete_comic_stmt->bindParam(1, $comic_id);
+        $delete_comic_stmt->execute();
+        
+        // Deletar arquivos físicos
+        if($cover && $cover['cover'] && file_exists($cover['cover'])) {
+            unlink($cover['cover']);
+        }
+        
+        foreach($pages as $page) {
+            if($page['image_url'] && file_exists($page['image_url'])) {
+                unlink($page['image_url']);
+            }
+        }
+        
+        $this->conn->commit();
+        return ['success' => true, 'message' => 'Quadrinho excluído com sucesso!'];
+        
+    } catch (Exception $e) {
+        $this->conn->rollback();
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+}
+
+
 } // FIM DA CLASSE Auth
 
 $auth = new Auth();
