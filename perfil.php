@@ -173,6 +173,27 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
         }
     }
 }
+
+// Processar solicitação de criador (agora em modal)
+if($viewing_own_profile && $_POST && isset($_POST['request_creator'])) {
+    $cpf = $_POST['cpf'] ?? '';
+    $address = $_POST['address'] ?? '';
+    $age = intval($_POST['age'] ?? 0);
+
+    // Formatar CPF (remover caracteres não numéricos)
+    $cpf = preg_replace('/[^0-9]/', '', $cpf);
+
+    $result = $auth->requestCreatorAccount($_SESSION['user_id'], $cpf, $address, $age);
+    
+    if($result === true) {
+        $success = "Solicitação enviada com sucesso! Aguarde a aprovação dos administradores.";
+    } else {
+        $error = $result;
+    }
+}
+
+// Obter status da solicitação de criador
+$creator_request_status = $auth->getCreatorRequestStatus($profile_user_id);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -183,6 +204,7 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Estilos anteriores mantidos */
         :root {
             --bg-primary: #1a1a2e;
             --bg-secondary: #16213e;
@@ -493,6 +515,33 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
             font-weight: 700;
         }
 
+        .profile-role {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .role-user {
+            background: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
+            border: 1px solid #6c757d;
+        }
+
+        .role-creator {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .role-admin {
+            background: rgba(233, 69, 96, 0.2);
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+        }
+
         .profile-stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -617,6 +666,45 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
         
         .btn-report:hover { 
             background: rgba(220, 53, 69, 0.2); 
+            transform: translateY(-2px);
+        }
+
+        .btn-creator {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-creator:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #5a3d8a 100%);
+            transform: translateY(-2px);
+        }
+
+        .btn-creator-pending {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-publish {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-publish:hover {
+            background: linear-gradient(135deg, #20c997 0%, #198754 100%);
+            transform: translateY(-2px);
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-logout:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
             transform: translateY(-2px);
         }
 
@@ -931,6 +1019,62 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
             75% { transform: translateX(5px); }
         }
 
+        /* Benefícios de ser criador */
+        .benefits-list {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+
+        .benefit-item i {
+            color: var(--accent-color);
+            width: 20px;
+        }
+
+        .privacy-notice {
+            background: rgba(0, 123, 255, 0.1);
+            border: 1px solid #007bff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .privacy-notice i {
+            color: #007bff;
+            margin-right: 10px;
+        }
+
+        .status-card {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .status-pending {
+            color: #ffc107;
+        }
+
+        .status-approved {
+            color: #28a745;
+        }
+
+        .status-rejected {
+            color: #dc3545;
+        }
+
         /* Responsividade */
         @media (max-width: 768px) {
             .profile-main {
@@ -1054,7 +1198,24 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
             <span>Mensagens</span>
         </a>
         
+        <div class="menu-section">Criador</div>
+        <?php if($auth->isCreator($_SESSION['user_id'])): ?>
+            <a href="upload_comic.php" class="menu-item">
+                <i class="fas fa-upload"></i>
+                <span>Publicar Quadrinho</span>
+            </a>
+        <?php else: ?>
+            <a href="#" class="menu-item" onclick="openCreatorModal()">
+                <i class="fas fa-palette"></i>
+                <span>Tornar-se Criador</span>
+            </a>
+        <?php endif; ?>
+        
         <div class="menu-section">Conta</div>
+        <a href="logout.php" class="menu-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Sair da Conta</span>
+        </a>
         <a href="#" class="menu-item" onclick="openDeleteModal()">
             <i class="fas fa-trash-alt"></i>
             <span>Excluir Conta</span>
@@ -1127,6 +1288,17 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
                 
                 <h2 class="profile-name"><?php echo htmlspecialchars($user_data['username']); ?></h2>
                 
+                <div class="profile-role role-<?php echo $user_data['role']; ?>">
+                    <?php 
+                    $role_names = [
+                        'user' => 'Usuário',
+                        'creator' => 'Criador',
+                        'admin' => 'Administrador'
+                    ];
+                    echo $role_names[$user_data['role']]; 
+                    ?>
+                </div>
+                
                 <div class="profile-stats">
                     <div class="stat">
                         <span class="stat-number"><?php echo $followers_count; ?></span>
@@ -1157,6 +1329,30 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
                         <a href="messages.php" class="btn btn-primary">
                             <i class="fas fa-envelope"></i> Minhas Mensagens
                         </a>
+                        
+                        <!-- BOTÃO PARA SOLICITAR CONTA CRIADOR -->
+                        <?php if(!$auth->isCreator($_SESSION['user_id'])): ?>
+                            <?php $request_status = $auth->getCreatorRequestStatus($_SESSION['user_id']); ?>
+                            <button class="btn <?php echo ($request_status && $request_status['status'] === 'pending') ? 'btn-creator-pending' : 'btn-creator'; ?>" onclick="openCreatorModal()">
+                                <i class="fas fa-palette"></i> 
+                                <?php 
+                                if($request_status) {
+                                    if($request_status['status'] === 'pending') {
+                                        echo '✓ Solicitação Pendente';
+                                    } elseif($request_status['status'] === 'rejected') {
+                                        echo '↻ Tornar-se Criador';
+                                    }
+                                } else {
+                                    echo ' Tornar-se Criador';
+                                }
+                                ?>
+                            </button>
+                        <?php else: ?>
+                            <a href="upload_comic.php" class="btn btn-publish">
+                                <i class="fas fa-upload"></i> Publicar Quadrinho
+                            </a>
+                        <?php endif; ?>
+                        
                     <?php endif; ?>
                 </div>
             </div>
@@ -1174,6 +1370,27 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
                             <?php echo $viewing_own_profile ? 'Você ainda não adicionou uma biografia. Clique no botão do menu para editar seu perfil!' : 'Este usuário ainda não adicionou uma biografia.'; ?>
                         </p>
                     <?php endif; ?>
+                </div>
+
+                <!-- Informações Adicionais -->
+                <div style="margin-top: 30px;">
+                    <h3 class="bio-title">
+                        <i class="fas fa-info-circle"></i> Informações
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                        <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 5px;">Membro desde</div>
+                            <div style="font-weight: 600; color: var(--accent-color);">
+                                <?php echo date('d/m/Y', strtotime($user_data['created_at'])); ?>
+                            </div>
+                        </div>
+                        <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 5px;">Status</div>
+                            <div style="font-weight: 600; color: var(--accent-color);">
+                                <?php echo $user_data['role'] === 'admin' ? 'Administrador' : ($user_data['role'] === 'creator' ? 'Criador' : 'Usuário'); ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1334,6 +1551,125 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
         </div>
     </div>
 
+    <!-- Modal de Solicitação de Criador -->
+    <div class="modal" id="creatorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-palette"></i> Tornar-se um Criador
+                </h3>
+                <button class="close-modal" onclick="closeCreatorModal()">&times;</button>
+            </div>
+            
+            <?php if($creator_request_status): ?>
+                <div class="status-card">
+                    <h3>
+                        <i class="fas fa-info-circle"></i> 
+                        Status da Solicitação: 
+                        <span class="status-<?php echo $creator_request_status['status']; ?>">
+                            <?php 
+                            $status_text = [
+                                'pending' => 'Pendente',
+                                'approved' => 'Aprovada',
+                                'rejected' => 'Rejeitada'
+                            ];
+                            echo $status_text[$creator_request_status['status']]; 
+                            ?>
+                        </span>
+                    </h3>
+                    
+                    <?php if($creator_request_status['status'] === 'pending'): ?>
+                        <p>Sua solicitação está em análise pelos administradores.</p>
+                    <?php elseif($creator_request_status['status'] === 'approved'): ?>
+                        <p>Parabéns! Sua conta criador foi aprovada.</p>
+                        <p><strong>Data de aprovação:</strong> 
+                           <?php echo date('d/m/Y H:i', strtotime($creator_request_status['processed_at'])); ?>
+                        </p>
+                    <?php elseif($creator_request_status['status'] === 'rejected'): ?>
+                        <p>Sua solicitação foi rejeitada.</p>
+                        <?php if($creator_request_status['admin_notes']): ?>
+                            <p><strong>Motivo:</strong> <?php echo htmlspecialchars($creator_request_status['admin_notes']); ?></p>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if(!$creator_request_status || $creator_request_status['status'] === 'rejected'): ?>
+                <div class="benefits-list">
+                    <h3><i class="fas fa-star"></i> Vantagens de ser Criador:</h3>
+                    <div class="benefit-item">
+                        <i class="fas fa-check"></i>
+                        <span>Publique seus próprios quadrinhos</span>
+                    </div>
+                    <div class="benefit-item">
+                        <i class="fas fa-check"></i>
+                        <span>Monetize suas histórias</span>
+                    </div>
+                    <div class="benefit-item">
+                        <i class="fas fa-check"></i>
+                        <span>Construa sua base de fãs</span>
+                    </div>
+                    <div class="benefit-item">
+                        <i class="fas fa-check"></i>
+                        <span>Acesso a analytics de leitura</span>
+                    </div>
+                </div>
+
+                <div class="privacy-notice">
+                    <i class="fas fa-shield-alt"></i>
+                    <strong>Proteção de Dados:</strong> Seus dados pessoais são criptografados e protegidos 
+                    de acordo com a LGPD. Usamos essas informações apenas para verificação de identidade.
+                </div>
+
+                <form method="POST" id="creatorForm">
+                    <input type="hidden" name="request_creator" value="1">
+                    
+                    <div class="form-group">
+                        <label for="cpf">CPF *</label>
+                        <input type="text" id="cpf" name="cpf" 
+                               placeholder="000.000.000-00" 
+                               required 
+                               maxlength="14">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="age">Idade *</label>
+                        <input type="number" id="age" name="age" 
+                               min="18" max="120" 
+                               placeholder="18" 
+                               required>
+                        <small style="color: var(--text-secondary); font-size: 0.8rem;">
+                            É necessário ter pelo menos 18 anos
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address">Endereço Completo *</label>
+                        <textarea id="address" name="address" 
+                                  placeholder="Rua, número, bairro, cidade, estado, CEP..."
+                                  required></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 25px;">
+                        <button type="button" class="btn btn-outline" onclick="closeCreatorModal()" style="flex: 1;">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">
+                            <i class="fas fa-paper-plane"></i> 
+                            <?php echo ($creator_request_status && $creator_request_status['status'] === 'rejected') ? 'Reenviar Solicitação' : 'Solicitar Conta Criador'; ?>
+                        </button>
+                    </div>
+                </form>
+            <?php elseif($creator_request_status['status'] === 'approved'): ?>
+                <div style="text-align: center; margin-top: 30px;">
+                    <a href="upload_comic.php" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Publicar Meu Primeiro Quadrinho
+                    </a>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
     <!-- Modal de Exclusão de Conta -->
     <div class="modal" id="deleteModal">
         <div class="modal-content">
@@ -1357,7 +1693,7 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
                            required placeholder="Sua senha atual">
                 </div>
                 
-                <button type="submit" class="btn btn-danger" style="width: 100%; background: #dc3545; border-color: #dc3545;"
+                <button type="submit" class="btn btn-logout" style="width: 100%;"
                         onclick="return confirm('⚠️ ATENÇÃO!\\n\\nTem certeza ABSOLUTA que deseja excluir sua conta permanentemente?\\n\\nEsta ação não pode ser desfeita!')">
                     <i class="fas fa-trash-alt"></i> Excluir Minha Conta Permanentemente
                 </button>
@@ -1505,12 +1841,21 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
             document.getElementById('followersModal').style.display = 'none';
         }
 
+        function openCreatorModal() {
+            document.getElementById('creatorModal').style.display = 'flex';
+            sideMenu.classList.remove('active');
+        }
+
+        function closeCreatorModal() {
+            document.getElementById('creatorModal').style.display = 'none';
+        }
+
         function openDeleteModal() {
             document.getElementById('deleteModal').style.display = 'flex';
             sideMenu.classList.remove('active');
             
             // Adicionar animação de shake
-            const deleteBtn = document.querySelector('#deleteModal .btn-danger');
+            const deleteBtn = document.querySelector('#deleteModal .btn-logout');
             deleteBtn.classList.add('shake-animation');
             setTimeout(() => {
                 deleteBtn.classList.remove('shake-animation');
@@ -1609,6 +1954,49 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
                     avatar.innerHTML = originalContent;
                 });
             }
+        });
+
+        // Máscara para CPF no modal de criador
+        document.getElementById('cpf').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length <= 11) {
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            }
+            
+            e.target.value = value;
+        });
+
+        // Validação do formulário de criador
+        document.getElementById('creatorForm').addEventListener('submit', function(e) {
+            const cpf = document.getElementById('cpf').value.replace(/\D/g, '');
+            const age = document.getElementById('age').value;
+            const address = document.getElementById('address').value;
+            const submitBtn = this.querySelector('button[type="submit"]');
+
+            if (cpf.length !== 11) {
+                e.preventDefault();
+                alert('Por favor, insira um CPF válido com 11 dígitos!');
+                return false;
+            }
+
+            if (age < 18) {
+                e.preventDefault();
+                alert('É necessário ter pelo menos 18 anos para ser criador!');
+                return false;
+            }
+
+            if (address.trim().length < 10) {
+                e.preventDefault();
+                alert('Por favor, insira um endereço completo!');
+                return false;
+            }
+
+            // Mostrar loading
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            submitBtn.disabled = true;
         });
         <?php endif; ?>
 
