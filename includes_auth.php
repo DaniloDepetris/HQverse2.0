@@ -11,6 +11,210 @@ class Auth {
         $this->conn = $database->getConnection();
     }
 
+// NOVA FUNÇÃO: Iniciar ou obter conversa
+public function getOrCreateConversation($user1_id, $user2_id) {
+    try {
+        // Garantir que user1_id é sempre o menor ID para evitar duplicatas
+        $min_id = min($user1_id, $user2_id);
+        $max_id = max($user1_id, $user2_id);
+        
+        $query = "SELECT id FROM conversations 
+                 WHERE user1_id = :user1_id AND user2_id = :user2_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":user1_id", $min_id);
+        $stmt->bindParam(":user2_id", $max_id);
+        $stmt->execute();
+        
+        if($stmt->rowCount() > 0) {
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['id'];
+        } else {
+            // Criar nova conversa
+            $query = "INSERT INTO conversations (user1_id, user2_id) 
+                     VALUES (:user1_id, :user2_id)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user1_id", $min_id);
+            $stmt->bindParam(":user2_id", $max_id);
+            
+            if($stmt->execute()) {
+                return $this->conn->lastInsertId();
+            }
+            return false;
+        }
+        
+    } catch(PDOException $exception) {
+        return false;
+    }
+}
+
+// NOVA FUNÇÃO: Enviar mensagem
+public function sendMessage($conversation_id, $sender_id, $content) {
+    try {
+        // Validar conteúdo
+        $content = trim($content);
+        if(empty($content)) {
+            return "A mensagem não pode estar vazia!";
+        }
+        
+        if(strlen($content) > 1000) {
+            return "A mensagem é muito longa (máximo 1000 caracteres)!";
+        }
+        
+        $query = "INSERT INTO messages (conversation_id, sender_id, content) 
+                 VALUES (:conversation_id, :sender_id, :content)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":conversation_id", $conversation_id);
+        $stmt->bindParam(":sender_id", $sender_id);
+        $stmt->bindParam(":content", $content);
+        
+        if($stmt->execute()) {
+            // Atualizar last_message_at na conversa
+            $update_query = "UPDATE conversations SET last_message_at = NOW() 
+                           WHERE id = :conversation_id";
+            $update_stmt = $this->conn->prepare($update_query);
+            $update_stmt->bindParam(":conversation_id", $conversation_id);
+            $update_stmt->execute();
+            
+            return true;
+        }
+        return "Erro ao enviar mensagem!";
+        
+    } catch(PDOException $exception) {
+        return "Erro: " . $exception->getMessage();
+    }
+}
+
+// NOVA FUNÇÃO: Obter mensagens de uma conversa
+public function getMessages($conversation_id, $limit = 50, $offset = 0) {
+    try {
+        $query = "SELECT m.*, u.username, u.avatar 
+                 FROM messages m 
+                 JOIN users u ON m.sender_id = u.id 
+                 WHERE m.conversation_id = :conversation_id 
+                 ORDER BY m.created_at DESC 
+                 LIMIT :limit OFFSET :offset";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":conversation_id", $conversation_id);
+        $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+        $stmt->bindParam(":offset", $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Inverter a ordem para mostrar as mais antigas primeiro
+        return array_reverse($messages);
+        
+    } catch(PDOException $exception) {
+        return [];
+    }
+}
+
+// NOVA FUNÇÃO: Obter conversas do usuário
+public function getUserConversations($user_id) {
+    try {
+        $query = "SELECT c.*, 
+                         CASE 
+                             WHEN c.user1_id = :user_id THEN u2.id 
+                             ELSE u1.id 
+                         END as other_user_id,
+                         CASE 
+                             WHEN c.user1_id = :user_id THEN u2.username 
+                             ELSE u1.username 
+                         END as other_username,
+                         CASE 
+                             WHEN c.user1_id = :user_id THEN u2.avatar 
+                             ELSE u1.avatar 
+                         END as other_avatar,
+                         (SELECT content FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
+                         (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != :user_id AND is_read = 0) as unread_count
+                  FROM conversations c
+                  JOIN users u1 ON c.user1_id = u1.id
+                  JOIN users u2 ON c.user2_id = u2.id
+                  WHERE c.user1_id = :user_id OR c.user2_id = :user_id
+                  ORDER BY c.last_message_at DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":user_id", $user_id);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch(PDOException $exception) {
+        return [];
+    }
+}
+
+// NOVA FUNÇÃO: Marcar mensagens como lidas
+public function markMessagesAsRead($conversation_id, $user_id) {
+    try {
+        $query = "UPDATE messages SET is_read = 1 
+                 WHERE conversation_id = :conversation_id 
+                 AND sender_id != :user_id 
+                 AND is_read = 0";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":conversation_id", $conversation_id);
+        $stmt->bindParam(":user_id", $user_id);
+        
+        return $stmt->execute();
+        
+    } catch(PDOException $exception) {
+        return false;
+    }
+}
+
+// NOVA FUNÇÃO: Verificar se usuário pode acessar a conversa
+public function canAccessConversation($conversation_id, $user_id) {
+    try {
+        $query = "SELECT id FROM conversations 
+                 WHERE id = :conversation_id 
+                 AND (user1_id = :user_id OR user2_id = :user_id)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":conversation_id", $conversation_id);
+        $stmt->bindParam(":user_id", $user_id);
+        $stmt->execute();
+        
+        return $stmt->rowCount() > 0;
+        
+    } catch(PDOException $exception) {
+        return false;
+    }
+}
+
+// NOVA FUNÇÃO: Obter dados do outro usuário na conversa
+public function getOtherUserInConversation($conversation_id, $current_user_id) {
+    try {
+        $query = "SELECT 
+                    CASE 
+                        WHEN user1_id = :current_user_id THEN user2_id 
+                        ELSE user1_id 
+                    END as other_user_id,
+                    CASE 
+                        WHEN user1_id = :current_user_id THEN u2.username 
+                        ELSE u1.username 
+                    END as other_username,
+                    CASE 
+                        WHEN user1_id = :current_user_id THEN u2.avatar 
+                        ELSE u1.avatar 
+                    END as other_avatar
+                  FROM conversations c
+                  JOIN users u1 ON c.user1_id = u1.id
+                  JOIN users u2 ON c.user2_id = u2.id
+                  WHERE c.id = :conversation_id";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":conversation_id", $conversation_id);
+        $stmt->bindParam(":current_user_id", $current_user_id);
+        $stmt->execute();
+        
+        if($stmt->rowCount() > 0) {
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+        return false;
+        
+    } catch(PDOException $exception) {
+        return false;
+    }
+}
 
     // NOVA FUNÇÃO: Reportar usuário
 public function reportUser($reported_user_id, $reporter_user_id, $reason, $description = '') {
@@ -193,30 +397,29 @@ public function getPendingReports() {
         }
     }
 
-    // NOVA FUNÇÃO: Buscar usuários com informações de follow
     public function searchUsersWithFollow($search_term, $current_user_id = null) {
-        try {
-            $query = "SELECT 
-                        u.id, u.username, u.email, u.avatar, u.role, u.bio,
-                        (SELECT COUNT(*) FROM user_follows WHERE following_id = u.id) as followers_count,
-                        (SELECT COUNT(*) FROM comics WHERE author_id = u.id) as comics_count,
-                        (SELECT COUNT(*) FROM user_follows WHERE follower_id = :current_user_id AND following_id = u.id) as is_following
-                      FROM users u 
-                      WHERE u.username LIKE :search OR u.email LIKE :search
-                      ORDER BY u.username";
-            
-            $stmt = $this->conn->prepare($query);
-            $search_term = "%$search_term%";
-            $stmt->bindParam(":search", $search_term);
-            $stmt->bindParam(":current_user_id", $current_user_id);
-            $stmt->execute();
-            
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-        } catch(PDOException $exception) {
-            return [];
-        }
+    try {
+        $query = "SELECT 
+                    u.id, u.username, u.email, u.avatar, u.role, u.bio,
+                    (SELECT COUNT(*) FROM user_follows WHERE following_id = u.id) as followers_count,
+                    (SELECT COUNT(*) FROM comics WHERE author_id = u.id) as comics_count,
+                    (SELECT COUNT(*) FROM user_follows WHERE follower_id = :current_user_id AND following_id = u.id) as is_following
+                  FROM users u 
+                  WHERE u.username LIKE :search OR u.email LIKE :search
+                  ORDER BY u.username";
+        
+        $stmt = $this->conn->prepare($query);
+        $search_term = "%$search_term%";
+        $stmt->bindParam(":search", $search_term);
+        $stmt->bindParam(":current_user_id", $current_user_id);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch(PDOException $exception) {
+        return [];
     }
+}
 
     // NOVA FUNÇÃO: Seguir usuário
     public function followUser($follower_id, $following_id) {
