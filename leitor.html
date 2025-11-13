@@ -5,6 +5,30 @@
     <title>Leitor de Quadrinhos - HQ Verso</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --bg-primary: #18122b;
+            --bg-secondary: #1a1a2e;
+            --bg-card: rgba(26, 26, 46, 0.8);
+            --text-primary: #f6f6f6;
+            --text-secondary: #b0b0b0;
+            --accent-color: #e94560;
+            --accent-hover: #d8345f;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #e9ecef;
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --text-primary: #2d3748;
+            --text-secondary: #6c757d;
+            --accent-color: #e94560;
+            --accent-hover: #d8345f;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,22 +38,17 @@
         }
         
         body {
-            background: #18122b;
-            color: #f6f6f6;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
             margin: 0;
-        }
-        
-        body.light-mode {
-            background: #f8fafc;
-            color: #2d3748;
         }
         
         .theme-toggle {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: rgba(15, 52, 96, 0.8);
+            background: var(--accent-color);
             color: white;
             border: none;
             border-radius: 50%;
@@ -40,33 +59,23 @@
             justify-content: center;
             cursor: pointer;
             font-size: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--shadow);
             transition: all 0.3s ease;
             z-index: 1000;
         }
         
         .theme-toggle:hover {
             transform: scale(1.1);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
-        }
-        
-        body.light-mode .theme-toggle {
-            background: rgba(233, 69, 96, 0.8);
-            color: white;
+            background: var(--accent-hover);
         }
         
         .reader-header {
-            background: #0f3460;
+            background: var(--accent-color);
             padding: 20px;
             text-align: center;
             font-size: 2rem;
-            color: #e94560;
-            letter-spacing: 2px;
-        }
-        
-        body.light-mode .reader-header {
-            background: #e94560;
             color: white;
+            letter-spacing: 2px;
         }
         
         .comic-pages {
@@ -81,18 +90,14 @@
             max-width: 700px;
             margin-bottom: 30px;
             border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-        }
-        
-        body.light-mode .comic-page-img {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            box-shadow: var(--shadow);
         }
         
         .back-btn {
             display: inline-block;
             margin: 20px;
             padding: 10px 20px;
-            background: #e94560;
+            background: var(--accent-color);
             color: #fff;
             border: none;
             border-radius: 4px;
@@ -103,7 +108,7 @@
         }
         
         .back-btn:hover {
-            background: #d8345f;
+            background: var(--accent-hover);
             transform: translateY(-2px);
         }
         
@@ -138,23 +143,22 @@
         .page-link {
             display: block;
             background: rgba(0,0,0,0.3);
-            color: #fff;
+            color: var(--text-primary);
             padding: 10px 14px;
             border-radius: 6px;
             text-decoration: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            box-shadow: var(--shadow);
             font-size: 0.95rem;
             transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
         }
         
-        body.light-mode .page-link {
+        [data-theme="light"] .page-link {
             background: rgba(0, 0, 0, 0.05);
-            color: #2d3748;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
         .page-link.current {
-            background: linear-gradient(90deg,#e94560,#ff6b81);
+            background: linear-gradient(90deg, var(--accent-color), #ff6b81);
             color: #fff;
             box-shadow: 0 6px 18px rgba(233,69,96,0.28);
         }
@@ -170,16 +174,12 @@
         .info-link {
             display: inline-block;
             padding: 10px 20px;
-            background: #0f3460;
+            background: var(--accent-color);
             color: white;
             text-decoration: none;
             border-radius: 5px;
             font-weight: 600;
             transition: all 0.3s ease;
-        }
-        
-        body.light-mode .info-link {
-            background: #e94560;
         }
         
         .info-link:hover {
@@ -192,47 +192,40 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 52, 96, 0.9);
+            background: var(--accent-color);
             color: white;
             padding: 10px 20px;
             border-radius: 25px;
             font-size: 0.9rem;
             z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
-        body.light-mode .progress-indicator {
-            background: rgba(233, 69, 96, 0.9);
+            box-shadow: var(--shadow);
         }
 
         .comic-info {
-    background: rgba(15, 52, 96, 0.1);
-    padding: 20px;
-    margin: 20px auto;
-    border-radius: 10px;
-    max-width: 700px;
-    text-align: center;
-}
+            background: rgba(15, 52, 96, 0.1);
+            padding: 20px;
+            margin: 20px auto;
+            border-radius: 10px;
+            max-width: 700px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
 
-body.light-mode .comic-info {
-    background: rgba(233, 69, 96, 0.1);
-}
+        [data-theme="light"] .comic-info {
+            background: rgba(233, 69, 96, 0.1);
+        }
 
-.page-counter {
-    position: fixed;
-    top: 100px;
-    right: 20px;
-    background: rgba(15, 52, 96, 0.9);
-    color: white;
-    padding: 10px 15px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    z-index: 999;
-}
-
-body.light-mode .page-counter {
-    background: rgba(233, 69, 96, 0.9);
-}
+        .page-counter {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: var(--accent-color);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 999;
+        }
 
         .loading {
             text-align: center;
@@ -243,7 +236,7 @@ body.light-mode .page-counter {
         .loading i {
             font-size: 2rem;
             margin-bottom: 15px;
-            color: #e94560;
+            color: var(--accent-color);
             animation: spin 1s linear infinite;
         }
 
@@ -255,7 +248,7 @@ body.light-mode .page-counter {
 </head>
 <body>
     <button class="theme-toggle" id="themeToggle">
-        <i class="fas fa-moon"></i>
+        <i class="fas fa-moon" id="themeIcon"></i>
     </button>
     
     <div class="reader-header">
@@ -275,12 +268,12 @@ body.light-mode .page-counter {
     </div>
 
     <div class="comic-info" id="comicInfo" style="display: none;">
-    <h3 id="comicTitle"></h3>
-    <p id="comicDescription"></p>
-    <div class="page-counter" id="pageCounter">
-        Página <span id="currentPage">1</span> de <span id="totalPages">1</span>
+        <h3 id="comicTitle"></h3>
+        <p id="comicDescription"></p>
+        <div class="page-counter" id="pageCounter">
+            Página <span id="currentPage">1</span> de <span id="totalPages">1</span>
+        </div>
     </div>
-</div>
     
     <div class="comic-pages" id="comicPages">
         <div class="loading">
@@ -299,27 +292,33 @@ body.light-mode .page-counter {
 
     <script>
         // Sistema de Tema
-        const themeToggle = document.getElementById('themeToggle');
-        const body = document.body;
-        
-        // Verificar tema salvo
-        const savedTheme = localStorage.getItem('hq-verso-theme');
-        if (savedTheme === 'light') {
-            body.classList.add('light-mode');
-            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-        }
-        
-        themeToggle.addEventListener('click', () => {
-            body.classList.toggle('light-mode');
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
             
-            if (body.classList.contains('light-mode')) {
-                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-                localStorage.setItem('hq-verso-theme', 'light');
+            // Aplicar tema salvo
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme, themeIcon);
+            
+            // Event listener para alternar tema
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme, themeIcon);
+            });
+        }
+
+        function updateThemeIcon(theme, iconElement) {
+            if (theme === 'dark') {
+                iconElement.className = 'fas fa-moon';
             } else {
-                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-                localStorage.setItem('hq-verso-theme', 'dark');
+                iconElement.className = 'fas fa-sun';
             }
-        });
+        }
 
         // Ler parâmetros da URL
         const params = new URLSearchParams(window.location.search);
@@ -458,21 +457,16 @@ body.light-mode .page-counter {
         }
 
         function updateComicInfo() {
-
-    currentPage = pageIndex + 1;
-    document.getElementById('currentPage').textContent = currentPage;
-    document.getElementById('totalPages').textContent = totalPages;
-    const comicInfo = document.getElementById('comicInfo');
-    const comicTitle = document.getElementById('comicTitle');
-    const comicDescription = document.getElementById('comicDescription');
-    const pageCounter = document.getElementById('pageCounter');
-    
-    if (comicData) {
-        comicTitle.textContent = comicData.title;
-        comicDescription.textContent = comicData.description || 'Uma incrível história em quadrinhos.';
-        comicInfo.style.display = 'block';
-    }
-}
+            const comicInfo = document.getElementById('comicInfo');
+            const comicTitle = document.getElementById('comicTitle');
+            const comicDescription = document.getElementById('comicDescription');
+            
+            if (comicData) {
+                comicTitle.textContent = comicData.title;
+                comicDescription.textContent = comicData.description || 'Uma incrível história em quadrinhos.';
+                comicInfo.style.display = 'block';
+            }
+        }
 
         // Ir para página específica
         function goToPage(pageIndex) {
@@ -492,6 +486,10 @@ body.light-mode .page-counter {
             links.forEach(l => l.classList.remove('current'));
             const currentLink = links[pageIndex];
             if (currentLink) currentLink.classList.add('current');
+
+            // Atualizar contador
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('totalPages').textContent = totalPages;
 
             // Calcular e salvar progresso
             const progress = Math.round((currentPage / totalPages) * 100);
@@ -541,7 +539,6 @@ body.light-mode .page-counter {
             const COMICS_MAP = {
                 1:{title:"Homem-Aranha: A Última Caçada",cover:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9az9jtGfQoj20u_4hUEeTQXvXvX9i0W2KPKw&s"},
                 2:{title:"Watchmen",cover:"https://upload.wikimedia.org/wikipedia/pt/d/d0/Watchmen.jpg"},
-                // ... outros quadrinhos
             };
 
             const comicInfo = COMICS_MAP[Number(comicId)] || { title: comicTitle };
@@ -601,6 +598,7 @@ body.light-mode .page-counter {
 
         // Inicializar
         loadComicData();
+        initializeTheme();
 
         console.log('Leitor de quadrinhos carregado com sucesso!');
     </script>
