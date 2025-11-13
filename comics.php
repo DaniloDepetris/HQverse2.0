@@ -1628,1099 +1628,941 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
     </div>
 
     <script>
-        // Dados completos dos quadrinhos
-        const comicsData = {
-            "all": [
-                {
-                    id: 1,
-                    title: "Homem-Aranha: A Última Caçada",
-                    cover: "https://www.google.com/url?sa=i&url=http%3A%2F%2Fwww.guiadosquadrinhos.com%2Fedicao%2Fcolecao-oficial-de-graphic-novels-marvel-a-n-9%2Fgr007106%2F107146&psig=AOvVaw2A2kueuW1yzMHmXTwd_HSm&ust=1762656564743000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCNi1w8bF4ZADFQAAAAAdAAAAABAE",
-                    meta: "Capítulo 3",
-                    progress: 20,
-                    categories: ["super-herois", "classicos"],
-                    description: "A clássica história onde o Homem-Aranha enfrenta seu maior desafio."
-                },
-                {
-                    id: 2,
-                    title: "Watchmen",
-                    cover: "https://upload.wikimedia.org/wikipedia/pt/d/d0/Watchmen.jpg",
-                    meta: "Página 45",
-                    progress: 45,
-                    categories: ["super-herois", "graphic-novels", "classicos"],
-                    description: "A revolucionária graphic novel que questiona a natureza dos super-heróis."
-                },
-                {
-                    id: 3,
-                    title: "Sandman: Prelúdios e Noturnos",
-                    cover: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcReNzUJRFsrqKb-Y4UIxg-jUSPYg-4ermAT3w&s",
-                    meta: "Volume 1",
-                    progress: 60,
-                    categories: ["graphic-novels", "classicos"],
-                    description: "A primeira coleção da aclamada série de Neil Gaiman."
-                },
-                {
-                    id: 4,
-                    title: "V de Vingança",
-                    cover: "https://m.media-amazon.com/images/I/711dLCQ6kuL._UF1000,1000_QL80_.jpg",
-                    meta: "50% lido",
-                    progress: 50,
-                    categories: ["graphic-novels", "classicos"],
-                    description: "A distópica graphic novel sobre anarquia e liberdade."
-                },
-                {
-                    id: 5,
-                    title: "Maus",
-                    cover: "https://m.media-amazon.com/images/I/916IgqQ-54L.jpg",
-                    meta: "Art Spiegelman",
-                    categories: ["graphic-novels", "classicos"],
-                    description: "A premiada graphic novel sobre o Holocausto."
-                },
-                {
-                    id: 6,
-                    title: "Persépolis",
-                    cover: "https://m.media-amazon.com/images/I/814zhAWOKBL._UF1000,1000_QL80_.jpg",
-                    meta: "Marjane Satrapi",
-                    categories: ["graphic-novels", "classicos"],
-                    description: "A autobiografia em quadrinhos sobre o Irã revolucionário."
-                },
-                {
-                    id: 7,
-                    title: "Hellboy: Caçada Selvagem",
-                    cover: "https://images.tcdn.com.br/img/img_prod/1119494/hellboy_omnibus_vol_3_1709745_1_a6e86cfa8f53f219f4d0d0b0c4f79558.jpg",
-                    meta: "Mike Mignola",
-                    categories: ["super-herois", "indie"],
-                    description: "As primeiras aventuras do demônio herói."
-                },
-                {
-                    id: 8,
-                    title: "Saga",
-                    cover: "https://m.media-amazon.com/images/I/81s49EEptML.jpg",
-                    meta: "Brian K. Vaughan",
-                    categories: ["graphic-novels", "indie"],
-                    description: "A épica space opera de ficção científica."
-                },
-                {
-                    id: 9,
-                    title: "Superman: Terra Um",
-                    cover: "https://m.media-amazon.com/images/I/91wpPruCKrL._UF1000,1000_QL80_.jpg",
-                    meta: "2010",
-                    categories: ["super-herois", "classicos"],
-                    description: "Uma reinterpretação moderna do Homem de Aço."
-                },
-                {
-                    id: 10,
-                    title: "Liga da Justiça: A Torre de Babel",
-                    cover: "https://super.abril.com.br/wp-content/uploads/2018/07/torredebabel.jpg",
-                    meta: "2000",
-                    categories: ["super-herois", "classicos"],
-                    description: "Quando Batman se torna a maior ameaça da Liga."
-                },
-                {
-                    id: 11,
-                    title: "Akira",
-                    cover: "https://m.media-amazon.com/images/I/81K1+Z+Yf+L.jpg",
-                    meta: "Katsuhiro Otomo",
-                    categories: ["manga", "classicos"],
-                    description: "A épica cyberpunk que revolucionou os mangás."
-                },
-                {
-                    id: 12,
-                    title: "Death Note",
-                    cover: "https://m.media-amazon.com/images/I/81MZ6eFQsfL.jpg",
-                    meta: "Tsugumi Ohba",
-                    categories: ["manga"],
-                    description: "Um estudante genius encontra um caderno que pode matar pessoas."
-                },
-                {
-                    id: 13,
-                    title: "Attack on Titan",
-                    cover: "https://m.media-amazon.com/images/I/81d6e+kN5+L.jpg",
-                    meta: "Hajime Isayama",
-                    categories: ["manga"],
-                    description: "Humanidade luta pela sobrevivência contra titãs gigantes."
-                },
-                {
-                    id: 14,
-                    title: "One-Punch Man",
-                    cover: "https://m.media-amazon.com/images/I/81I1+-+0R0L.jpg",
-                    meta: "ONE",
-                    categories: ["manga", "super-herois"],
-                    description: "Um herói tão forte que derrota qualquer inimigo com um só soco."
-                },
-                {
-                    id: 15,
-                    title: "Scott Pilgrim",
-                    cover: "https://m.media-amazon.com/images/I/81K1+Z+Yf+L.jpg",
-                    meta: "Bryan Lee O'Malley",
-                    categories: ["indie", "graphic-novels"],
-                    description: "Um baixista deve derrotar os 7 ex-namorados malvados de sua amada."
-                },
-                {
-                    id: 16,
-                    title: "Batman: Ano Um",
-                    cover: "https://m.media-amazon.com/images/I/81zK5OjR5aL.jpg",
-                    meta: "Frank Miller",
-                    categories: ["super-herois", "classicos"],
-                    description: "A origem definitiva do Cavaleiro das Trevas."
-                },
-                {
-                    id: 17,
-                    title: "X-Men: Fênix Negra",
-                    cover: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmC8oS-dR6n1EW5YxEnvL0mPaz13taAKsbvQ&s",
-                    meta: "Chris Claremont",
-                    categories: ["super-herois", "classicos"],
-                    description: "A épica saga onde Jean Grey se torna a Fênix Negra."
-                },
-                {
-                    id: 18,
-                    title: "Monstress",
-                    cover: "https://m.media-amazon.com/images/I/81bGs636lzL.jpg",
-                    meta: "Marjorie Liu",
-                    categories: ["graphic-novels", "indie"],
-                    description: "Fantasia sombria em um mundo de guerra e monstros."
-                },
-                {
-                    id: 19,
-                    title: "Homem de Ferro: Extremis",
-                    cover: "https://m.media-amazon.com/images/I/81bGs636lzL.jpg",
-                    meta: "Extremis",
-                    categories: ["super-herois"],
-                    description: "A história que redefiniu o Homem de Ferro moderno."
-                },
-                {
-                    id: 20,
-                    title: "Capitão América: O Soldado Invernal",
-                    cover: "https://m.media-amazon.com/images/I/611wcUISMmL._UF1000,1000_QL80_.jpg",
-                    meta: "2005",
-                    categories: ["super-herois"],
-                    description: "Um thriller político que coloca o Capitão América contra inimigos internos."
-                },
-                {
-                    id: 21,
-                    title: "Thor: Deus do Trovão",
-                    cover: "https://m.media-amazon.com/images/I/91JTRo6EFcL._UF1000,1000_QL80_.jpg",
-                    meta: "2012",
-                    categories: ["super-herois"],
-                    description: "Uma saga épica do Deus do Trovão através dos tempos."
-                },
-                {
-                    id: 22,
-                    title: "Doutor Estranho: O Juramento",
-                    cover: "https://m.media-amazon.com/images/I/91DcEu1b-rL.jpg",
-                    meta: "2006",
-                    categories: ["super-herois"],
-                    description: "Uma história íntima e sombria do Mago Supremo."
-                },
-                {
-                    id: 23,
-                    title: "Pantera Negra: Rei do Wakanda",
-                    cover: "https://d14d9vp3wdof84.cloudfront.net/image/589816272436/image_v8bl17fqv95mf8v1jd9k8lrp5r/-S897-FWEBP",
-                    meta: "2016",
-                    categories: ["super-herois"],
-                    description: "A jornada do rei e herói de Wakanda."
-                },
-                {
-                    id: 24,
-                    title: "Batman: Silêncio",
-                    cover: "https://lh3.googleusercontent.com/proxy/9y2rp6F2x4dSCvFkZoz847oXtBE8IP0mscS0W0SkYpRtdub4qCQRCzj-Qwfgd4BWQq6EtqSmr7edCB_rNckNCs8pGT8jFx0HdMknRmb_1EmPWIb5zuujbw",
-                    meta: "Jeph Loeb",
-                    categories: ["super-herois", "classicos"],
-                    description: "Uma intensa história de Batman escrita por Jeph Loeb."
-                },
-                {
-                    id: 25,
-                    title: "Mulher-Maravilha: Deuses e Mortais",
-                    cover: "https://cdn.awsli.com.br/600x450/1668/1668242/produto/162790896905299a6a0.jpg",
-                    meta: "1987",
-                    categories: ["super-herois", "classicos"],
-                    description: "A reinvenção da origem da Mulher-Maravilha por George Pérez."
-                },
-                {
-                    id: 26,
-                    title: "Flashpoint",
-                    cover: "https://m.media-amazon.com/images/I/91dXNvO2fML.jpg",
-                    meta: "2011",
-                    categories: ["super-herois", "classicos"],
-                    description: "Uma linha temporal alternativa que altera o universo DC."
-                },
-                {
-                    id: 27,
-                    title: "Arqueiro Verde: Ano Um",
-                    cover: "https://rika.vtexassets.com/arquivos/ids/219835/-herois_panini-arqueiro-verde-ano-um.jpg?v=635316153891630000",
-                    meta: "2007",
-                    categories: ["super-herois", "classicos"],
-                    description: "A origem moderna do Arqueiro Verde."
-                }
-            ],
-            "super-herois": [1, 2, 7, 9, 10, 14, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27],
-            "manga": [11, 12, 13, 14],
-            "graphic-novels": [2, 3, 4, 5, 6, 8, 15, 18],
-            "classicos": [1, 2, 3, 4, 5, 6, 9, 10, 11, 16, 17, 24, 25, 26, 27],
-            "indie": [7, 8, 15, 18],
-            "favoritos": [1, 3, 5, 8, 11, 14, 16]
-        };
+    // Dados de usuários para busca (fallback)
+    const usersData = [
+        {
+            id: 1,
+            username: "comic_lover",
+            email: "comic.lover@email.com",
+            role: "Leitor",
+            comics_count: 42,
+            favorites_count: 15,
+            followers_count: 28,
+            avatar: ""
+        },
+        {
+            id: 2,
+            username: "manga_fan",
+            email: "manga.fan@email.com",
+            role: "Leitor",
+            comics_count: 28,
+            favorites_count: 8,
+            followers_count: 15,
+            avatar: ""
+        },
+        {
+            id: 3,
+            username: "art_creator",
+            email: "art.creator@email.com",
+            role: "Artista",
+            comics_count: 12,
+            favorites_count: 32,
+            followers_count: 45,
+            avatar: ""
+        },
+        {
+            id: 4,
+            username: "dc_collector",
+            email: "dc.collector@email.com",
+            role: "Colecionador",
+            comics_count: 67,
+            favorites_count: 23,
+            followers_count: 32,
+            avatar: ""
+        },
+        {
+            id: 5,
+            username: "marvel_fan",
+            email: "marvel.fan@email.com",
+            role: "Fã",
+            comics_count: 35,
+            favorites_count: 18,
+            followers_count: 21,
+            avatar: ""
+        }
+    ];
 
-        // Dados de usuários para busca
-        const usersData = [
+    // Dados locais como fallback
+    const comicsData = {
+        "all": [
             {
                 id: 1,
-                username: "comic_lover",
-                email: "comic.lover@email.com",
-                role: "Leitor",
-                comics_count: 42,
-                favorites_count: 15,
-                followers_count: 28,
-                avatar: ""
+                title: "Homem-Aranha: A Última Caçada",
+                cover: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9az9jtGfQoj20u_4hUEeTQXvXvX9i0W2KPKw&s",
+                meta: "Capítulo 3",
+                progress: 20,
+                categories: ["super-herois", "classicos"],
+                description: "A clássica história onde o Homem-Aranha enfrenta seu maior desafio."
             },
-            {
-                id: 2,
-                username: "manga_fan",
-                email: "manga.fan@email.com",
-                role: "Leitor",
-                comics_count: 28,
-                favorites_count: 8,
-                followers_count: 15,
-                avatar: ""
-            },
-            {
-                id: 3,
-                username: "art_creator",
-                email: "art.creator@email.com",
-                role: "Artista",
-                comics_count: 12,
-                favorites_count: 32,
-                followers_count: 45,
-                avatar: ""
-            },
-            {
-                id: 4,
-                username: "dc_collector",
-                email: "dc.collector@email.com",
-                role: "Colecionador",
-                comics_count: 67,
-                favorites_count: 23,
-                followers_count: 32,
-                avatar: ""
-            },
-            {
-                id: 5,
-                username: "marvel_fan",
-                email: "marvel.fan@email.com",
-                role: "Fã",
-                comics_count: 35,
-                favorites_count: 18,
-                followers_count: 21,
-                avatar: ""
-            }
-        ];
+            // ... outros quadrinhos como fallback
+        ]
+    };
 
-        // Função para criar card de quadrinho
-        function createComicCard(comic, showProgress = false) {
-            const placeholder = `https://via.placeholder.com/200x300/1a1a2e/e94560?text=${encodeURIComponent(comic.title.substring(0, 15))}`;
-            
-            return `
-                <div class="comic-card" data-id="${comic.id}" data-categories="${comic.categories.join(',')}">
-                    <span class="read-badge">Ler agora</span>
-                    <img src="${comic.cover}" 
-                         alt="Capa do quadrinho ${comic.title}" 
-                         class="comic-cover"
-                         onerror="this.src='${placeholder}'">
-                    <div class="card-bottom">
-                        <div class="title-meta">
-                            <div class="comic-title">${comic.title}</div>
-                            <div class="comic-meta">${comic.meta}</div>
-                        </div>
-                        <div class="card-actions">
-                            <button class="btn btn-outline add-list" title="Adicionar à lista">+</button>
-                        </div>
+    // Variável global para armazenar quadrinhos do banco
+    let allComics = [];
+
+    // Função para criar card de quadrinho
+    function createComicCard(comic, showProgress = false) {
+        const placeholder = `https://via.placeholder.com/200x300/1a1a2e/e94560?text=${encodeURIComponent(comic.title.substring(0, 15))}`;
+        
+        return `
+            <div class="comic-card" data-id="${comic.id}" data-categories="${comic.categories ? comic.categories.join(',') : 'all'}">
+                <span class="read-badge">Ler agora</span>
+                <img src="${comic.cover}" 
+                     alt="Capa do quadrinho ${comic.title}" 
+                     class="comic-cover"
+                     onerror="this.src='${placeholder}'">
+                <div class="card-bottom">
+                    <div class="title-meta">
+                        <div class="comic-title">${comic.title}</div>
+                        <div class="comic-meta">${comic.meta || 'Quadrinho'}</div>
                     </div>
-                    ${showProgress && comic.progress ? `
-                    <div class="progress"><div class="progress-bar" style="width:${comic.progress}%"></div></div>
+                    <div class="card-actions">
+                        <button class="btn btn-outline add-list" title="Adicionar à lista">+</button>
+                    </div>
+                </div>
+                ${showProgress && comic.progress ? `
+                <div class="progress"><div class="progress-bar" style="width:${comic.progress}%"></div></div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Função para criar card de quadrinho do banco de dados
+    function createModalComicCard(comic) {
+        const placeholder = `https://via.placeholder.com/80x120/1a1a2e/e94560?text=${encodeURIComponent(comic.title.substring(0, 10))}`;
+        
+        return `
+            <div class="search-comic-card" data-id="${comic.id}" data-type="comic">
+                <img src="${comic.cover}" 
+                     alt="${comic.title}" 
+                     class="search-comic-cover"
+                     onerror="this.src='${placeholder}'">
+                <div class="search-comic-info">
+                    <div class="search-comic-title">${comic.title}</div>
+                    <div class="search-comic-meta">${comic.meta}</div>
+                    <div class="search-comic-meta">${comic.categories ? comic.categories.join(', ') : 'Geral'}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Função para criar card de usuário no modal
+    function createModalUserCard(user, currentUserId = null) {
+        const initial = user.username ? user.username.charAt(0).toUpperCase() : 'U';
+        const isFollowing = user.is_following == 1 || user.is_following === true;
+        const canFollow = currentUserId && currentUserId != user.id;
+        
+        return `
+            <div class="search-user-card" data-id="${user.id}" data-type="user">
+                <div class="search-user-avatar">
+                    ${user.avatar ? `<img src="${user.avatar}" alt="${user.username}">` : `<span>${initial}</span>`}
+                </div>
+                <div class="search-user-info">
+                    <div class="search-user-name">${user.username}</div>
+                    <div class="search-user-email">${user.email}</div>
+                    <div class="search-user-stats">
+                        ${user.comics_count || 0} comics • ${user.followers_count || 0} seguidores
+                    </div>
+                    <div class="search-user-role">${user.role}</div>
+                    ${canFollow ? `
+                    <div class="search-user-actions">
+                        <button class="btn-follow ${isFollowing ? 'following' : ''}" 
+                                data-user-id="${user.id}"
+                                onclick="toggleFollow(${user.id}, this)">
+                            ${isFollowing ? '<i class="fas fa-user-check"></i> Seguindo' : '<i class="fas fa-user-plus"></i> Seguir'}
+                        </button>
+                    </div>
                     ` : ''}
                 </div>
-            `;
-        }
+            </div>
+        `;
+    }
 
-        // Função para criar card de quadrinho do banco de dados
-        function createModalComicCard(comic) {
-            const placeholder = `https://via.placeholder.com/80x120/1a1a2e/e94560?text=${encodeURIComponent(comic.title.substring(0, 10))}`;
+    // Sistema de Progresso de Leitura - INTEGRADO COM BANCO
+    async function setupReadingProgress() {
+        try {
+            // Carregar quadrinhos do banco
+            const dbComics = await loadComicsFromDatabase();
             
-            return `
-                <div class="search-comic-card" data-id="${comic.id}" data-type="comic">
-                    <img src="${comic.cover}" 
-                         alt="${comic.title}" 
-                         class="search-comic-cover"
-                         onerror="this.src='${placeholder}'">
-                    <div class="search-comic-info">
-                        <div class="search-comic-title">${comic.title}</div>
-                        <div class="search-comic-meta">${comic.meta}</div>
-                        <div class="search-comic-meta">${comic.categories.join(', ')}</div>
-                    </div>
-                </div>
-            `;
+            // Carregar progresso do servidor
+            const progressData = await loadServerProgress();
+            
+            // Combinar os dados
+            allComics = combineComicsWithProgress(dbComics, progressData);
+            
+            // Atualizar a interface
+            updateAllSections('all');
+            updateContinueReadingSection();
+            
+            console.log('Sistema de progresso carregado:', allComics.length + ' quadrinhos');
+        } catch (error) {
+            console.error('Erro no setup de progresso:', error);
+            // Fallback para dados locais
+            allComics = comicsData.all;
+            updateAllSections('all');
         }
+    }
 
-        // Função para criar card de usuário no modal
-        function createModalUserCard(user, currentUserId = null) {
-            const initial = user.username ? user.username.charAt(0).toUpperCase() : 'U';
-            const isFollowing = user.is_following == 1 || user.is_following === true;
-            const canFollow = currentUserId && currentUserId != user.id;
+    // Função para carregar quadrinhos do banco de dados
+    async function loadComicsFromDatabase() {
+        try {
+            const response = await fetch('get_comics_from_db.php');
+            const data = await response.json();
             
-            return `
-                <div class="search-user-card" data-id="${user.id}" data-type="user">
-                    <div class="search-user-avatar">
-                        ${user.avatar ? `<img src="${user.avatar}" alt="${user.username}">` : `<span>${initial}</span>`}
-                    </div>
-                    <div class="search-user-info">
-                        <div class="search-user-name">${user.username}</div>
-                        <div class="search-user-email">${user.email}</div>
-                        <div class="search-user-stats">
-                            ${user.comics_count || 0} comics • ${user.followers_count || 0} seguidores
-                        </div>
-                        <div class="search-user-role">${user.role}</div>
-                        ${canFollow ? `
-                        <div class="search-user-actions">
-                            <button class="btn-follow ${isFollowing ? 'following' : ''}" 
-                                    data-user-id="${user.id}"
-                                    onclick="toggleFollow(${user.id}, this)">
-                                ${isFollowing ? '<i class="fas fa-user-check"></i> Seguindo' : '<i class="fas fa-user-plus"></i> Seguir'}
-                            </button>
-                        </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
+            if (data.success && data.comics) {
+                return data.comics;
+            } else {
+                console.warn('Não foi possível carregar quadrinhos do banco, usando dados locais');
+                return comicsData.all;
+            }
+        } catch (error) {
+            console.error('Erro ao carregar quadrinhos:', error);
+            return comicsData.all;
         }
+    }
 
-        // Função para seguir/deseguir usuário
-        function toggleFollow(userId, button) {
-            const isFollowing = button.classList.contains('following');
+    // Carregar progresso do servidor
+    async function loadServerProgress() {
+        try {
+            const response = await fetch('get_all_progress.php');
+            const data = await response.json();
             
-            fetch('follow_user.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `user_id=${userId}&action=${isFollowing ? 'unfollow' : 'follow'}`
+            if (data.progresses) {
+                return data.progresses;
+            }
+            return [];
+        } catch (error) {
+            console.error('Erro ao carregar progresso:', error);
+            return [];
+        }
+    }
+
+    // Função para combinar quadrinhos do banco com progresso
+    function combineComicsWithProgress(dbComics, progressData) {
+        return dbComics.map(comic => {
+            const progressInfo = progressData.find(p => p.comic_id === comic.id);
+            return {
+                ...comic,
+                progress: progressInfo ? progressInfo.progress_pct : 0,
+                lastRead: progressInfo ? progressInfo.last_read_at : null
+            };
+        });
+    }
+
+    // Obter quadrinhos em progresso
+    function getContinueReadingComics() {
+        return allComics
+            .filter(comic => comic.progress > 0 && comic.progress < 100)
+            .sort((a, b) => {
+                // Ordenar por último lido (mais recente primeiro)
+                if (!a.lastRead && !b.lastRead) return 0;
+                if (!a.lastRead) return 1;
+                if (!b.lastRead) return -1;
+                return new Date(b.lastRead) - new Date(a.lastRead);
+            });
+    }
+
+    // Atualizar seção "Continuar Lendo"
+    function updateContinueReadingSection() {
+        const continueReadingComics = getContinueReadingComics();
+        const continueSection = document.getElementById('continueReading');
+        const continueInfo = document.getElementById('continueInfo');
+        
+        if (!continueSection) return;
+        
+        if (continueReadingComics.length === 0) {
+            continueSection.innerHTML = '<div class="no-comics">Nenhum quadrinho em progresso. Comece a ler algum quadrinho!</div>';
+            if (continueInfo) continueInfo.style.display = 'none';
+            return;
+        }
+        
+        // Renderizar quadrinhos em progresso
+        renderComicsInSection('continueReading', continueReadingComics.slice(0, 6), true);
+        
+        // Atualizar info do primeiro quadrinho
+        if (continueInfo) {
+            const firstComic = continueReadingComics[0];
+            updateContinueInfo(firstComic);
+        }
+        
+        // Adicionar event listeners
+        addComicCardEventListeners();
+    }
+
+    // Atualizar info do quadrinho em progresso
+    function updateContinueInfo(comic) {
+        const continueInfo = document.getElementById('continueInfo');
+        const infoTitle = document.getElementById('infoTitle');
+        const infoMeta = document.getElementById('infoMeta');
+        const infoProgress = document.getElementById('infoProgress');
+        
+        if (comic && comic.progress > 0) {
+            infoTitle.textContent = comic.title;
+            infoMeta.textContent = `${comic.progress}% lido • ${comic.meta || 'Em progresso'}`;
+            infoProgress.style.width = `${comic.progress}%`;
+            continueInfo.style.display = 'block';
+        } else {
+            continueInfo.style.display = 'none';
+        }
+    }
+
+    // Salvar progresso
+    function saveReadingProgress(comicId, progress, currentPage = 1) {
+        // Encontrar o quadrinho na lista
+        const comicIndex = allComics.findIndex(c => c.id === comicId);
+        if (comicIndex !== -1) {
+            allComics[comicIndex].progress = progress;
+            allComics[comicIndex].lastRead = new Date().toISOString();
+        }
+        
+        // Salvar no servidor
+        fetch('save_progress.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                comicId: comicId,
+                progress: Math.min(progress, 100)
             })
-            .then(response => response.json())
-            .then(data => {
-                if(data.success) {
-                    if(isFollowing) {
-                        button.classList.remove('following');
-                        button.innerHTML = '<i class="fas fa-user-plus"></i> Seguir';
-                    } else {
-                        button.classList.add('following');
-                        button.innerHTML = '<i class="fas fa-user-check"></i> Seguindo';
-                    }
-                } else {
-                    alert(data.message || 'Erro ao processar solicitação');
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                alert('Erro ao processar solicitação');
-            });
-        }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.ok) {
+                console.log(`Progresso salvo: Quadrinho ${comicId} - ${progress}%`);
+                // Atualizar a seção "Continuar Lendo"
+                updateContinueReadingSection();
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao salvar progresso:', error);
+        });
+    }
 
-        // Sistema de Busca Modal MELHORADO
-        function setupModalSearch() {
-            const searchInput = document.getElementById('searchInput');
-            const searchButton = document.getElementById('searchButton');
-            const searchModal = document.getElementById('searchModal');
-            const closeSearch = document.getElementById('closeSearch');
-            const searchModalInput = document.getElementById('searchModalInput');
-            const searchTabs = document.querySelectorAll('.tab-btn');
-            const resultsSections = document.querySelectorAll('.results-section');
-            
-            let currentResults = { comics: [], users: [] };
-            let searchTimeout = null;
-            let currentTab = 'all';
-            
-            // Abrir modal ao clicar no botão de busca ou no input
-            searchButton.addEventListener('click', openSearchModal);
-            searchInput.addEventListener('click', openSearchModal);
-            
-            // Busca por Enter no input principal
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    openSearchModal();
-                    if (this.value.trim()) {
-                        searchModalInput.value = this.value;
-                        performModalSearch(this.value);
+    // Sistema de filtro por categoria
+    function filterComicsByCategory(category) {
+        if (category === 'all') {
+            return allComics;
+        } else if (category === 'favoritos') {
+            // Implemente lógica de favoritos se necessário
+            return allComics.slice(0, 4);
+        } else {
+            return allComics.filter(comic => 
+                comic.categories && comic.categories.includes(category)
+            );
+        }
+    }
+
+    // Renderizar quadrinhos em uma seção
+    function renderComicsInSection(sectionId, comics, showProgress = false) {
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        
+        if (comics.length === 0) {
+            section.innerHTML = '<div class="no-comics">Nenhum quadrinho encontrado</div>';
+            return;
+        }
+        
+        section.innerHTML = '';
+        
+        comics.forEach(comic => {
+            section.innerHTML += createComicCard(comic, showProgress);
+        });
+        
+        // Adicionar event listeners aos novos cards
+        addComicCardEventListeners();
+    }
+
+    // Adicionar event listeners aos cards de quadrinhos
+    function addComicCardEventListeners() {
+        document.querySelectorAll('.comic-card').forEach(card => {
+            // Remover event listeners antigos para evitar duplicação
+            card.replaceWith(card.cloneNode(true));
+        });
+
+        // Adicionar novos event listeners
+        document.querySelectorAll('.comic-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Se clicou no botão 'Ler agora', ir para o leitor
+                if (e.target.closest('.read-badge')) {
+                    const comicId = parseInt(this.getAttribute('data-id'), 10);
+                    const comic = allComics.find(c => c.id === comicId);
+                    if (comic) {
+                        // Salvar progresso inicial
+                        saveReadingProgress(comicId, 10);
+                        window.location.href = `leitor.html?comic=${comicId}&title=${encodeURIComponent(comic.title)}`;
                     }
-                }
-            });
-            
-            // Fechar modal
-            closeSearch.addEventListener('click', closeSearchModal);
-            
-            // Fechar modal ao clicar fora
-            searchModal.addEventListener('click', function(e) {
-                if (e.target === searchModal) {
-                    closeSearchModal();
-                }
-            });
-            
-            // Fechar com ESC
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && searchModal.classList.contains('active')) {
-                    closeSearchModal();
-                }
-            });
-            
-            // Busca em tempo real no modal
-            searchModalInput.addEventListener('input', function() {
-                const searchTerm = this.value.trim();
-                
-                clearTimeout(searchTimeout);
-                
-                if (searchTerm.length < 2) {
-                    showEmptyState();
                     return;
                 }
                 
-                // Mostrar loading
-                showLoadingState();
-                
-                searchTimeout = setTimeout(() => {
-                    performModalSearch(searchTerm);
-                }, 500);
-            });
-            
-            // Busca por Enter no modal
-            searchModalInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    const searchTerm = this.value.trim();
-                    if (searchTerm.length >= 2) {
-                        clearTimeout(searchTimeout);
-                        showLoadingState();
-                        performModalSearch(searchTerm);
-                    }
-                }
-            });
-            
-            function openSearchModal() {
-                searchModal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                setTimeout(() => {
-                    searchModalInput.focus();
-                    // Copiar valor do input principal se existir
-                    if (searchInput.value.trim()) {
-                        searchModalInput.value = searchInput.value;
-                        performModalSearch(searchInput.value);
-                    }
-                }, 100);
-            }
-            
-            function closeSearchModal() {
-                searchModal.classList.remove('active');
-                document.body.style.overflow = '';
-                searchModalInput.value = '';
-                showEmptyState();
-            }
-            
-            function performModalSearch(searchTerm) {
-                // Buscar quadrinhos
-                const comicResults = comicsData.all.filter(comic => 
-                    comic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    comic.meta.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    comic.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    comic.categories.some(cat => cat.toLowerCase().includes(searchTerm.toLowerCase()))
-                );
-                
-                // Buscar usuários VIA AJAX
-                fetch(`search_users.php?q=${encodeURIComponent(searchTerm)}`)
-                    .then(response => response.json())
-                    .then(userResults => {
-                        currentResults = { comics: comicResults, users: userResults };
-                        displayModalResults(currentResults, searchTerm);
-                    })
-                    .catch(error => {
-                        console.error('Erro na busca de usuários:', error);
-                        // Fallback para dados mockados em caso de erro
-                        const userResults = usersData.filter(user =>
-                            user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            user.role.toLowerCase().includes(searchTerm.toLowerCase())
-                        ).map(user => ({
-                            ...user,
-                            is_following: false,
-                        }));
-                        
-                        currentResults = { comics: comicResults, users: userResults };
-                        displayModalResults(currentResults, searchTerm);
-                    });
-            }
-            
-            function displayModalResults(results, searchTerm) {
-                const totalResults = results.comics.length + results.users.length;
-                
-                // Atualizar estatísticas
-                document.getElementById('resultsCount').textContent = 
-                    `${totalResults} resultados para "${searchTerm}"`;
-                
-                // Atualizar todas as abas
-                updateResultsDisplay(currentTab);
-            }
-            
-            function updateResultsDisplay(activeTab) {
-                const comicsGridAll = document.getElementById('resultsGridAll');
-                const comicsGridComics = document.getElementById('resultsGridComics');
-                const comicsGridUsers = document.getElementById('resultsGridUsers');
-                
-                const emptyAll = document.getElementById('emptyAll');
-                const emptyComics = document.getElementById('emptyComics');
-                const emptyUsers = document.getElementById('emptyUsers');
-                
-                // Limpar grids
-                comicsGridAll.innerHTML = '';
-                comicsGridComics.innerHTML = '';
-                comicsGridUsers.innerHTML = '';
-                
-                // Mostrar/ocultar estados vazios
-                emptyAll.style.display = currentResults.comics.length === 0 && currentResults.users.length === 0 ? 'block' : 'none';
-                emptyComics.style.display = currentResults.comics.length === 0 ? 'block' : 'none';
-                emptyUsers.style.display = currentResults.users.length === 0 ? 'block' : 'none';
-                
-                // Popular aba "Todos"
-                if (currentResults.comics.length > 0) {
-                    currentResults.comics.slice(0, 6).forEach(comic => {
-                        comicsGridAll.innerHTML += createModalComicCard(comic);
-                    });
-                }
-                
-                if (currentResults.users.length > 0) {
-                    currentResults.users.slice(0, 4).forEach(user => {
-                        comicsGridAll.innerHTML += createModalUserCard(user, <?php echo $_SESSION['user_id']; ?>);
-                    });
-                }
-                
-                // Popular aba "Quadrinhos"
-                if (currentResults.comics.length > 0) {
-                    currentResults.comics.forEach(comic => {
-                        comicsGridComics.innerHTML += createModalComicCard(comic);
-                    });
-                }
-                
-                // Popular aba "Usuários"
-                if (currentResults.users.length > 0) {
-                    currentResults.users.forEach(user => {
-                        comicsGridUsers.innerHTML += createModalUserCard(user, <?php echo $_SESSION['user_id']; ?>);
-                    });
-                }
-                
-                // Adicionar event listeners para os cards
-                addCardEventListeners();
-            }
-            
-            function addCardEventListeners() {
-                // Event listeners para cards de quadrinhos
-                document.querySelectorAll('.search-comic-card').forEach(card => {
-                    card.addEventListener('click', function() {
-                        const comicId = this.getAttribute('data-id');
-                        const comic = currentResults.comics.find(c => c.id == comicId);
-                        if (comic) {
-                            closeSearchModal();
-                            window.location.href = `leitor.html?comic=${comicId}&title=${encodeURIComponent(comic.title)}`;
-                        }
-                    });
-                });
-                
-                // Event listeners para cards de usuários
-                document.querySelectorAll('.search-user-card').forEach(card => {
-                    card.addEventListener('click', function() {
-                        const userId = this.getAttribute('data-id');
-                        closeSearchModal();
-                        window.location.href = `perfil.php?user_id=${userId}`;
-                    });
-                });
-            }
-            
-            function showEmptyState() {
-                document.getElementById('resultsCount').textContent = 'Digite para buscar';
-                document.querySelectorAll('.results-grid').forEach(grid => grid.innerHTML = '');
-                document.querySelectorAll('.empty-state').forEach(empty => empty.style.display = 'block');
-            }
-            
-            function showLoadingState() {
-                document.getElementById('resultsCount').textContent = 'Buscando...';
-                document.querySelectorAll('.results-grid').forEach(grid => {
-                    grid.innerHTML = `
-                        <div class="search-loading">
-                            <i class="fas fa-spinner"></i>
-                            <div>Carregando resultados...</div>
-                        </div>
-                    `;
-                });
-            }
-            
-            // Trocar abas
-            searchTabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tabName = this.getAttribute('data-tab');
-                    currentTab = tabName;
-                    
-                    // Atualizar aba ativa
-                    searchTabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Mostrar seção correspondente
-                    resultsSections.forEach(section => {
-                        section.classList.remove('active');
-                        if (section.id === `results${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`) {
-                            section.classList.add('active');
-                        }
-                    });
-                    
-                    updateResultsDisplay(tabName);
-                });
-            });
-        }
-
-        // Sistema de Tema
-        function setupTheme() {
-            const themeToggle = document.getElementById('themeToggle');
-            const body = document.body;
-            
-            // Verificar tema salvo
-            const savedTheme = localStorage.getItem('theme') || localStorage.getItem('hq-verso-theme');
-            
-            if (savedTheme === 'light') {
-                body.classList.add('light-mode');
-                // Atualizar ícone
-                const icon = themeToggle.querySelector('i');
-                if (icon) {
-                    icon.classList.replace('fa-moon', 'fa-sun');
-                }
-            }
-            
-            // Alternar tema
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('light-mode');
-                const icon = themeToggle.querySelector('i');
-                
-                if (body.classList.contains('light-mode')) {
-                    icon.classList.replace('fa-moon', 'fa-sun');
-                    localStorage.setItem('theme', 'light');
-                    localStorage.setItem('hq-verso-theme', 'light');
-                } else {
-                    icon.classList.replace('fa-sun', 'fa-moon');
-                    localStorage.setItem('theme', 'dark');
-                    localStorage.setItem('hq-verso-theme', 'dark');
-                }
-            });
-        }
-
-        // Sistema de carrossel e filtros
-        function filterComicsByCategory(category) {
-            const allComics = comicsData.all;
-            let filteredComics = [];
-            
-            if (category === 'all') {
-                filteredComics = allComics;
-            } else if (category === 'favoritos') {
-                const favoriteIds = comicsData.favoritos;
-                filteredComics = allComics.filter(comic => favoriteIds.includes(comic.id));
-            } else {
-                const categoryIds = comicsData[category] || [];
-                filteredComics = allComics.filter(comic => categoryIds.includes(comic.id));
-            }
-            
-            return filteredComics;
-        }
-
-        function renderComicsInSection(sectionId, comics, showProgress = false) {
-            const section = document.getElementById(sectionId);
-            if (!section) return;
-            
-            if (comics.length === 0) {
-                section.innerHTML = '<div class="no-comics">Nenhum quadrinho encontrado</div>';
-                return;
-            }
-            
-            section.innerHTML = '';
-            
-            comics.forEach(comic => {
-                section.innerHTML += createComicCard(comic, showProgress);
-            });
-        }
-
-        function updateAllSections(category) {
-            const filteredComics = filterComicsByCategory(category);
-            
-            const continueReadingComics = filteredComics.filter(comic => comic.progress && comic.progress > 0);
-            renderComicsInSection('continueReading', continueReadingComics.slice(0, 4), true);
-            
-            const recommendedComics = filteredComics.slice(0, 4);
-            renderComicsInSection('recommendedComics', recommendedComics);
-            
-            const dcComics = filteredComics.filter(comic => 
-                comic.categories.includes('super-herois') && 
-                (comic.title.includes('Batman') || comic.title.includes('Superman') || comic.title.includes('Liga'))
-            );
-            renderComicsInSection('dcClassics', dcComics.slice(0, 3));
-            
-            const mangaComics = filteredComics.filter(comic => 
-                comic.categories.includes('manga')
-            );
-            renderComicsInSection('popularManga', mangaComics.slice(0, 4));
-            
-            const graphicNovels = filteredComics.filter(comic => 
-                comic.categories.includes('graphic-novels')
-            );
-            renderComicsInSection('graphicNovels', graphicNovels.slice(0, 4));
-            
-            updateComicCount(filteredComics.length);
-        }
-
-        function updateComicCount(count) {
-            const counter = document.getElementById('comicCounter');
-            if (counter) {
-                counter.textContent = `${count} quadrinhos encontrados`;
-            }
-        }
-
-        function setupCategoryFilter() {
-            document.querySelectorAll('.category').forEach(category => {
-                category.addEventListener('click', function() {
-                    document.querySelectorAll('.category').forEach(cat => cat.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    const categoryType = this.getAttribute('data-category');
-                    
-                    document.querySelectorAll('.comics-carousel').forEach(carousel => {
-                        carousel.style.opacity = '0.7';
-                        setTimeout(() => {
-                            carousel.style.opacity = '1';
-                        }, 300);
-                    });
-                    
-                    updateAllSections(categoryType);
-                });
-            });
-        }
-
-        // Sistema de navegação do carrossel
-        function setupCarouselNavigation() {
-            document.querySelectorAll('.carousel-container').forEach(container => {
-                const carousel = container.querySelector('.comics-carousel');
-                const prevBtn = container.querySelector('.carousel-nav.prev');
-                const nextBtn = container.querySelector('.carousel-nav.next');
-                
-                if (!carousel) return;
-                
-                // Verificar estado inicial
-                updateNavButtons(carousel, prevBtn, nextBtn);
-                
-                // Atualizar durante o scroll
-                carousel.addEventListener('scroll', () => {
-                    updateNavButtons(carousel, prevBtn, nextBtn);
-                });
-                
-                // Configurar botões
-                if (prevBtn) {
-                    prevBtn.addEventListener('click', () => {
-                        const amount = Math.round(carousel.clientWidth * 0.8) || 300;
-                        scrollCarousel(carousel.id, -amount);
-                    });
-                }
-                
-                if (nextBtn) {
-                    nextBtn.addEventListener('click', () => {
-                        const amount = Math.round(carousel.clientWidth * 0.8) || 300;
-                        scrollCarousel(carousel.id, amount);
-                    });
-                }
-            });
-        }
-
-        function updateNavButtons(carousel, prevBtn, nextBtn) {
-            if (!carousel || !prevBtn || !nextBtn) return;
-            const scrollLeft = carousel.scrollLeft;
-            const scrollWidth = carousel.scrollWidth;
-            const clientWidth = carousel.clientWidth;
-            
-            // Botão anterior
-            if (scrollLeft <= 10) {
-                prevBtn.disabled = true;
-                prevBtn.style.opacity = '0.3';
-            } else {
-                prevBtn.disabled = false;
-                prevBtn.style.opacity = '0.9';
-            }
-            
-            // Botão próximo
-            if (scrollLeft + clientWidth >= scrollWidth - 10) {
-                nextBtn.disabled = true;
-                nextBtn.style.opacity = '0.3';
-            } else {
-                nextBtn.disabled = false;
-                nextBtn.style.opacity = '0.9';
-            }
-        }
-
-        function scrollCarousel(carouselId, amount) {
-            const carousel = document.getElementById(carouselId);
-            if (carousel) {
-                carousel.scrollBy({ left: amount, behavior: 'smooth' });
-            }
-        }
-
-        // Modal de detalhe do quadrinho
-        function openComicModal(comic) {
-            const overlay = document.getElementById('comicModalOverlay');
-            if (!overlay || !comic) return;
-            const cover = document.getElementById('comicModalCover');
-            const title = document.getElementById('comicModalTitle');
-            const meta = document.getElementById('comicModalMeta');
-            const desc = document.getElementById('comicModalDescription');
-            const readBtn = document.getElementById('comicModalRead');
-            const addBtn = document.getElementById('comicModalAdd');
-            
-            cover.src = comic.cover || '';
-            cover.alt = `Capa do quadrinho ${comic.title || ''}`;
-            title.textContent = comic.title || '';
-            meta.textContent = comic.meta || '';
-            desc.textContent = comic.description || 'Sem sinopse disponível.';
-            
-            // ações dos botões
-            readBtn.onclick = function() {
-                window.location.href = `leitor.html?comic=${encodeURIComponent(comic.id)}`;
-            };
-            
-            addBtn.onclick = function() {
-                addBtn.textContent = 'Adicionado';
-                addBtn.disabled = true;
-            };
-            
-            overlay.style.display = 'flex';
-            overlay.setAttribute('aria-hidden', 'false');
-            setTimeout(() => {
-                readBtn.focus();
-            }, 120);
-        }
-        
-        function closeComicModal() {
-            const overlay = document.getElementById('comicModalOverlay');
-            if (!overlay) return;
-            overlay.style.display = 'none';
-            overlay.setAttribute('aria-hidden', 'true');
-        }
-        
-        function setupComicModalHandlers() {
-            // abre modal ao clicar em um card (event delegation)
-            document.body.addEventListener('click', function(e) {
-                // Prioridade: se clicou no botão 'Ler agora' dentro do card, ir diretamente para o leitor
-                const readTrigger = e.target.closest('.read-badge');
-                if (readTrigger) {
-                    const cardForRead = readTrigger.closest('.comic-card');
-                    if (cardForRead) {
-                        const idForRead = parseInt(cardForRead.getAttribute('data-id'), 10);
-                        if (idForRead) {
-                            window.location.href = `leitor.html?comic=${encodeURIComponent(idForRead)}`;
-                            return;
-                        }
-                    }
-                }
-                
-                // Caso contrário, tratar clique no card para abrir modal (ignorando botões internos)
-                const card = e.target.closest('.comic-card');
-                if (!card) return;
+                // Ignorar cliques nos botões de ação
                 if (e.target.closest('.card-actions') || e.target.tagName === 'BUTTON') return;
                 
-                const id = parseInt(card.getAttribute('data-id'), 10);
-                if (!id) return;
-                const comic = comicsData.all.find(c => c.id === id);
+                // Abrir modal de detalhes
+                const comicId = parseInt(this.getAttribute('data-id'), 10);
+                const comic = allComics.find(c => c.id === comicId);
                 if (comic) {
                     openComicModal(comic);
                 }
             });
-            
-            // fechar pelo botão e clicando fora
-            const overlay = document.getElementById('comicModalOverlay');
-            const closeBtn = document.getElementById('comicModalClose');
-            if (closeBtn) closeBtn.addEventListener('click', closeComicModal);
-            if (overlay) {
-                overlay.addEventListener('click', function(evt) {
-                    if (evt.target === overlay) closeComicModal();
-                });
+        });
+    }
+
+    // Atualizar todas as seções
+    function updateAllSections(category) {
+        const filteredComics = filterComicsByCategory(category);
+        
+        // Seção Continuar Lendo (já é atualizada separadamente)
+        const continueReadingComics = getContinueReadingComics();
+        if (continueReadingComics.length === 0) {
+            renderComicsInSection('continueReading', [], true);
+        }
+        
+        // Outras seções
+        const recommendedComics = filteredComics.slice(0, 6);
+        renderComicsInSection('recommendedComics', recommendedComics);
+        
+        const dcComics = filteredComics.filter(comic => 
+            comic.categories && comic.categories.includes('super-herois')
+        );
+        renderComicsInSection('dcClassics', dcComics.slice(0, 4));
+        
+        const mangaComics = filteredComics.filter(comic => 
+            comic.categories && comic.categories.includes('manga')
+        );
+        renderComicsInSection('popularManga', mangaComics.slice(0, 4));
+        
+        const graphicNovels = filteredComics.filter(comic => 
+            comic.categories && comic.categories.includes('graphic-novels')
+        );
+        renderComicsInSection('graphicNovels', graphicNovels.slice(0, 4));
+        
+        updateComicCount(filteredComics.length);
+    }
+
+    // Atualizar contador de quadrinhos
+    function updateComicCount(count) {
+        const counter = document.getElementById('comicCounter');
+        if (counter) {
+            counter.textContent = `${count} quadrinhos encontrados`;
+        }
+    }
+
+    // Sistema de Busca Modal
+    function setupModalSearch() {
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const searchModal = document.getElementById('searchModal');
+        const closeSearch = document.getElementById('closeSearch');
+        const searchModalInput = document.getElementById('searchModalInput');
+        const searchTabs = document.querySelectorAll('.tab-btn');
+        const resultsSections = document.querySelectorAll('.results-section');
+        
+        let currentResults = { comics: [], users: [] };
+        let searchTimeout = null;
+        let currentTab = 'all';
+        
+        // Abrir modal ao clicar no botão de busca ou no input
+        searchButton.addEventListener('click', openSearchModal);
+        searchInput.addEventListener('click', openSearchModal);
+        
+        // Busca por Enter no input principal
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                openSearchModal();
+                if (this.value.trim()) {
+                    searchModalInput.value = this.value;
+                    performModalSearch(this.value);
+                }
             }
-            
-            // fechar com ESC
-            window.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') closeComicModal();
-            });
-        }
-
-        // Sistema de menu do usuário por clique
-        function setupUserMenu() {
-            const userAvatar = document.getElementById('userAvatar');
-            const userDropdown = document.getElementById('userDropdown');
-            
-            if (!userAvatar || !userDropdown) return;
-            
-            // Abrir/fechar menu ao clicar no avatar
-            userAvatar.addEventListener('click', function(e) {
-                e.stopPropagation();
-                userDropdown.classList.toggle('active');
-            });
-            
-            // Fechar menu ao clicar fora
-            document.addEventListener('click', function(e) {
-                if (!userAvatar.contains(e.target) && !userDropdown.contains(e.target)) {
-                    userDropdown.classList.remove('active');
-                }
-            });
-            
-            // Fechar menu ao pressionar ESC
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && userDropdown.classList.contains('active')) {
-                    userDropdown.classList.remove('active');
-                }
-            });
-        }
-
-        // Sistema de Progresso de Leitura
-        function setupReadingProgress() {
-            // Carregar progresso salvo do localStorage
-            const savedProgress = JSON.parse(localStorage.getItem('hq-verso-reading-progress')) || {};
-            
-            // Atualizar dados dos quadrinhos com progresso salvo
-            comicsData.all.forEach(comic => {
-                if (savedProgress[comic.id]) {
-                    comic.progress = savedProgress[comic.id].progress;
-                    comic.lastRead = savedProgress[comic.id].lastRead;
-                    comic.currentPage = savedProgress[comic.id].currentPage;
-                }
-            });
-            
-            // Salvar progresso quando clicar em "Ler agora"
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.read-badge') || 
-                    (e.target.closest('#comicModalRead') && document.getElementById('comicModalRead'))) {
-                    
-                    let comicId;
-                    
-                    if (e.target.closest('.read-badge')) {
-                        comicId = parseInt(e.target.closest('.comic-card').getAttribute('data-id'));
-                    } else {
-                        // Do modal
-                        const activeComic = getActiveModalComic();
-                        if (activeComic) comicId = activeComic.id;
-                    }
-                    
-                    if (comicId) {
-                        saveReadingProgress(comicId, 10); // Inicia com 10% de progresso
-                        updateContinueReadingSection();
-                    }
-                }
-            });
-            
-            // Atualizar progresso quando navegar no leitor (simulação)
-            window.addEventListener('message', function(e) {
-                if (e.data && e.data.type === 'readingProgress') {
-                    saveReadingProgress(e.data.comicId, e.data.progress, e.data.currentPage);
-                    updateContinueReadingSection();
-                }
-            });
-        }
-
-        function saveReadingProgress(comicId, progress, currentPage = 1) {
-            const savedProgress = JSON.parse(localStorage.getItem('hq-verso-reading-progress')) || {};
-            
-            savedProgress[comicId] = {
-                progress: Math.min(progress, 100),
-                currentPage: currentPage,
-                lastRead: new Date().toISOString()
-            };
-            
-            localStorage.setItem('hq-verso-reading-progress', JSON.stringify(savedProgress));
-            
-            // Atualizar também nos dados em memória
-            const comic = comicsData.all.find(c => c.id === comicId);
-            if (comic) {
-                comic.progress = savedProgress[comicId].progress;
-                comic.currentPage = savedProgress[comicId].currentPage;
-                comic.lastRead = savedProgress[comicId].lastRead;
+        });
+        
+        // Fechar modal
+        closeSearch.addEventListener('click', closeSearchModal);
+        
+        // Fechar modal ao clicar fora
+        searchModal.addEventListener('click', function(e) {
+            if (e.target === searchModal) {
+                closeSearchModal();
             }
+        });
+        
+        // Fechar com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && searchModal.classList.contains('active')) {
+                closeSearchModal();
+            }
+        });
+        
+        // Busca em tempo real no modal
+        searchModalInput.addEventListener('input', function() {
+            const searchTerm = this.value.trim();
             
-            console.log(`Progresso salvo: Quadrinho ${comicId} - ${progress}%`);
-        }
-
-        function getContinueReadingComics() {
-            const savedProgress = JSON.parse(localStorage.getItem('hq-verso-reading-progress')) || {};
+            clearTimeout(searchTimeout);
             
-            return comicsData.all
-                .filter(comic => savedProgress[comic.id] && savedProgress[comic.id].progress > 0 && savedProgress[comic.id].progress < 100)
-                .sort((a, b) => {
-                    const progressA = savedProgress[a.id] || { lastRead: '0' };
-                    const progressB = savedProgress[b.id] || { lastRead: '0' };
-                    return new Date(progressB.lastRead) - new Date(progressA.lastRead);
-                });
-        }
-
-        function updateContinueReadingSection() {
-            const continueReadingComics = getContinueReadingComics();
-            const continueSection = document.getElementById('continueReading');
-            const continueInfo = document.getElementById('continueInfo');
-            
-            if (continueReadingComics.length === 0) {
-                continueSection.innerHTML = '<div class="no-comics">Nenhum quadrinho em progresso</div>';
-                continueInfo.style.display = 'none';
+            if (searchTerm.length < 2) {
+                showEmptyState();
                 return;
             }
             
-            // Renderizar quadrinhos em progresso
-            renderComicsInSection('continueReading', continueReadingComics.slice(0, 6), true);
+            // Mostrar loading
+            showLoadingState();
             
-            // Atualizar info do primeiro quadrinho
-            const firstComic = continueReadingComics[0];
-            updateContinueInfo(firstComic);
+            searchTimeout = setTimeout(() => {
+                performModalSearch(searchTerm);
+            }, 500);
+        });
+        
+        // Busca por Enter no modal
+        searchModalInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value.trim();
+                if (searchTerm.length >= 2) {
+                    clearTimeout(searchTimeout);
+                    showLoadingState();
+                    performModalSearch(searchTerm);
+                }
+            }
+        });
+        
+        function openSearchModal() {
+            searchModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                searchModalInput.focus();
+                // Copiar valor do input principal se existir
+                if (searchInput.value.trim()) {
+                    searchModalInput.value = searchInput.value;
+                    performModalSearch(searchInput.value);
+                }
+            }, 100);
         }
-
-        function updateContinueInfo(comic) {
-            const continueInfo = document.getElementById('continueInfo');
-            const infoTitle = document.getElementById('infoTitle');
-            const infoMeta = document.getElementById('infoMeta');
-            const infoProgress = document.getElementById('infoProgress');
+        
+        function closeSearchModal() {
+            searchModal.classList.remove('active');
+            document.body.style.overflow = '';
+            searchModalInput.value = '';
+            showEmptyState();
+        }
+        
+        function performModalSearch(searchTerm) {
+            // Buscar quadrinhos dos dados atuais
+            const comicResults = allComics.filter(comic => 
+                comic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (comic.meta && comic.meta.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                (comic.description && comic.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                (comic.categories && comic.categories.some(cat => cat.toLowerCase().includes(searchTerm.toLowerCase())))
+            );
             
-            if (comic && comic.progress > 0) {
-                infoTitle.textContent = comic.title;
-                infoMeta.textContent = `${comic.progress}% lido • Continuar da página ${comic.currentPage || 1}`;
-                infoProgress.style.width = `${comic.progress}%`;
-                continueInfo.style.display = 'block';
-            } else {
-                continueInfo.style.display = 'none';
+            // Buscar usuários VIA AJAX
+            fetch(`search_users.php?q=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(userResults => {
+                    currentResults = { comics: comicResults, users: userResults };
+                    displayModalResults(currentResults, searchTerm);
+                })
+                .catch(error => {
+                    console.error('Erro na busca de usuários:', error);
+                    // Fallback para dados mockados
+                    const userResults = usersData.filter(user =>
+                        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        user.role.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).map(user => ({
+                        ...user,
+                        is_following: false,
+                    }));
+                    
+                    currentResults = { comics: comicResults, users: userResults };
+                    displayModalResults(currentResults, searchTerm);
+                });
+        }
+        
+        function displayModalResults(results, searchTerm) {
+            const totalResults = results.comics.length + results.users.length;
+            
+            // Atualizar estatísticas
+            document.getElementById('resultsCount').textContent = 
+                `${totalResults} resultados para "${searchTerm}"`;
+            
+            // Atualizar todas as abas
+            updateResultsDisplay(currentTab);
+        }
+        
+        function updateResultsDisplay(activeTab) {
+            const comicsGridAll = document.getElementById('resultsGridAll');
+            const comicsGridComics = document.getElementById('resultsGridComics');
+            const comicsGridUsers = document.getElementById('resultsGridUsers');
+            
+            const emptyAll = document.getElementById('emptyAll');
+            const emptyComics = document.getElementById('emptyComics');
+            const emptyUsers = document.getElementById('emptyUsers');
+            
+            // Limpar grids
+            comicsGridAll.innerHTML = '';
+            comicsGridComics.innerHTML = '';
+            comicsGridUsers.innerHTML = '';
+            
+            // Mostrar/ocultar estados vazios
+            emptyAll.style.display = currentResults.comics.length === 0 && currentResults.users.length === 0 ? 'block' : 'none';
+            emptyComics.style.display = currentResults.comics.length === 0 ? 'block' : 'none';
+            emptyUsers.style.display = currentResults.users.length === 0 ? 'block' : 'none';
+            
+            // Popular aba "Todos"
+            if (currentResults.comics.length > 0) {
+                currentResults.comics.slice(0, 6).forEach(comic => {
+                    comicsGridAll.innerHTML += createModalComicCard(comic);
+                });
+            }
+            
+            if (currentResults.users.length > 0) {
+                currentResults.users.slice(0, 4).forEach(user => {
+                    comicsGridAll.innerHTML += createModalUserCard(user, <?php echo $_SESSION['user_id']; ?>);
+                });
+            }
+            
+            // Popular aba "Quadrinhos"
+            if (currentResults.comics.length > 0) {
+                currentResults.comics.forEach(comic => {
+                    comicsGridComics.innerHTML += createModalComicCard(comic);
+                });
+            }
+            
+            // Popular aba "Usuários"
+            if (currentResults.users.length > 0) {
+                currentResults.users.forEach(user => {
+                    comicsGridUsers.innerHTML += createModalUserCard(user, <?php echo $_SESSION['user_id']; ?>);
+                });
+            }
+            
+            // Adicionar event listeners para os cards
+            addModalCardEventListeners();
+        }
+        
+        function addModalCardEventListeners() {
+            // Event listeners para cards de quadrinhos
+            document.querySelectorAll('.search-comic-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const comicId = this.getAttribute('data-id');
+                    const comic = currentResults.comics.find(c => c.id == comicId);
+                    if (comic) {
+                        closeSearchModal();
+                        window.location.href = `leitor.html?comic=${comicId}&title=${encodeURIComponent(comic.title)}`;
+                    }
+                });
+            });
+            
+            // Event listeners para cards de usuários
+            document.querySelectorAll('.search-user-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-id');
+                    closeSearchModal();
+                    window.location.href = `perfil.php?user_id=${userId}`;
+                });
+            });
+        }
+        
+        function showEmptyState() {
+            document.getElementById('resultsCount').textContent = 'Digite para buscar';
+            document.querySelectorAll('.results-grid').forEach(grid => grid.innerHTML = '');
+            document.querySelectorAll('.empty-state').forEach(empty => empty.style.display = 'block');
+        }
+        
+        function showLoadingState() {
+            document.getElementById('resultsCount').textContent = 'Buscando...';
+            document.querySelectorAll('.results-grid').forEach(grid => {
+                grid.innerHTML = `
+                    <div class="search-loading">
+                        <i class="fas fa-spinner"></i>
+                        <div>Carregando resultados...</div>
+                    </div>
+                `;
+            });
+        }
+        
+        // Trocar abas
+        searchTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                currentTab = tabName;
+                
+                // Atualizar aba ativa
+                searchTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Mostrar seção correspondente
+                resultsSections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.id === `results${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`) {
+                        section.classList.add('active');
+                    }
+                });
+                
+                updateResultsDisplay(tabName);
+            });
+        });
+    }
+
+    // Sistema de Tema
+    function setupTheme() {
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        // Verificar tema salvo
+        const savedTheme = localStorage.getItem('theme') || localStorage.getItem('hq-verso-theme');
+        
+        if (savedTheme === 'light') {
+            body.classList.add('light-mode');
+            // Atualizar ícone
+            const icon = themeToggle.querySelector('i');
+            if (icon) {
+                icon.classList.replace('fa-moon', 'fa-sun');
             }
         }
-
-        function getActiveModalComic() {
-            const modalTitle = document.getElementById('comicModalTitle');
-            if (!modalTitle) return null;
+        
+        // Alternar tema
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('light-mode');
+            const icon = themeToggle.querySelector('i');
             
-            const title = modalTitle.textContent;
-            return comicsData.all.find(comic => comic.title === title);
-        }
-
-        // Inicialização completa
-        function initializePage() {
-            setupTheme();
-            setupCategoryFilter();
-            setupModalSearch();
-            setupCarouselNavigation();
-            setupComicModalHandlers();
-            setupUserMenu();
-            setupReadingProgress();
-            updateAllSections('all');
-            
-            console.log('Sistema de quadrinhos inicializado!');
-        }
-
-        // Inicializar a página quando o DOM estiver carregado
-        document.addEventListener('DOMContentLoaded', function() {
-            initializePage();
+            if (body.classList.contains('light-mode')) {
+                icon.classList.replace('fa-moon', 'fa-sun');
+                localStorage.setItem('theme', 'light');
+                localStorage.setItem('hq-verso-theme', 'light');
+            } else {
+                icon.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('theme', 'dark');
+                localStorage.setItem('hq-verso-theme', 'dark');
+            }
         });
-    </script>
+    }
+
+    // Sistema de categoria
+    function setupCategoryFilter() {
+        document.querySelectorAll('.category').forEach(category => {
+            category.addEventListener('click', function() {
+                document.querySelectorAll('.category').forEach(cat => cat.classList.remove('active'));
+                this.classList.add('active');
+                
+                const categoryType = this.getAttribute('data-category');
+                
+                document.querySelectorAll('.comics-carousel').forEach(carousel => {
+                    carousel.style.opacity = '0.7';
+                    setTimeout(() => {
+                        carousel.style.opacity = '1';
+                    }, 300);
+                });
+                
+                updateAllSections(categoryType);
+            });
+        });
+    }
+
+    // Sistema de navegação do carrossel
+    function setupCarouselNavigation() {
+        document.querySelectorAll('.carousel-container').forEach(container => {
+            const carousel = container.querySelector('.comics-carousel');
+            const prevBtn = container.querySelector('.carousel-nav.prev');
+            const nextBtn = container.querySelector('.carousel-nav.next');
+            
+            if (!carousel) return;
+            
+            // Verificar estado inicial
+            updateNavButtons(carousel, prevBtn, nextBtn);
+            
+            // Atualizar durante o scroll
+            carousel.addEventListener('scroll', () => {
+                updateNavButtons(carousel, prevBtn, nextBtn);
+            });
+            
+            // Configurar botões
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    const amount = Math.round(carousel.clientWidth * 0.8) || 300;
+                    scrollCarousel(carousel.id, -amount);
+                });
+            }
+            
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    const amount = Math.round(carousel.clientWidth * 0.8) || 300;
+                    scrollCarousel(carousel.id, amount);
+                });
+            }
+        });
+    }
+
+    function updateNavButtons(carousel, prevBtn, nextBtn) {
+        if (!carousel || !prevBtn || !nextBtn) return;
+        const scrollLeft = carousel.scrollLeft;
+        const scrollWidth = carousel.scrollWidth;
+        const clientWidth = carousel.clientWidth;
+        
+        // Botão anterior
+        if (scrollLeft <= 10) {
+            prevBtn.disabled = true;
+            prevBtn.style.opacity = '0.3';
+        } else {
+            prevBtn.disabled = false;
+            prevBtn.style.opacity = '0.9';
+        }
+        
+        // Botão próximo
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+            nextBtn.disabled = true;
+            nextBtn.style.opacity = '0.3';
+        } else {
+            nextBtn.disabled = false;
+            nextBtn.style.opacity = '0.9';
+        }
+    }
+
+    function scrollCarousel(carouselId, amount) {
+        const carousel = document.getElementById(carouselId);
+        if (carousel) {
+            carousel.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+    }
+
+    // Modal de detalhe do quadrinho
+    function openComicModal(comic) {
+        const overlay = document.getElementById('comicModalOverlay');
+        if (!overlay || !comic) return;
+        const cover = document.getElementById('comicModalCover');
+        const title = document.getElementById('comicModalTitle');
+        const meta = document.getElementById('comicModalMeta');
+        const desc = document.getElementById('comicModalDescription');
+        const readBtn = document.getElementById('comicModalRead');
+        const addBtn = document.getElementById('comicModalAdd');
+        
+        cover.src = comic.cover || '';
+        cover.alt = `Capa do quadrinho ${comic.title || ''}`;
+        title.textContent = comic.title || '';
+        meta.textContent = comic.meta || '';
+        desc.textContent = comic.description || 'Sem sinopse disponível.';
+        
+        // ações dos botões
+        readBtn.onclick = function() {
+            saveReadingProgress(comic.id, 10); // Iniciar com 10% de progresso
+            window.location.href = `leitor.html?comic=${encodeURIComponent(comic.id)}&title=${encodeURIComponent(comic.title)}`;
+        };
+        
+        addBtn.onclick = function() {
+            addBtn.textContent = 'Adicionado';
+            addBtn.disabled = true;
+            // Aqui você pode adicionar lógica para adicionar à lista
+        };
+        
+        overlay.style.display = 'flex';
+        overlay.setAttribute('aria-hidden', 'false');
+        setTimeout(() => {
+            readBtn.focus();
+        }, 120);
+    }
+    
+    function closeComicModal() {
+        const overlay = document.getElementById('comicModalOverlay');
+        if (!overlay) return;
+        overlay.style.display = 'none';
+        overlay.setAttribute('aria-hidden', 'true');
+    }
+    
+    function setupComicModalHandlers() {
+        // Fechar pelo botão e clicando fora
+        const overlay = document.getElementById('comicModalOverlay');
+        const closeBtn = document.getElementById('comicModalClose');
+        if (closeBtn) closeBtn.addEventListener('click', closeComicModal);
+        if (overlay) {
+            overlay.addEventListener('click', function(evt) {
+                if (evt.target === overlay) closeComicModal();
+            });
+        }
+        
+        // Fechar com ESC
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeComicModal();
+        });
+    }
+
+    // Sistema de menu do usuário
+    function setupUserMenu() {
+        const userAvatar = document.getElementById('userAvatar');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        if (!userAvatar || !userDropdown) return;
+        
+        // Abrir/fechar menu ao clicar no avatar
+        userAvatar.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userDropdown.classList.toggle('active');
+        });
+        
+        // Fechar menu ao clicar fora
+        document.addEventListener('click', function(e) {
+            if (!userAvatar.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('active');
+            }
+        });
+        
+        // Fechar menu ao pressionar ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && userDropdown.classList.contains('active')) {
+                userDropdown.classList.remove('active');
+            }
+        });
+    }
+
+    // Função para seguir/deseguir usuário
+    function toggleFollow(userId, button) {
+        const isFollowing = button.classList.contains('following');
+        
+        fetch('follow_user.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `user_id=${userId}&action=${isFollowing ? 'unfollow' : 'follow'}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                if(isFollowing) {
+                    button.classList.remove('following');
+                    button.innerHTML = '<i class="fas fa-user-plus"></i> Seguir';
+                } else {
+                    button.classList.add('following');
+                    button.innerHTML = '<i class="fas fa-user-check"></i> Seguindo';
+                }
+            } else {
+                alert(data.message || 'Erro ao processar solicitação');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao processar solicitação');
+        });
+    }
+
+    // Inicialização completa
+    async function initializePage() {
+        setupTheme();
+        setupCategoryFilter();
+        setupModalSearch();
+        setupCarouselNavigation();
+        setupComicModalHandlers();
+        setupUserMenu();
+        
+        // Inicializar sistema de progresso (agora assíncrono)
+        await setupReadingProgress();
+        
+        console.log('Sistema de quadrinhos inicializado!');
+    }
+
+    // Inicializar a página quando o DOM estiver carregado
+    document.addEventListener('DOMContentLoaded', function() {
+        initializePage();
+    });
+</script>
 </body>
 </html>
