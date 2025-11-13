@@ -20,6 +20,19 @@ if(isset($_GET['user_id']) && !empty($_GET['user_id'])) {
     }
 }
 
+// Iniciar conversa diretamente do perfil
+if(isset($_GET['start_conversation']) && !empty($_GET['start_conversation'])) {
+    $target_user_id = intval($_GET['start_conversation']);
+    
+    if($target_user_id && $target_user_id != $_SESSION['user_id']) {
+        $conversation_id = $auth->getOrCreateConversation($_SESSION['user_id'], $target_user_id);
+        if($conversation_id) {
+            header("Location: messages.php?conversation_id=" . $conversation_id);
+            exit();
+        }
+    }
+}
+
 // Obter dados do usuário do perfil
 $user_data = $auth->getUserData($profile_user_id);
 if(!$user_data) {
@@ -584,6 +597,18 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
             transform: translateY(-2px);
         }
 
+        .btn-message { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-message:hover { 
+            background: linear-gradient(135deg, #764ba2 0%, #5a3d8a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
         .btn-report { 
             background: rgba(220, 53, 69, 0.1); 
             border: 2px solid #dc3545; 
@@ -842,7 +867,7 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
             margin-bottom: 15px;
             color: var(--accent-color);
         }
-
+        
         /* Indicador visual de que é clicável */
         .follow-user-info::after {
             content: "👁️";
@@ -952,6 +977,16 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
                 flex-direction: column;
                 text-align: center;
             }
+
+            .profile-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .profile-actions .btn {
+                width: 100%;
+                max-width: 250px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1012,6 +1047,11 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
         <a href="#" class="menu-item" onclick="openFollowersModal()">
             <i class="fas fa-users"></i>
             <span>Seguidores & Seguindo</span>
+        </a>
+        
+        <a href="messages.php" class="menu-item">
+            <i class="fas fa-envelope"></i>
+            <span>Mensagens</span>
         </a>
         
         <div class="menu-section">Conta</div>
@@ -1107,9 +1147,16 @@ if(!$viewing_own_profile && $_POST && isset($_POST['report_user'])) {
                                 <?php echo $is_following ? 'Seguindo' : 'Seguir'; ?>
                             </button>
                         </form>
+                        <a href="messages.php?start_conversation=<?php echo $profile_user_id; ?>" class="btn btn-message">
+                            <i class="fas fa-envelope"></i> Mensagem
+                        </a>
                         <button class="btn btn-report" onclick="openReportModal()">
                             <i class="fas fa-flag"></i> Reportar
                         </button>
+                    <?php else: ?>
+                        <a href="messages.php" class="btn btn-primary">
+                            <i class="fas fa-envelope"></i> Minhas Mensagens
+                        </a>
                     <?php endif; ?>
                 </div>
             </div>
