@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 13/11/2025 às 07:36
+-- Tempo de geração: 13/11/2025 às 20:57
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -82,7 +82,8 @@ CREATE TABLE `admin_notifications` (
 --
 
 INSERT INTO `admin_notifications` (`id`, `type`, `title`, `message`, `related_id`, `related_type`, `is_read`, `priority`, `created_at`) VALUES
-(1, 'user_report', 'Novo usuário reportado', 'O usuário ID 6 foi reportado por ID 2', 6, 'user', 0, 'medium', '2025-11-10 00:58:14');
+(1, 'user_report', 'Novo usuário reportado', 'O usuário ID 6 foi reportado por ID 2', 6, 'user', 0, 'medium', '2025-11-10 00:58:14'),
+(2, '', 'Nova solicitação de conta criador', 'O usuário ID 2 solicitou uma conta de criador', 2, 'user', 0, 'medium', '2025-11-13 16:40:12');
 
 -- --------------------------------------------------------
 
@@ -184,7 +185,8 @@ INSERT INTO `comics` (`id`, `title`, `author_id`, `publisher_id`, `cover`, `desc
 (24, 'Batman: Silêncio', 2, NULL, 'https://lh3.googleusercontent.com/proxy/9y2rp6F2x4dSCvFkZoz847oXtBE8IP0mscS0W0SkYpRtdub4qCQRCzj-Qwfgd4BWQq6EtqSmr7edCB_rNckNCs8pGT8jFx0HdMknRmb_1EmPWIb5zuujbw', 'Uma intensa história de Batman escrita por Jeph Loeb.', 0.00, 1, 0, 'published', NULL, 150, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
 (25, 'Mulher-Maravilha: Deuses e Mortais', 2, NULL, 'https://cdn.awsli.com.br/600x450/1668/1668242/produto/162790896905299a6a0.jpg', 'A reinvenção da origem da Mulher-Maravilha por George Pérez.', 0.00, 1, 0, 'published', NULL, 140, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
 (26, 'Flashpoint', 2, NULL, 'https://m.media-amazon.com/images/I/91dXNvO2fML.jpg', 'Uma linha temporal alternativa que altera o universo DC.', 0.00, 1, 0, 'published', NULL, 160, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
-(27, 'Arqueiro Verde: Ano Um', 2, NULL, 'https://rika.vtexassets.com/arquivos/ids/219835/-herois_panini-arqueiro-verde-ano-um.jpg?v=635316153891630000', 'A origem moderna do Arqueiro Verde.', 0.00, 1, 0, 'published', NULL, 110, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28');
+(27, 'Arqueiro Verde: Ano Um', 2, NULL, 'https://rika.vtexassets.com/arquivos/ids/219835/-herois_panini-arqueiro-verde-ano-um.jpg?v=635316153891630000', 'A origem moderna do Arqueiro Verde.', 0.00, 1, 0, 'published', NULL, 110, 0, '2025-11-13 05:13:28', '2025-11-13 05:13:28'),
+(28, 'Scott Pilgrim - contra o munso', 2, NULL, 'uploads/covers/cover_2_1763054995.jpg', 'um canadense luta contra os 7 ex-namorados do mal da sua namorada.', 0.00, 1, 0, 'published', NULL, 1, 0, '2025-11-13 17:29:55', '2025-11-13 17:29:55');
 
 --
 -- Acionadores `comics`
@@ -259,7 +261,10 @@ INSERT INTO `comic_categories` (`comic_id`, `category_id`) VALUES
 (26, 1),
 (26, 4),
 (27, 1),
-(27, 4);
+(27, 4),
+(28, 1),
+(28, 5),
+(28, 9);
 
 -- --------------------------------------------------------
 
@@ -299,7 +304,8 @@ CREATE TABLE `comic_comments` (
 
 INSERT INTO `comic_comments` (`id`, `user_id`, `comic_id`, `comment`, `parent_comment_id`, `contains_spoilers`, `is_approved`, `created_at`, `updated_at`) VALUES
 (1, 2, 7, 'salve', NULL, 0, 1, '2025-11-13 06:10:30', '2025-11-13 06:10:30'),
-(2, 2, 7, 'salve', 1, 0, 1, '2025-11-13 06:17:43', '2025-11-13 06:17:43');
+(2, 2, 7, 'salve', 1, 0, 1, '2025-11-13 06:17:43', '2025-11-13 06:17:43'),
+(3, 4, 3, 'morreu no final', NULL, 1, 1, '2025-11-13 07:43:24', '2025-11-13 07:43:24');
 
 -- --------------------------------------------------------
 
@@ -445,7 +451,8 @@ INSERT INTO `comic_pages` (`id`, `comic_id`, `page_number`, `image_url`, `title`
 (107, 27, 1, 'https://rika.vtexassets.com/arquivos/ids/219835/-herois_panini-arqueiro-verde-ano-um.jpg?v=635316153891630000', 'Capa', '2025-11-13 05:34:12'),
 (108, 27, 2, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Arqueiro+Verde+Página+1', 'Oliver Queen naufraga', '2025-11-13 05:34:12'),
 (109, 27, 3, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Arqueiro+Verde+Página+2', 'Ilha deserta', '2025-11-13 05:34:12'),
-(110, 27, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Arqueiro+Verde+Página+3', 'Retorno a Star City', '2025-11-13 05:34:12');
+(110, 27, 4, 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Arqueiro+Verde+Página+3', 'Retorno a Star City', '2025-11-13 05:34:12'),
+(111, 28, 1, 'uploads/pages/page_28_1_1763054995.jpg', 'Página 1', '2025-11-13 17:29:55');
 
 -- --------------------------------------------------------
 
@@ -467,7 +474,8 @@ CREATE TABLE `comic_ratings` (
 --
 
 INSERT INTO `comic_ratings` (`id`, `user_id`, `comic_id`, `rating`, `created_at`, `updated_at`) VALUES
-(1, 2, 7, 5, '2025-11-13 06:05:00', '2025-11-13 06:05:00');
+(1, 2, 7, 5, '2025-11-13 06:05:00', '2025-11-13 06:05:00'),
+(2, 4, 3, 5, '2025-11-13 18:15:11', '2025-11-13 18:15:11');
 
 -- --------------------------------------------------------
 
@@ -529,7 +537,34 @@ CREATE TABLE `conversations` (
 INSERT INTO `conversations` (`id`, `user1_id`, `user2_id`, `last_message_at`, `created_at`) VALUES
 (1, 2, 7, '2025-11-13 02:39:55', '2025-11-10 04:01:12'),
 (2, 4, 5, '2025-11-13 00:48:32', '2025-11-13 00:47:45'),
-(3, 2, 5, '2025-11-13 02:40:11', '2025-11-13 01:00:07');
+(3, 2, 5, '2025-11-13 02:40:11', '2025-11-13 01:00:07'),
+(4, 5, 6, '2025-11-13 17:14:11', '2025-11-13 17:14:04');
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `creator_requests`
+--
+
+CREATE TABLE `creator_requests` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `cpf` varchar(14) NOT NULL,
+  `address` text NOT NULL,
+  `age` int(11) NOT NULL,
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `requested_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `processed_at` timestamp NULL DEFAULT NULL,
+  `admin_id` int(11) DEFAULT NULL,
+  `admin_notes` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `creator_requests`
+--
+
+INSERT INTO `creator_requests` (`id`, `user_id`, `cpf`, `address`, `age`, `status`, `requested_at`, `processed_at`, `admin_id`, `admin_notes`) VALUES
+(1, 2, '13971969984', 'feijão com farinha', 18, 'approved', '2025-11-13 16:40:12', '2025-11-13 16:40:54', 4, '');
 
 -- --------------------------------------------------------
 
@@ -594,7 +629,8 @@ INSERT INTO `messages` (`id`, `conversation_id`, `sender_id`, `content`, `is_rea
 (3, 3, 5, 'carro', 1, '2025-11-13 01:00:15'),
 (4, 3, 5, 'odeio esse cara', 1, '2025-11-13 01:02:30'),
 (5, 1, 2, 'oxe baitola oq que tu quer?', 0, '2025-11-13 02:39:55'),
-(6, 3, 2, 'eu tbm me chamou de gostosa', 0, '2025-11-13 02:40:11');
+(6, 3, 2, 'eu tbm me chamou de gostosa', 1, '2025-11-13 02:40:11'),
+(7, 4, 5, 'e ai?', 0, '2025-11-13 17:14:11');
 
 -- --------------------------------------------------------
 
@@ -801,9 +837,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `avatar`, `avatar_file_name`, `avatar_file_size`, `avatar_mime_type`, `avatar_updated_at`, `bio`, `role`, `created_at`, `updated_at`, `favorite_hero`, `nationality`, `age`, `pronouns`) VALUES
-(2, 'Juan Taborda', 'taborda.mjuan@gmail.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', 'uploads/avatars/avatar_2_1762812275.png', '3tene_20250930220016.png', 91516, 'image/png', '2025-11-10 22:04:35', 'sou legal', 'user', '2025-10-20 23:21:30', '2025-11-10 22:04:35', 'batman', NULL, NULL, NULL),
+(2, 'Juan Taborda', 'taborda.mjuan@gmail.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', 'uploads/avatars/avatar_2_1762812275.png', '3tene_20250930220016.png', 91516, 'image/png', '2025-11-10 22:04:35', 'sou legal', 'creator', '2025-10-20 23:21:30', '2025-11-13 16:40:54', 'batman', NULL, NULL, NULL),
 (4, 'admin', 'admin@hqverso.com', '$2y$10$BzrSnR9AYcmK.bLQV3abV.AQ1gXidkWQLZ/rkEj6I/VfyeJS7CrFu', 'uploads/avatars/avatar_4_1762988992.png', 'avatar_4_1762435030.png', 10652, 'image/png', '2025-11-12 23:09:52', 'sou bilola', 'admin', '2025-10-21 01:11:36', '2025-11-12 23:09:52', 'batman', NULL, NULL, NULL),
-(5, 'reza+', 'ghyslainemoraes@gmail.com', '$2y$10$Bl1YDtuy/P54grfdqfTcw.vV/Gt/gj8tBR562cgU3UqlaBArIswju', 'uploads/avatars/avatar_5_1763000965.gif', 'bob-esponja-dançando.gif', 925657, 'image/gif', '2025-11-13 02:29:25', NULL, 'user', '2025-11-07 19:35:20', '2025-11-13 02:29:25', 'batman', NULL, NULL, NULL),
+(5, 'reza+', 'ghyslainemoraes@gmail.com', '$2y$10$Bl1YDtuy/P54grfdqfTcw.vV/Gt/gj8tBR562cgU3UqlaBArIswju', 'uploads/avatars/avatar_5_1763054020.gif', 'sr20a1666d409aws3.gif', 48568, 'image/gif', '2025-11-13 17:13:40', NULL, 'user', '2025-11-07 19:35:20', '2025-11-13 17:13:40', 'batman', NULL, NULL, NULL),
 (6, 'carro', 'a@a.com', '$2y$10$PbVOpLZio5Z1oPVbrHdZ7exgDYUYEamTRNVePFgSJOGNrYvysL8xO', NULL, NULL, NULL, NULL, NULL, NULL, 'user', '2025-11-07 23:10:41', '2025-11-07 23:10:41', 'batman', NULL, NULL, NULL),
 (7, 'souchato', 'souchato@gmail.com', '$2y$10$y14kdrgtyszdqo5ifsaoBOiQCCMPwIU5tk6Ud6.IBfBq3D/QgMmae', NULL, NULL, NULL, NULL, NULL, NULL, 'user', '2025-11-10 03:45:40', '2025-11-10 03:45:40', 'batman', NULL, NULL, NULL);
 
@@ -863,19 +899,21 @@ CREATE TABLE `user_progress` (
 --
 
 INSERT INTO `user_progress` (`id`, `user_id`, `comic_id`, `progress_pct`, `last_read_at`) VALUES
-(1, 2, 3, 25, '2025-11-13 05:30:58'),
+(1, 2, 3, 50, '2025-11-13 06:39:44'),
 (3, 2, 12, 75, '2025-11-13 05:39:46'),
 (5, 2, 2, 100, '2025-11-13 05:40:32'),
 (7, 2, 10, 25, '2025-11-13 04:35:51'),
 (13, 2, 9, 25, '2025-11-11 01:23:56'),
-(17, 4, 2, 50, '2025-11-13 00:16:01'),
-(19, 4, 3, 75, '2025-11-12 23:29:36'),
+(17, 4, 2, 25, '2025-11-13 07:56:54'),
+(19, 4, 3, 25, '2025-11-13 18:15:21'),
 (21, 4, 9, 100, '2025-11-12 23:29:49'),
 (25, 5, 2, 50, '2025-11-13 00:49:08'),
 (34, 2, 11, 25, '2025-11-13 05:07:36'),
 (38, 2, 7, 75, '2025-11-13 05:19:46'),
 (41, 2, 5, 100, '2025-11-13 05:31:39'),
-(84, 2, 13, 75, '2025-11-13 05:39:25');
+(84, 2, 13, 75, '2025-11-13 05:39:25'),
+(135, 2, 28, 25, '2025-11-13 17:30:28'),
+(141, 4, 13, 100, '2025-11-13 18:14:58');
 
 -- --------------------------------------------------------
 
@@ -1067,6 +1105,15 @@ ALTER TABLE `conversations`
   ADD KEY `idx_conversation_user2` (`user2_id`);
 
 --
+-- Índices de tabela `creator_requests`
+--
+ALTER TABLE `creator_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_pending_request` (`user_id`,`status`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `admin_id` (`admin_id`);
+
+--
 -- Índices de tabela `favorites`
 --
 ALTER TABLE `favorites`
@@ -1240,7 +1287,7 @@ ALTER TABLE `user_uploads`
 -- AUTO_INCREMENT de tabela `admin_notifications`
 --
 ALTER TABLE `admin_notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de tabela `banned_users`
@@ -1258,7 +1305,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT de tabela `comics`
 --
 ALTER TABLE `comics`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT de tabela `comic_collaborators`
@@ -1270,7 +1317,7 @@ ALTER TABLE `comic_collaborators`
 -- AUTO_INCREMENT de tabela `comic_comments`
 --
 ALTER TABLE `comic_comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de tabela `comic_drafts`
@@ -1282,13 +1329,13 @@ ALTER TABLE `comic_drafts`
 -- AUTO_INCREMENT de tabela `comic_pages`
 --
 ALTER TABLE `comic_pages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=111;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=112;
 
 --
 -- AUTO_INCREMENT de tabela `comic_ratings`
 --
 ALTER TABLE `comic_ratings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de tabela `comment_likes`
@@ -1300,7 +1347,13 @@ ALTER TABLE `comment_likes`
 -- AUTO_INCREMENT de tabela `conversations`
 --
 ALTER TABLE `conversations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de tabela `creator_requests`
+--
+ALTER TABLE `creator_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de tabela `favorites`
@@ -1318,7 +1371,7 @@ ALTER TABLE `forums`
 -- AUTO_INCREMENT de tabela `messages`
 --
 ALTER TABLE `messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de tabela `page_comments`
@@ -1396,7 +1449,7 @@ ALTER TABLE `user_library`
 -- AUTO_INCREMENT de tabela `user_progress`
 --
 ALTER TABLE `user_progress`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=153;
 
 --
 -- AUTO_INCREMENT de tabela `user_reports`
@@ -1481,6 +1534,13 @@ ALTER TABLE `comment_likes`
 ALTER TABLE `conversations`
   ADD CONSTRAINT `conversations_ibfk_1` FOREIGN KEY (`user1_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `conversations_ibfk_2` FOREIGN KEY (`user2_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Restrições para tabelas `creator_requests`
+--
+ALTER TABLE `creator_requests`
+  ADD CONSTRAINT `creator_requests_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `creator_requests_ibfk_2` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Restrições para tabelas `favorites`
