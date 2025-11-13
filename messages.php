@@ -192,6 +192,10 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
             overflow-y: auto;
         }
 
+        [data-theme="light"] .conversations-sidebar {
+            background: rgba(233, 69, 96, 0.05);
+        }
+
         .conversations-header {
             padding: 20px;
             border-bottom: 1px solid var(--border-color);
@@ -328,6 +332,10 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
             background: rgba(15, 52, 96, 0.2);
         }
 
+        [data-theme="light"] .chat-header {
+            background: rgba(233, 69, 96, 0.05);
+        }
+
         .chat-user-avatar {
             width: 50px;
             height: 50px;
@@ -414,6 +422,10 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
             padding: 20px;
             border-top: 1px solid var(--border-color);
             background: rgba(15, 52, 96, 0.2);
+        }
+
+        [data-theme="light"] .message-input-area {
+            background: rgba(233, 69, 96, 0.05);
         }
 
         .message-form {
@@ -591,6 +603,10 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
             font-size: 0.9rem;
         }
 
+        [data-theme="light"] .search-input {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
         .search-results {
             max-height: 300px;
             overflow-y: auto;
@@ -614,6 +630,31 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
             border-color: rgba(233, 69, 96, 0.3);
         }
 
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            background: var(--accent-hover);
+        }
+
         @media (max-width: 768px) {
             .messages-container {
                 grid-template-columns: 1fr;
@@ -631,6 +672,10 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
     </style>
 </head>
 <body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+
     <div class="container">
         <header>
             <a href="comics.php" class="logo">HQ VERSO</a>
@@ -783,6 +828,35 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
     </div>
 
     <script>
+        // Sistema de Tema
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            
+            // Aplicar tema salvo
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme, themeIcon);
+            
+            // Event listener para alternar tema
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme, themeIcon);
+            });
+        }
+
+        function updateThemeIcon(theme, iconElement) {
+            if (theme === 'dark') {
+                iconElement.className = 'fas fa-moon';
+            } else {
+                iconElement.className = 'fas fa-sun';
+            }
+        }
+
         // Sistema de busca de usuários
         document.getElementById('userSearch').addEventListener('input', function(e) {
             const searchTerm = e.target.value.trim();
@@ -792,7 +866,6 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
                 return;
             }
             
-            // Fazer busca via AJAX
             fetch('search_users.php?q=' + encodeURIComponent(searchTerm))
                 .then(response => response.json())
                 .then(users => {
@@ -859,7 +932,6 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
             document.getElementById('searchResults').innerHTML = '';
         }
 
-        // Fechar modal ao clicar fora
         document.getElementById('newConversationModal').addEventListener('click', function(e) {
             if(e.target === this) {
                 closeNewConversationModal();
@@ -882,7 +954,6 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
                 const sendBtn = document.getElementById('sendBtn');
                 const messageInput = document.getElementById('messageInput');
                 
-                // Desabilitar botão
                 sendBtn.disabled = true;
                 sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                 
@@ -893,7 +964,6 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
                 .then(response => response.json())
                 .then(data => {
                     if(data.success) {
-                        // Recarregar a página para mostrar a nova mensagem
                         location.reload();
                     } else {
                         alert('Erro: ' + data.message);
@@ -914,12 +984,14 @@ if(isset($_GET['conversation_id']) && !empty($_GET['conversation_id'])) {
         if(messageInput) {
             messageInput.focus();
             
-            // Auto-resize do textarea
             messageInput.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
             });
         }
+
+        // Inicializar tema quando o DOM carregar
+        document.addEventListener('DOMContentLoaded', initializeTheme);
     </script>
 </body>
 </html>
