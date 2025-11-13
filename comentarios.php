@@ -40,6 +40,30 @@ try {
     <title>Comentários - <?php echo htmlspecialchars($comic['title']); ?> - HQ Verso</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-card: rgba(26, 26, 46, 0.7);
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --accent-color: #e94560;
+            --accent-hover: #d8345f;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #e9ecef;
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --text-primary: #2c3e50;
+            --text-secondary: #6c757d;
+            --accent-color: #e94560;
+            --accent-hover: #d8345f;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -48,14 +72,9 @@ try {
         }
         
         body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
             min-height: 100vh;
-        }
-        
-        body.light-mode {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: #333;
         }
         
         .container {
@@ -70,14 +89,9 @@ try {
             gap: 20px;
             margin-bottom: 30px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--bg-card);
             border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        body.light-mode .header {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
         }
         
         .comic-cover {
@@ -90,7 +104,7 @@ try {
         .comic-info h1 {
             font-size: 2rem;
             margin-bottom: 10px;
-            color: #e94560;
+            color: var(--accent-color);
         }
         
         .back-btn {
@@ -98,7 +112,7 @@ try {
             align-items: center;
             gap: 8px;
             padding: 10px 20px;
-            background: #e94560;
+            background: var(--accent-color);
             color: white;
             text-decoration: none;
             border-radius: 25px;
@@ -107,7 +121,7 @@ try {
         }
         
         .back-btn:hover {
-            background: #d8345f;
+            background: var(--accent-hover);
             transform: translateY(-2px);
         }
         
@@ -126,22 +140,17 @@ try {
         }
         
         .spoiler-content {
-            background: #1a1a2e;
+            background: var(--bg-primary);
             padding: 40px;
             border-radius: 15px;
             text-align: center;
             max-width: 500px;
-            border: 2px solid #e94560;
-        }
-        
-        body.light-mode .spoiler-content {
-            background: white;
-            color: #333;
+            border: 2px solid var(--accent-color);
         }
         
         .spoiler-icon {
             font-size: 4rem;
-            color: #e94560;
+            color: var(--accent-color);
             margin-bottom: 20px;
         }
         
@@ -162,28 +171,23 @@ try {
         }
         
         .btn-primary {
-            background: #e94560;
+            background: var(--accent-color);
             color: white;
         }
         
         .btn-outline {
             background: transparent;
-            border: 2px solid #e94560;
-            color: #e94560;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
         }
         
         /* Sistema de Avaliação */
         .rating-section {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--bg-card);
             padding: 30px;
             border-radius: 15px;
             margin-bottom: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        body.light-mode .rating-section {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
         }
         
         .rating-stars {
@@ -219,15 +223,10 @@ try {
         
         /* Sistema de Comentários */
         .comments-section {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--bg-card);
             padding: 30px;
             border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        body.light-mode .comments-section {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
         }
         
         .comment-form {
@@ -239,17 +238,15 @@ try {
             min-height: 120px;
             padding: 15px;
             background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border-color);
             border-radius: 10px;
-            color: white;
+            color: var(--text-primary);
             font-size: 1rem;
             resize: vertical;
         }
         
-        body.light-mode .comment-textarea {
+        [data-theme="light"] .comment-textarea {
             background: rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-            color: #333;
         }
         
         .comment-options {
@@ -264,12 +261,12 @@ try {
             align-items: center;
             gap: 8px;
             font-size: 0.9rem;
-            color: #e94560;
+            color: var(--accent-color);
         }
         
         .submit-btn {
             padding: 10px 25px;
-            background: #e94560;
+            background: var(--accent-color);
             color: white;
             border: none;
             border-radius: 20px;
@@ -278,27 +275,22 @@ try {
         }
         
         .comment {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--bg-card);
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
             position: relative;
-        }
-        
-        body.light-mode .comment {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #e2e8f0;
         }
         
         .comment.reply {
             margin-left: 40px;
             background: rgba(255, 255, 255, 0.03);
-            border-left: 3px solid #e94560;
+            border-left: 3px solid var(--accent-color);
         }
         
-        body.light-mode .comment.reply {
-            background: rgba(255, 255, 255, 0.7);
+        [data-theme="light"] .comment.reply {
+            background: rgba(0, 0, 0, 0.03);
         }
         
         .comment-header {
@@ -324,7 +316,7 @@ try {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #e94560;
+            background: var(--accent-color);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -341,7 +333,7 @@ try {
         }
         
         .spoiler-badge {
-            background: #e94560;
+            background: var(--accent-color);
             color: white;
             padding: 4px 8px;
             border-radius: 12px;
@@ -354,13 +346,17 @@ try {
             padding: 15px;
             border-radius: 8px;
             margin: 10px 0;
-            border-left: 4px solid #e94560;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        [data-theme="light"] .spoiler-content {
+            background: #f8f9fa;
         }
         
         .spoiler-toggle {
             background: none;
             border: none;
-            color: #e94560;
+            color: var(--accent-color);
             cursor: pointer;
             font-weight: 600;
             display: flex;
@@ -373,13 +369,13 @@ try {
             gap: 15px;
             margin-top: 15px;
             padding-top: 10px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid var(--border-color);
         }
         
         .comment-action {
             background: none;
             border: none;
-            color: #e94560;
+            color: var(--accent-color);
             cursor: pointer;
             font-size: 0.9rem;
             display: flex;
@@ -395,14 +391,9 @@ try {
         .reply-form {
             margin-top: 15px;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--bg-card);
             border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        body.light-mode .reply-form {
-            background: rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
         }
         
         .reply-textarea {
@@ -410,18 +401,16 @@ try {
             min-height: 80px;
             padding: 12px;
             background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            color: white;
+            color: var(--text-primary);
             font-size: 0.9rem;
             resize: vertical;
             margin-bottom: 10px;
         }
         
-        body.light-mode .reply-textarea {
+        [data-theme="light"] .reply-textarea {
             background: rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-            color: #333;
         }
         
         .reply-actions {
@@ -445,54 +434,78 @@ try {
         }
 
         /* Estilos para o sistema de likes */
-.like-btn {
-    position: relative;
-    transition: all 0.3s ease;
-}
+        .like-btn {
+            position: relative;
+            transition: all 0.3s ease;
+        }
 
-.like-btn.liked {
-    color: #e94560 !important;
-}
+        .like-btn.liked {
+            color: var(--accent-color) !important;
+        }
 
-.like-btn.loading {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
+        .like-btn.loading {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
 
-.like-btn:hover:not(.loading) {
-    transform: scale(1.05);
-}
+        .like-btn:hover:not(.loading) {
+            transform: scale(1.05);
+        }
 
-.like-count {
-    margin-left: 5px;
-    font-weight: 600;
-    transition: transform 0.2s ease;
-}
+        .like-count {
+            margin-left: 5px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
 
-/* Animação de pulso para novos likes */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
+        /* Animação de pulso para novos likes */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
 
-.like-btn.pulse {
-    animation: pulse 0.3s ease;
-}
+        .like-btn.pulse {
+            animation: pulse 0.3s ease;
+        }
 
-/* Estilo para botão quando curtido */
-.like-btn.liked i {
-    color: #e94560;
-}
-        
         .replies-section {
             margin-top: 15px;
             padding-left: 20px;
             border-left: 2px solid rgba(233, 69, 96, 0.3);
         }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            background: var(--accent-hover);
+        }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+
     <!-- Modal de Alerta de Spoiler -->
     <div class="spoiler-modal" id="spoilerModal">
         <div class="spoiler-content">
@@ -572,11 +585,40 @@ try {
     </div>
 
     <script>
+    // Sistema de Tema
+    function initializeTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        // Aplicar tema salvo
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme, themeIcon);
+        
+        // Event listener para alternar tema
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme, themeIcon);
+        });
+    }
+
+    function updateThemeIcon(theme, iconElement) {
+        if (theme === 'dark') {
+            iconElement.className = 'fas fa-moon';
+        } else {
+            iconElement.className = 'fas fa-sun';
+        }
+    }
+
     // Variáveis globais
     const comicId = <?php echo $comic_id; ?>;
     let userRating = 0;
     let spoilerAccepted = localStorage.getItem(`spoiler_accepted_${comicId}`);
-    let replyingTo = null; // Controla para qual comentário estamos respondendo
+    let replyingTo = null;
 
     // Elementos DOM
     const spoilerModal = document.getElementById('spoilerModal');
@@ -706,7 +748,7 @@ try {
                     comicId: comicId,
                     comment: comment,
                     containsSpoilers: hasSpoilers,
-                    parentCommentId: replyingTo // Se estiver respondendo a alguém
+                    parentCommentId: replyingTo
                 })
             });
 
@@ -714,11 +756,10 @@ try {
             if (data.success) {
                 commentText.value = '';
                 containsSpoilers.checked = false;
-                replyingTo = null; // Resetar resposta
+                replyingTo = null;
                 commentText.placeholder = "Compartilhe sua opinião sobre este quadrinho...";
                 loadComments();
                 
-                // Feedback visual
                 showNotification('Comentário enviado com sucesso!', 'success');
             } else {
                 alert('Erro ao enviar comentário: ' + data.message);
@@ -755,7 +796,6 @@ try {
             return;
         }
 
-        // Separar comentários principais e respostas
         const mainComments = comments.filter(comment => !comment.parent_comment_id);
         const replies = comments.filter(comment => comment.parent_comment_id);
 
@@ -806,9 +846,8 @@ try {
             </div>
         `).join('');
 
-        // Aplicar estilos para botões curtidos
         document.querySelectorAll('.like-btn.liked').forEach(btn => {
-            btn.style.color = '#e94560';
+            btn.style.color = 'var(--accent-color)';
         });
     }
 
@@ -867,17 +906,15 @@ try {
         `;
     }
 
-    // Sistema de Likes - COMPLETO
+    // Sistema de Likes
     async function likeComment(commentId, button) {
         try {
-            // Verificar se já está carregando
             if (button.classList.contains('loading')) return;
             
             button.classList.add('loading');
             const icon = button.querySelector('i');
             const countSpan = button.querySelector('.like-count');
             
-            // Animação de loading
             icon.className = 'fas fa-spinner fa-spin';
 
             const response = await fetch('like_comment.php', {
@@ -894,14 +931,12 @@ try {
             const data = await response.json();
             
             if (data.success) {
-                // Atualizar visual do botão
                 if (data.liked) {
                     button.classList.add('liked');
                     icon.className = 'fas fa-thumbs-up';
-                    button.style.color = '#e94560';
+                    button.style.color = 'var(--accent-color)';
                     button.title = 'Remover curtida';
                     
-                    // Animação de pulso
                     button.classList.add('pulse');
                     setTimeout(() => button.classList.remove('pulse'), 300);
                 } else {
@@ -911,29 +946,24 @@ try {
                     button.title = 'Curtir comentário';
                 }
                 
-                // Atualizar contador
                 if (countSpan) {
                     countSpan.textContent = data.likeCount;
                     
-                    // Animação no contador
                     countSpan.style.transform = 'scale(1.3)';
                     setTimeout(() => {
                         countSpan.style.transform = 'scale(1)';
                     }, 200);
                 }
                 
-                // Feedback visual
                 button.style.transform = 'scale(0.95)';
                 setTimeout(() => {
                     button.style.transform = 'scale(1)';
                 }, 150);
                 
-                // Mostrar notificação
                 showNotification(data.message, 'success');
                 
             } else {
                 showNotification(data.message, 'error');
-                // Reverter ícone
                 icon.className = button.classList.contains('liked') ? 'fas fa-thumbs-up' : 'far fa-thumbs-up';
             }
             
@@ -950,9 +980,8 @@ try {
         document.querySelectorAll('.like-btn').forEach(button => {
             const isLiked = button.classList.contains('liked');
             
-            // Aplicar estilo visual inicial
             if (isLiked) {
-                button.style.color = '#e94560';
+                button.style.color = 'var(--accent-color)';
             }
         });
     }
@@ -963,16 +992,11 @@ try {
         commentText.placeholder = `Respondendo a ${username}...`;
         commentText.focus();
         
-        // Rolar até o formulário principal
-        commentForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Destacar visualmente que está respondendo
-        commentForm.style.border = '2px solid #e94560';
+        commentForm.style.border = '2px solid var(--accent-color)';
         commentForm.style.borderRadius = '10px';
         commentForm.style.padding = '15px';
         commentForm.style.background = 'rgba(233, 69, 96, 0.05)';
         
-        // Remover destaque após 5 segundos ou quando começar a digitar
         setTimeout(() => {
             if (commentText.value === '') {
                 resetReplyForm();
@@ -1042,7 +1066,6 @@ try {
 
     // Mostrar notificação
     function showNotification(message, type = 'info') {
-        // Remover notificação anterior se existir
         const existingNotification = document.querySelector('.notification');
         if (existingNotification) {
             existingNotification.remove();
@@ -1057,7 +1080,6 @@ try {
             </div>
         `;
 
-        // Estilos da notificação
         notification.style.cssText = `
             position: fixed;
             top: 20px;
@@ -1066,7 +1088,7 @@ try {
             color: white;
             padding: 15px 20px;
             border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: var(--shadow);
             z-index: 10001;
             animation: slideIn 0.3s ease;
             max-width: 300px;
@@ -1074,7 +1096,6 @@ try {
 
         document.body.appendChild(notification);
 
-        // Remover após 3 segundos
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.style.animation = 'slideOut 0.3s ease';
@@ -1121,7 +1142,7 @@ try {
         .loading-state i {
             font-size: 2rem;
             margin-bottom: 15px;
-            color: #e94560;
+            color: var(--accent-color);
         }
         
         .like-btn.loading {
@@ -1147,10 +1168,10 @@ try {
 
     // Inicializar
     document.addEventListener('DOMContentLoaded', () => {
+        initializeTheme();
         loadRatingStats();
         loadComments();
         
-        // Adicionar botão de cancelar resposta se estiver respondendo
         const commentOptions = document.querySelector('.comment-options');
         if (commentOptions && !document.getElementById('cancelReplyBtn')) {
             const cancelBtn = document.createElement('button');
@@ -1178,6 +1199,6 @@ try {
             if (cancelBtn) cancelBtn.style.display = 'block';
         }
     });
-</script>
+    </script>
 </body>
 </html>
