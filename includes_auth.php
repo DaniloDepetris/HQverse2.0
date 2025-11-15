@@ -11,348 +11,11 @@ class Auth {
         $this->conn = $database->getConnection();
     }
 
-
+    // ============ FUNÇÕES DE AUTENTICAÇÃO ============
     
-// NOVA FUNÇÃO: Iniciar ou obter conversa
-public function getOrCreateConversation($user1_id, $user2_id) {
-    try {
-        // Garantir que user1_id é sempre o menor ID para evitar duplicatas
-        $min_id = min($user1_id, $user2_id);
-        $max_id = max($user1_id, $user2_id);
-        
-        $query = "SELECT id FROM conversations 
-                 WHERE user1_id = :user1_id AND user2_id = :user2_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":user1_id", $min_id);
-        $stmt->bindParam(":user2_id", $max_id);
-        $stmt->execute();
-        
-        if($stmt->rowCount() > 0) {
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $result['id'];
-        } else {
-            // Criar nova conversa
-            $query = "INSERT INTO conversations (user1_id, user2_id) 
-                     VALUES (:user1_id, :user2_id)";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":user1_id", $min_id);
-            $stmt->bindParam(":user2_id", $max_id);
-            
-            if($stmt->execute()) {
-                return $this->conn->lastInsertId();
-            }
-            return false;
-        }
-        
-    } catch(PDOException $exception) {
-        return false;
-    }
-}
-
-// NOVA FUNÇÃO: Enviar mensagem
-public function sendMessage($conversation_id, $sender_id, $content) {
-    try {
-        // Validar conteúdo
-        $content = trim($content);
-        if(empty($content)) {
-            return "A mensagem não pode estar vazia!";
-        }
-        
-        if(strlen($content) > 1000) {
-            return "A mensagem é muito longa (máximo 1000 caracteres)!";
-        }
-        
-        $query = "INSERT INTO messages (conversation_id, sender_id, content) 
-                 VALUES (:conversation_id, :sender_id, :content)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":conversation_id", $conversation_id);
-        $stmt->bindParam(":sender_id", $sender_id);
-        $stmt->bindParam(":content", $content);
-        
-        if($stmt->execute()) {
-            // Atualizar last_message_at na conversa
-            $update_query = "UPDATE conversations SET last_message_at = NOW() 
-                           WHERE id = :conversation_id";
-            $update_stmt = $this->conn->prepare($update_query);
-            $update_stmt->bindParam(":conversation_id", $conversation_id);
-            $update_stmt->execute();
-            
-            return true;
-        }
-        return "Erro ao enviar mensagem!";
-        
-    } catch(PDOException $exception) {
-        return "Erro: " . $exception->getMessage();
-    }
-}
-
-// NOVA FUNÇÃO: Obter mensagens de uma conversa
-public function getMessages($conversation_id, $limit = 50, $offset = 0) {
-    try {
-        $query = "SELECT m.*, u.username, u.avatar 
-                 FROM messages m 
-                 JOIN users u ON m.sender_id = u.id 
-                 WHERE m.conversation_id = :conversation_id 
-                 ORDER BY m.created_at DESC 
-                 LIMIT :limit OFFSET :offset";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":conversation_id", $conversation_id);
-        $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
-        $stmt->bindParam(":offset", $offset, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Inverter a ordem para mostrar as mais antigas primeiro
-        return array_reverse($messages);
-        
-    } catch(PDOException $exception) {
-        return [];
-    }
-}
-
-// NOVA FUNÇÃO: Obter conversas do usuário
-public function getUserConversations($user_id) {
-    try {
-        $query = "SELECT c.*, 
-                         CASE 
-                             WHEN c.user1_id = :user_id THEN u2.id 
-                             ELSE u1.id 
-                         END as other_user_id,
-                         CASE 
-                             WHEN c.user1_id = :user_id THEN u2.username 
-                             ELSE u1.username 
-                         END as other_username,
-                         CASE 
-                             WHEN c.user1_id = :user_id THEN u2.avatar 
-                             ELSE u1.avatar 
-                         END as other_avatar,
-                         (SELECT content FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
-                         (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != :user_id AND is_read = 0) as unread_count
-                  FROM conversations c
-                  JOIN users u1 ON c.user1_id = u1.id
-                  JOIN users u2 ON c.user2_id = u2.id
-                  WHERE c.user1_id = :user_id OR c.user2_id = :user_id
-                  ORDER BY c.last_message_at DESC";
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":user_id", $user_id);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-    } catch(PDOException $exception) {
-        return [];
-    }
-}
-
-// NOVA FUNÇÃO: Marcar mensagens como lidas
-public function markMessagesAsRead($conversation_id, $user_id) {
-    try {
-        $query = "UPDATE messages SET is_read = 1 
-                 WHERE conversation_id = :conversation_id 
-                 AND sender_id != :user_id 
-                 AND is_read = 0";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":conversation_id", $conversation_id);
-        $stmt->bindParam(":user_id", $user_id);
-        
-        return $stmt->execute();
-        
-    } catch(PDOException $exception) {
-        return false;
-    }
-}
-
-// NOVA FUNÇÃO: Verificar se usuário pode acessar a conversa
-public function canAccessConversation($conversation_id, $user_id) {
-    try {
-        $query = "SELECT id FROM conversations 
-                 WHERE id = :conversation_id 
-                 AND (user1_id = :user_id OR user2_id = :user_id)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":conversation_id", $conversation_id);
-        $stmt->bindParam(":user_id", $user_id);
-        $stmt->execute();
-        
-        return $stmt->rowCount() > 0;
-        
-    } catch(PDOException $exception) {
-        return false;
-    }
-}
-
-// NOVA FUNÇÃO: Obter dados do outro usuário na conversa
-public function getOtherUserInConversation($conversation_id, $current_user_id) {
-    try {
-        $query = "SELECT 
-                    CASE 
-                        WHEN user1_id = :current_user_id THEN user2_id 
-                        ELSE user1_id 
-                    END as other_user_id,
-                    CASE 
-                        WHEN user1_id = :current_user_id THEN u2.username 
-                        ELSE u1.username 
-                    END as other_username,
-                    CASE 
-                        WHEN user1_id = :current_user_id THEN u2.avatar 
-                        ELSE u1.avatar 
-                    END as other_avatar
-                  FROM conversations c
-                  JOIN users u1 ON c.user1_id = u1.id
-                  JOIN users u2 ON c.user2_id = u2.id
-                  WHERE c.id = :conversation_id";
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":conversation_id", $conversation_id);
-        $stmt->bindParam(":current_user_id", $current_user_id);
-        $stmt->execute();
-        
-        if($stmt->rowCount() > 0) {
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        }
-        return false;
-        
-    } catch(PDOException $exception) {
-        return false;
-    }
-}
-
-    // NOVA FUNÇÃO: Reportar usuário
-public function reportUser($reported_user_id, $reporter_user_id, $reason, $description = '') {
-    try {
-        // Verificar se não está reportando a si mesmo
-        if($reported_user_id == $reporter_user_id) {
-            return "Você não pode se reportar!";
-        }
-
-        // Verificar se já reportou este usuário recentemente (evitar spam)
-        $query = "SELECT id FROM user_reports 
-                 WHERE reporter_user_id = :reporter_id 
-                 AND reported_user_id = :reported_id 
-                 AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":reporter_id", $reporter_user_id);
-        $stmt->bindParam(":reported_id", $reported_user_id);
-        $stmt->execute();
-
-        if($stmt->rowCount() > 0) {
-            return "Você já reportou este usuário recentemente. Aguarde um pouco antes de reportar novamente.";
-        }
-
-        // Inserir report
-        $query = "INSERT INTO user_reports (reported_user_id, reporter_user_id, reason, description) 
-                 VALUES (:reported_id, :reporter_id, :reason, :description)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":reported_id", $reported_user_id);
-        $stmt->bindParam(":reporter_id", $reporter_user_id);
-        $stmt->bindParam(":reason", $reason);
-        $stmt->bindParam(":description", $description);
-
-        if($stmt->execute()) {
-            // Criar notificação para admin
-            $this->createAdminNotification(
-                'user_report', 
-                'Novo usuário reportado', 
-                "O usuário ID {$reported_user_id} foi reportado por ID {$reporter_user_id}",
-                $reported_user_id,
-                'user'
-            );
-            return true;
-        }
-        return "Erro ao reportar usuário!";
-
-    } catch(PDOException $exception) {
-        return "Erro: " . $exception->getMessage();
-    }
-}
-
-// NOVA FUNÇÃO: Criar notificação para admin
-public function createAdminNotification($type, $title, $message, $related_id = null, $related_type = null) {
-    try {
-        $query = "INSERT INTO admin_notifications (type, title, message, related_id, related_type) 
-                 VALUES (:type, :title, :message, :related_id, :related_type)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":type", $type);
-        $stmt->bindParam(":title", $title);
-        $stmt->bindParam(":message", $message);
-        $stmt->bindParam(":related_id", $related_id);
-        $stmt->bindParam(":related_type", $related_type);
-
-        return $stmt->execute();
-
-    } catch(PDOException $exception) {
-        return false;
-    }
-}
-
-// NOVA FUNÇÃO: Obter notificações não lidas para admin
-public function getUnreadAdminNotifications($limit = 10) {
-    try {
-        $query = "SELECT * FROM admin_notifications 
-                 WHERE is_read = 0 
-                 ORDER BY created_at DESC 
-                 LIMIT :limit";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    } catch(PDOException $exception) {
-        return [];
-    }
-}
-
-// NOVA FUNÇÃO: Obter todos os reports pendentes
-public function getPendingReports() {
-    try {
-        $query = "SELECT ur.*, 
-                         ru.username as reported_username,
-                         ru.email as reported_email,
-                         rep.username as reporter_username
-                  FROM user_reports ur
-                  JOIN users ru ON ur.reported_user_id = ru.id
-                  JOIN users rep ON ur.reporter_user_id = rep.id
-                  WHERE ur.status = 'pending'
-                  ORDER BY ur.created_at DESC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    } catch(PDOException $exception) {
-        return [];
-    }
-}
-
-    // NOVA FUNÇÃO: Seguir usuário automaticamente após cadastro
-    public function autoFollowAfterRegister($new_user_id, $target_username = 'Juan Taborda') {
-        try {
-            // Buscar o ID do usuário alvo
-            $query = "SELECT id FROM users WHERE username = :username";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":username", $target_username);
-            $stmt->execute();
-            
-            if($stmt->rowCount() > 0) {
-                $target_user = $stmt->fetch(PDO::FETCH_ASSOC);
-                $target_user_id = $target_user['id'];
-                
-                // Seguir o usuário
-                return $this->followUser($new_user_id, $target_user_id);
-            }
-            return false;
-            
-        } catch(PDOException $exception) {
-            return false;
-        }
-    }
-
-    // ATUALIZADA: Função register com follow automático
     public function register($username, $email, $password) {
         try {
-            // VERIFICAÇÃO DE BANIMENTO - Verificar primeiro se está banido
+            // VERIFICAÇÃO DE BANIMENTO
             $banned = $this->isUserBanned($email, $username);
             if($banned) {
                 $banned_date = date('d/m/Y H:i', strtotime($banned['banned_at']));
@@ -384,7 +47,6 @@ public function getPendingReports() {
             $stmt->bindParam(":password", $hashed_password);
 
             if($stmt->execute()) {
-                // Obter o ID do novo usuário
                 $new_user_id = $this->conn->lastInsertId();
                 
                 // Seguir automaticamente o usuário "Juan Taborda"
@@ -399,166 +61,9 @@ public function getPendingReports() {
         }
     }
 
-    public function searchUsersWithFollow($search_term, $current_user_id = null) {
-    try {
-        $query = "SELECT 
-                    u.id, u.username, u.email, u.avatar, u.role, u.bio,
-                    (SELECT COUNT(*) FROM user_follows WHERE following_id = u.id) as followers_count,
-                    (SELECT COUNT(*) FROM comics WHERE author_id = u.id) as comics_count,
-                    (SELECT COUNT(*) FROM user_follows WHERE follower_id = :current_user_id AND following_id = u.id) as is_following
-                  FROM users u 
-                  WHERE u.username LIKE :search OR u.email LIKE :search
-                  ORDER BY u.username";
-        
-        $stmt = $this->conn->prepare($query);
-        $search_term = "%$search_term%";
-        $stmt->bindParam(":search", $search_term);
-        $stmt->bindParam(":current_user_id", $current_user_id);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-    } catch(PDOException $exception) {
-        return [];
-    }
-}
-
-    // NOVA FUNÇÃO: Seguir usuário
-    public function followUser($follower_id, $following_id) {
-        try {
-            // Verificar se não é o próprio usuário
-            if($follower_id == $following_id) {
-                return "Você não pode seguir a si mesmo!";
-            }
-
-            // Verificar se já está seguindo
-            $query = "SELECT id FROM user_follows WHERE follower_id = :follower_id AND following_id = :following_id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":follower_id", $follower_id);
-            $stmt->bindParam(":following_id", $following_id);
-            $stmt->execute();
-
-            if($stmt->rowCount() > 0) {
-                return "Você já está seguindo este usuário!";
-            }
-
-            // Inserir follow
-            $query = "INSERT INTO user_follows (follower_id, following_id) VALUES (:follower_id, :following_id)";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":follower_id", $follower_id);
-            $stmt->bindParam(":following_id", $following_id);
-
-            if($stmt->execute()) {
-                return true;
-            }
-            return "Erro ao seguir usuário!";
-
-        } catch(PDOException $exception) {
-            return "Erro: " . $exception->getMessage();
-        }
-    }
-
-    // NOVA FUNÇÃO: Deixar de seguir usuário
-    public function unfollowUser($follower_id, $following_id) {
-        try {
-            $query = "DELETE FROM user_follows WHERE follower_id = :follower_id AND following_id = :following_id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":follower_id", $follower_id);
-            $stmt->bindParam(":following_id", $following_id);
-
-            if($stmt->execute()) {
-                return true;
-            }
-            return "Erro ao deixar de seguir usuário!";
-
-        } catch(PDOException $exception) {
-            return "Erro: " . $exception->getMessage();
-        }
-    }
-
-    // NOVA FUNÇÃO: Verificar se está seguindo
-    public function isFollowing($follower_id, $following_id) {
-        try {
-            $query = "SELECT id FROM user_follows WHERE follower_id = :follower_id AND following_id = :following_id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":follower_id", $follower_id);
-            $stmt->bindParam(":following_id", $following_id);
-            $stmt->execute();
-
-            return $stmt->rowCount() > 0;
-
-        } catch(PDOException $exception) {
-            return false;
-        }
-    }
-
-    // NOVA FUNÇÃO: Obter estatísticas de seguidores
-    public function getFollowStats($user_id) {
-        try {
-            $query = "SELECT 
-                        (SELECT COUNT(*) FROM user_follows WHERE following_id = :user_id) as followers_count,
-                        (SELECT COUNT(*) FROM user_follows WHERE follower_id = :user_id) as following_count";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":user_id", $user_id);
-            $stmt->execute();
-
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-
-        } catch(PDOException $exception) {
-            return ['followers_count' => 0, 'following_count' => 0];
-        }
-    }
-
-    // NOVA FUNÇÃO: Obter lista de seguidores
-    public function getFollowers($user_id, $limit = 20) {
-        try {
-            $query = "SELECT u.id, u.username, u.avatar, u.bio, u.role,
-                             (SELECT COUNT(*) FROM user_follows uf2 WHERE uf2.following_id = u.id) as followers_count
-                      FROM user_follows uf
-                      JOIN users u ON uf.follower_id = u.id
-                      WHERE uf.following_id = :user_id
-                      ORDER BY uf.created_at DESC
-                      LIMIT :limit";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":user_id", $user_id);
-            $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
-            $stmt->execute();
-
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        } catch(PDOException $exception) {
-            return [];
-        }
-    }
-
-    // NOVA FUNÇÃO: Obter lista de usuários seguindo
-    public function getFollowing($user_id, $limit = 20) {
-        try {
-            $query = "SELECT u.id, u.username, u.avatar, u.bio, u.role,
-                             (SELECT COUNT(*) FROM user_follows uf2 WHERE uf2.following_id = u.id) as followers_count
-                      FROM user_follows uf
-                      JOIN users u ON uf.following_id = u.id
-                      WHERE uf.follower_id = :user_id
-                      ORDER BY uf.created_at DESC
-                      LIMIT :limit";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":user_id", $user_id);
-            $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
-            $stmt->execute();
-
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        } catch(PDOException $exception) {
-            return [];
-        }
-    }
-
     public function login($email, $password) {
         try {
-            $query = "SELECT id, username, email, password, role FROM " . $this->table . " 
+            $query = "SELECT id, username, email, password, role, avatar FROM " . $this->table . " 
                      WHERE email = :email";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(":email", $email);
@@ -572,6 +77,7 @@ public function getPendingReports() {
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['email'] = $user['email'];
                     $_SESSION['role'] = $user['role'];
+                    $_SESSION['avatar'] = $user['avatar'];
                     return true;
                 }
             }
@@ -590,15 +96,33 @@ public function getPendingReports() {
         return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
     }
 
+    public function isCreator($user_id) {
+        try {
+            $query = "SELECT role FROM users WHERE id = :user_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->execute();
+
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $user && ($user['role'] === 'creator' || $user['role'] === 'admin');
+
+        } catch(PDOException $e) {
+            error_log("Erro ao verificar role: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function logout() {
         session_destroy();
         header("Location: login.php");
         exit();
     }
 
+    // ============ FUNÇÕES DE PERFIL ============
+
     public function getUserData($user_id) {
         try {
-            $query = "SELECT id, username, email, avatar, bio, role, created_at 
+            $query = "SELECT id, username, email, avatar, bio, role, created_at, updated_at 
                      FROM " . $this->table . " WHERE id = :id";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(":id", $user_id);
@@ -614,18 +138,6 @@ public function getPendingReports() {
         }
     }
 
-    public function getAllUsers() {
-        try {
-            $query = "SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch(PDOException $exception) {
-            return [];
-        }
-    }
-
-    // CORREÇÃO: Função updateProfile corrigida
     public function updateProfile($user_id, $username, $email, $bio = '') {
         try {
             // Verificar se o username ou email já existem (excluindo o usuário atual)
@@ -641,7 +153,7 @@ public function getPendingReports() {
                 return "Username ou email já está em uso!";
             }
 
-            // Atualizar perfil - CORREÇÃO: adicionado updated_at
+            // Atualizar perfil
             $query = "UPDATE " . $this->table . " 
                      SET username = :username, email = :email, bio = :bio, updated_at = NOW() 
                      WHERE id = :id";
@@ -665,7 +177,6 @@ public function getPendingReports() {
         }
     }
 
-    // CORREÇÃO: Função changePassword corrigida
     public function changePassword($user_id, $current_password, $new_password) {
         try {
             // Buscar usuário
@@ -704,185 +215,6 @@ public function getPendingReports() {
         }
     }
 
-    // FUNÇÃO: Excluir conta do usuário
-    public function deleteUserAccount($user_id, $current_user_id = null) {
-        try {
-            // Verificar se é o próprio usuário ou um admin
-            if($current_user_id && $current_user_id != $user_id) {
-                $current_user = $this->getUserData($current_user_id);
-                if($current_user['role'] !== 'admin') {
-                    return "Você não tem permissão para excluir esta conta!";
-                }
-            }
-
-            // Iniciar transação para garantir que todas as exclusões sejam feitas
-            $this->conn->beginTransaction();
-
-            // Excluir dados relacionados nas outras tabelas
-            $tables = [
-                'reactions', 'posts', 'topics', 'comic_comments', 'reviews', 
-                'favorites', 'reading_progress', 'user_library', 'transactions',
-                'comic_collaborators', 'comic_drafts', 'user_uploads',
-                'comic_categories', 'comic_pages', 'comics'
-            ];
-
-            foreach($tables as $table) {
-                // Para comics, só excluir se o usuário for o autor
-                if($table === 'comics') {
-                    $query = "DELETE FROM $table WHERE author_id = :user_id";
-                } else {
-                    // Verificar se a tabela tem user_id ou author_id
-                    $columns = $this->getTableColumns($table);
-                    if(in_array('user_id', $columns)) {
-                        $query = "DELETE FROM $table WHERE user_id = :user_id";
-                    } elseif(in_array('author_id', $columns)) {
-                        $query = "DELETE FROM $table WHERE author_id = :user_id";
-                    } else {
-                        continue;
-                    }
-                }
-                
-                $stmt = $this->conn->prepare($query);
-                $stmt->bindParam(":user_id", $user_id);
-                $stmt->execute();
-            }
-
-            // Finalmente excluir o usuário
-            $query = "DELETE FROM users WHERE id = :user_id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":user_id", $user_id);
-            $stmt->execute();
-
-            $this->conn->commit();
-
-            // Se o usuário está excluindo a própria conta, fazer logout
-            if($current_user_id == $user_id) {
-                session_destroy();
-            }
-
-            return true;
-
-        } catch(PDOException $exception) {
-            $this->conn->rollBack();
-            return "Erro ao excluir conta: " . $exception->getMessage();
-        }
-    }
-
-    // Função auxiliar para obter colunas da tabela
-    private function getTableColumns($table) {
-        $query = "SHOW COLUMNS FROM $table";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        return $columns;
-    }
-
-    // NOVA FUNÇÃO: Verificar se usuário está banido
-    public function isUserBanned($email, $username = '') {
-        try {
-            $query = "SELECT id, email, username, reason, banned_at, banned_by 
-                     FROM banned_users 
-                     WHERE email = :email OR username = :username";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":email", $email);
-            $stmt->bindParam(":username", $username);
-            $stmt->execute();
-
-            if($stmt->rowCount() > 0) {
-                return $stmt->fetch(PDO::FETCH_ASSOC);
-            }
-            return false;
-
-        } catch(PDOException $exception) {
-            return false;
-        }
-    }
-
-    // NOVA FUNÇÃO: Banir usuário permanentemente
-    public function banUser($user_id, $banned_by, $reason = '') {
-        try {
-            // Primeiro obter dados do usuário a ser banido
-            $user_data = $this->getUserData($user_id);
-            if(!$user_data) {
-                return "Usuário não encontrado!";
-            }
-
-            // Verificar se já está banido
-            $already_banned = $this->isUserBanned($user_data['email'], $user_data['username']);
-            if($already_banned) {
-                return "Este usuário já está banido!";
-            }
-
-            // Inserir na tabela de banidos
-            $query = "INSERT INTO banned_users (email, username, reason, banned_by, is_permanent) 
-                     VALUES (:email, :username, :reason, :banned_by, TRUE)";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":email", $user_data['email']);
-            $stmt->bindParam(":username", $user_data['username']);
-            $stmt->bindParam(":reason", $reason);
-            $stmt->bindParam(":banned_by", $banned_by);
-
-            if($stmt->execute()) {
-                // Agora excluir a conta do usuário
-                return $this->deleteUserAccount($user_id, $banned_by);
-            }
-            return "Erro ao banir usuário!";
-
-        } catch(PDOException $exception) {
-            return "Erro: " . $exception->getMessage();
-        }
-    }
-
-    // NOVA FUNÇÃO: Pesquisar usuários
-    public function searchUsers($search_term) {
-        try {
-            $query = "SELECT id, username, email, role, created_at,
-                             (SELECT COUNT(*) FROM comics WHERE author_id = users.id) as comics_count
-                      FROM users 
-                      WHERE username LIKE :search OR email LIKE :search
-                      ORDER BY username";
-            $stmt = $this->conn->prepare($query);
-            $search_term = "%$search_term%";
-            $stmt->bindParam(":search", $search_term);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch(PDOException $exception) {
-            return [];
-        }
-    }
-
-    // NOVA FUNÇÃO: Obter lista de usuários banidos
-    public function getBannedUsers() {
-        try {
-            $query = "SELECT bu.*, u.username as banned_by_name 
-                     FROM banned_users bu 
-                     LEFT JOIN users u ON bu.banned_by = u.id 
-                     ORDER BY bu.banned_at DESC";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch(PDOException $exception) {
-            return [];
-        }
-    }
-
-    // NOVA FUNÇÃO: Obter todos os usuários para admin
-    public function getAllUsersForAdmin() {
-        try {
-            $query = "SELECT id, username, email, role, created_at,
-                             (SELECT COUNT(*) FROM comics WHERE author_id = users.id) as comics_count
-                      FROM users 
-                      ORDER BY created_at DESC";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch(PDOException $exception) {
-            return [];
-        }
-    }
-
-    // NOVA FUNÇÃO: Atualizar avatar (sistema de arquivos)
     public function updateAvatar($user_id, $avatar_path, $file_name, $file_size, $mime_type) {
         try {
             // Primeiro remover avatar anterior se existir
@@ -906,6 +238,7 @@ public function getPendingReports() {
             $stmt->bindParam(":user_id", $user_id);
 
             if($stmt->execute()) {
+                $_SESSION['avatar'] = $avatar_path;
                 return true;
             }
             return false;
@@ -915,7 +248,6 @@ public function getPendingReports() {
         }
     }
 
-    // NOVA FUNÇÃO: Remover avatar
     public function removeAvatar($user_id) {
         try {
             // Primeiro obter o caminho do avatar atual
@@ -939,6 +271,7 @@ public function getPendingReports() {
             $stmt->bindParam(":user_id", $user_id);
 
             if($stmt->execute()) {
+                $_SESSION['avatar'] = null;
                 return true;
             }
             return false;
@@ -948,9 +281,137 @@ public function getPendingReports() {
         }
     }
 
-        /**
-     * Solicitar conta de criador
-     */
+    // ============ FUNÇÕES DE SEGUIDORES ============
+
+    public function followUser($follower_id, $following_id) {
+        try {
+            // Verificar se não é o próprio usuário
+            if($follower_id == $following_id) {
+                return "Você não pode seguir a si mesmo!";
+            }
+
+            // Verificar se já está seguindo
+            $query = "SELECT id FROM user_follows WHERE follower_id = :follower_id AND following_id = :following_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":follower_id", $follower_id);
+            $stmt->bindParam(":following_id", $following_id);
+            $stmt->execute();
+
+            if($stmt->rowCount() > 0) {
+                return "Você já está seguindo este usuário!";
+            }
+
+            // Inserir follow
+            $query = "INSERT INTO user_follows (follower_id, following_id) VALUES (:follower_id, :following_id)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":follower_id", $follower_id);
+            $stmt->bindParam(":following_id", $following_id);
+
+            if($stmt->execute()) {
+                return true;
+            }
+            return "Erro ao seguir usuário!";
+
+        } catch(PDOException $exception) {
+            return "Erro: " . $exception->getMessage();
+        }
+    }
+
+    public function unfollowUser($follower_id, $following_id) {
+        try {
+            $query = "DELETE FROM user_follows WHERE follower_id = :follower_id AND following_id = :following_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":follower_id", $follower_id);
+            $stmt->bindParam(":following_id", $following_id);
+
+            if($stmt->execute()) {
+                return true;
+            }
+            return "Erro ao deixar de seguir usuário!";
+
+        } catch(PDOException $exception) {
+            return "Erro: " . $exception->getMessage();
+        }
+    }
+
+    public function isFollowing($follower_id, $following_id) {
+        try {
+            $query = "SELECT id FROM user_follows WHERE follower_id = :follower_id AND following_id = :following_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":follower_id", $follower_id);
+            $stmt->bindParam(":following_id", $following_id);
+            $stmt->execute();
+
+            return $stmt->rowCount() > 0;
+
+        } catch(PDOException $exception) {
+            return false;
+        }
+    }
+
+    public function getFollowStats($user_id) {
+        try {
+            $query = "SELECT 
+                        (SELECT COUNT(*) FROM user_follows WHERE following_id = :user_id) as followers_count,
+                        (SELECT COUNT(*) FROM user_follows WHERE follower_id = :user_id) as following_count";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->execute();
+
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+
+        } catch(PDOException $exception) {
+            return ['followers_count' => 0, 'following_count' => 0];
+        }
+    }
+
+    public function getFollowers($user_id, $limit = 20) {
+        try {
+            $query = "SELECT u.id, u.username, u.avatar, u.bio, u.role,
+                             (SELECT COUNT(*) FROM user_follows uf2 WHERE uf2.following_id = u.id) as followers_count
+                      FROM user_follows uf
+                      JOIN users u ON uf.follower_id = u.id
+                      WHERE uf.following_id = :user_id
+                      ORDER BY uf.created_at DESC
+                      LIMIT :limit";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch(PDOException $exception) {
+            return [];
+        }
+    }
+
+    public function getFollowing($user_id, $limit = 20) {
+        try {
+            $query = "SELECT u.id, u.username, u.avatar, u.bio, u.role,
+                             (SELECT COUNT(*) FROM user_follows uf2 WHERE uf2.following_id = u.id) as followers_count
+                      FROM user_follows uf
+                      JOIN users u ON uf.following_id = u.id
+                      WHERE uf.follower_id = :user_id
+                      ORDER BY uf.created_at DESC
+                      LIMIT :limit";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch(PDOException $exception) {
+            return [];
+        }
+    }
+
+    // ============ FUNÇÕES DE CONTA CRIADOR ============
+
     public function requestCreatorAccount($user_id, $cpf, $address, $age) {
         try {
             // Validar dados
@@ -1019,40 +480,6 @@ public function getPendingReports() {
         }
     }
 
-    /**
-     * Validar CPF
-     */
-    private function validateCPF($cpf) {
-        // Remove caracteres não numéricos
-        $cpf = preg_replace('/[^0-9]/', '', $cpf);
-        
-        // Verifica se tem 11 dígitos
-        if (strlen($cpf) != 11) {
-            return false;
-        }
-        
-        // Verifica se não é uma sequência de números iguais
-        if (preg_match('/(\d)\1{10}/', $cpf)) {
-            return false;
-        }
-        
-        // Calcula e verifica primeiro dígito verificador
-        for ($t = 9; $t < 11; $t++) {
-            for ($d = 0, $c = 0; $c < $t; $c++) {
-                $d += $cpf[$c] * (($t + 1) - $c);
-            }
-            $d = ((10 * $d) % 11) % 10;
-            if ($cpf[$c] != $d) {
-                return false;
-            }
-        }
-        
-        return true;
-    }
-
-    /**
-     * Obter status da solicitação de criador
-     */
     public function getCreatorRequestStatus($user_id) {
         try {
             $query = "SELECT status, admin_notes, processed_at 
@@ -1073,9 +500,6 @@ public function getPendingReports() {
         }
     }
 
-    /**
-     * Obter todas as solicitações de criador pendentes (para admin)
-     */
     public function getPendingCreatorRequests() {
         try {
             $query = "SELECT cr.*, u.username, u.email 
@@ -1095,9 +519,6 @@ public function getPendingReports() {
         }
     }
 
-    /**
-     * Aprovar ou rejeitar solicitação de criador (admin)
-     */
     public function processCreatorRequest($request_id, $status, $admin_id, $admin_notes = '') {
         try {
             // Obter dados da solicitação
@@ -1148,7 +569,6 @@ public function getPendingReports() {
         }
     }
 
-    
     public function getAllCreatorRequests() {
         try {
             $query = "SELECT cr.*, u.username, u.email, 
@@ -1168,63 +588,579 @@ public function getPendingReports() {
             return [];
         }
     }
-    
-public function isCreator($user_id) {
-    try {
-        $query = "SELECT role FROM users WHERE id = :user_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":user_id", $user_id);
-        $stmt->execute();
 
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $user && ($user['role'] === 'creator' || $user['role'] === 'admin');
+    // ============ FUNÇÕES DE MENSAGENS ============
 
-    } catch(PDOException $e) {
-        error_log("Erro ao verificar role: " . $e->getMessage());
-        return false;
+    public function getOrCreateConversation($user1_id, $user2_id) {
+        try {
+            // Garantir que user1_id é sempre o menor ID para evitar duplicatas
+            $min_id = min($user1_id, $user2_id);
+            $max_id = max($user1_id, $user2_id);
+            
+            $query = "SELECT id FROM conversations 
+                     WHERE user1_id = :user1_id AND user2_id = :user2_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user1_id", $min_id);
+            $stmt->bindParam(":user2_id", $max_id);
+            $stmt->execute();
+            
+            if($stmt->rowCount() > 0) {
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                return $result['id'];
+            } else {
+                // Criar nova conversa
+                $query = "INSERT INTO conversations (user1_id, user2_id) 
+                         VALUES (:user1_id, :user2_id)";
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(":user1_id", $min_id);
+                $stmt->bindParam(":user2_id", $max_id);
+                
+                if($stmt->execute()) {
+                    return $this->conn->lastInsertId();
+                }
+                return false;
+            }
+            
+        } catch(PDOException $exception) {
+            return false;
+        }
     }
-}
 
-/**
- * Obter todas as categorias
- */
-public function getAllCategories() {
-    try {
-        $query = "SELECT id, name, description FROM categories ORDER BY name";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-    } catch(PDOException $e) {
-        error_log("Erro ao obter categorias: " . $e->getMessage());
-        return [];
+    public function sendMessage($conversation_id, $sender_id, $content) {
+        try {
+            // Validar conteúdo
+            $content = trim($content);
+            if(empty($content)) {
+                return "A mensagem não pode estar vazia!";
+            }
+            
+            if(strlen($content) > 1000) {
+                return "A mensagem é muito longa (máximo 1000 caracteres)!";
+            }
+            
+            $query = "INSERT INTO messages (conversation_id, sender_id, content) 
+                     VALUES (:conversation_id, :sender_id, :content)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":conversation_id", $conversation_id);
+            $stmt->bindParam(":sender_id", $sender_id);
+            $stmt->bindParam(":content", $content);
+            
+            if($stmt->execute()) {
+                // Atualizar last_message_at na conversa
+                $update_query = "UPDATE conversations SET last_message_at = NOW() 
+                               WHERE id = :conversation_id";
+                $update_stmt = $this->conn->prepare($update_query);
+                $update_stmt->bindParam(":conversation_id", $conversation_id);
+                $update_stmt->execute();
+                
+                return true;
+            }
+            return "Erro ao enviar mensagem!";
+            
+        } catch(PDOException $exception) {
+            return "Erro: " . $exception->getMessage();
+        }
     }
-}
 
-/**
- * Upload da capa do quadrinho
- */
-public function uploadComicCover($file, $user_id) {
-    try {
+    public function getMessages($conversation_id, $limit = 50, $offset = 0) {
+        try {
+            $query = "SELECT m.*, u.username, u.avatar 
+                     FROM messages m 
+                     JOIN users u ON m.sender_id = u.id 
+                     WHERE m.conversation_id = :conversation_id 
+                     ORDER BY m.created_at DESC 
+                     LIMIT :limit OFFSET :offset";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":conversation_id", $conversation_id);
+            $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+            $stmt->bindParam(":offset", $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Inverter a ordem para mostrar as mais antigas primeiro
+            return array_reverse($messages);
+            
+        } catch(PDOException $exception) {
+            return [];
+        }
+    }
+
+    public function getUserConversations($user_id) {
+        try {
+            $query = "SELECT c.*, 
+                             CASE 
+                                 WHEN c.user1_id = :user_id THEN u2.id 
+                                 ELSE u1.id 
+                             END as other_user_id,
+                             CASE 
+                                 WHEN c.user1_id = :user_id THEN u2.username 
+                                 ELSE u1.username 
+                             END as other_username,
+                             CASE 
+                                 WHEN c.user1_id = :user_id THEN u2.avatar 
+                                 ELSE u1.avatar 
+                             END as other_avatar,
+                             (SELECT content FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
+                             (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != :user_id AND is_read = 0) as unread_count
+                      FROM conversations c
+                      JOIN users u1 ON c.user1_id = u1.id
+                      JOIN users u2 ON c.user2_id = u2.id
+                      WHERE c.user1_id = :user_id OR c.user2_id = :user_id
+                      ORDER BY c.last_message_at DESC";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch(PDOException $exception) {
+            return [];
+        }
+    }
+
+    public function markMessagesAsRead($conversation_id, $user_id) {
+        try {
+            $query = "UPDATE messages SET is_read = 1 
+                     WHERE conversation_id = :conversation_id 
+                     AND sender_id != :user_id 
+                     AND is_read = 0";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":conversation_id", $conversation_id);
+            $stmt->bindParam(":user_id", $user_id);
+            
+            return $stmt->execute();
+            
+        } catch(PDOException $exception) {
+            return false;
+        }
+    }
+
+    public function canAccessConversation($conversation_id, $user_id) {
+        try {
+            $query = "SELECT id FROM conversations 
+                     WHERE id = :conversation_id 
+                     AND (user1_id = :user_id OR user2_id = :user_id)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":conversation_id", $conversation_id);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->execute();
+            
+            return $stmt->rowCount() > 0;
+            
+        } catch(PDOException $exception) {
+            return false;
+        }
+    }
+
+    public function getOtherUserInConversation($conversation_id, $current_user_id) {
+        try {
+            $query = "SELECT 
+                        CASE 
+                            WHEN user1_id = :current_user_id THEN user2_id 
+                            ELSE user1_id 
+                        END as other_user_id,
+                        CASE 
+                            WHEN user1_id = :current_user_id THEN u2.username 
+                            ELSE u1.username 
+                        END as other_username,
+                        CASE 
+                            WHEN user1_id = :current_user_id THEN u2.avatar 
+                            ELSE u1.avatar 
+                        END as other_avatar
+                      FROM conversations c
+                      JOIN users u1 ON c.user1_id = u1.id
+                      JOIN users u2 ON c.user2_id = u2.id
+                      WHERE c.id = :conversation_id";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":conversation_id", $conversation_id);
+            $stmt->bindParam(":current_user_id", $current_user_id);
+            $stmt->execute();
+            
+            if($stmt->rowCount() > 0) {
+                return $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+            return false;
+            
+        } catch(PDOException $exception) {
+            return false;
+        }
+    }
+
+    // ============ FUNÇÕES DE REPORT E MODERAÇÃO ============
+
+    public function reportUser($reported_user_id, $reporter_user_id, $reason, $description = '') {
+        try {
+            // Verificar se não está reportando a si mesmo
+            if($reported_user_id == $reporter_user_id) {
+                return "Você não pode se reportar!";
+            }
+
+            // Verificar se já reportou este usuário recentemente (evitar spam)
+            $query = "SELECT id FROM user_reports 
+                     WHERE reporter_user_id = :reporter_id 
+                     AND reported_user_id = :reported_id 
+                     AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":reporter_id", $reporter_user_id);
+            $stmt->bindParam(":reported_id", $reported_user_id);
+            $stmt->execute();
+
+            if($stmt->rowCount() > 0) {
+                return "Você já reportou este usuário recentemente. Aguarde um pouco antes de reportar novamente.";
+            }
+
+            // Inserir report
+            $query = "INSERT INTO user_reports (reported_user_id, reporter_user_id, reason, description) 
+                     VALUES (:reported_id, :reporter_id, :reason, :description)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":reported_id", $reported_user_id);
+            $stmt->bindParam(":reporter_id", $reporter_user_id);
+            $stmt->bindParam(":reason", $reason);
+            $stmt->bindParam(":description", $description);
+
+            if($stmt->execute()) {
+                // Criar notificação para admin
+                $this->createAdminNotification(
+                    'user_report', 
+                    'Novo usuário reportado', 
+                    "O usuário ID {$reported_user_id} foi reportado por ID {$reporter_user_id}",
+                    $reported_user_id,
+                    'user'
+                );
+                return true;
+            }
+            return "Erro ao reportar usuário!";
+
+        } catch(PDOException $exception) {
+            return "Erro: " . $exception->getMessage();
+        }
+    }
+
+    public function createAdminNotification($type, $title, $message, $related_id = null, $related_type = null) {
+        try {
+            $query = "INSERT INTO admin_notifications (type, title, message, related_id, related_type) 
+                     VALUES (:type, :title, :message, :related_id, :related_type)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":type", $type);
+            $stmt->bindParam(":title", $title);
+            $stmt->bindParam(":message", $message);
+            $stmt->bindParam(":related_id", $related_id);
+            $stmt->bindParam(":related_type", $related_type);
+
+            return $stmt->execute();
+
+        } catch(PDOException $exception) {
+            return false;
+        }
+    }
+
+    public function getUnreadAdminNotifications($limit = 10) {
+        try {
+            $query = "SELECT * FROM admin_notifications 
+                     WHERE is_read = 0 
+                     ORDER BY created_at DESC 
+                     LIMIT :limit";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch(PDOException $exception) {
+            return [];
+        }
+    }
+
+    public function getPendingReports() {
+        try {
+            $query = "SELECT ur.*, 
+                             ru.username as reported_username,
+                             ru.email as reported_email,
+                             rep.username as reporter_username
+                      FROM user_reports ur
+                      JOIN users ru ON ur.reported_user_id = ru.id
+                      JOIN users rep ON ur.reporter_user_id = rep.id
+                      WHERE ur.status = 'pending'
+                      ORDER BY ur.created_at DESC";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch(PDOException $exception) {
+            return [];
+        }
+    }
+
+    // ============ FUNÇÕES DE ADMIN ============
+
+    public function getAllUsers() {
+        try {
+            $query = "SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch(PDOException $exception) {
+            return [];
+        }
+    }
+
+    public function getAllUsersForAdmin() {
+        try {
+            $query = "SELECT id, username, email, role, created_at,
+                             (SELECT COUNT(*) FROM comics WHERE author_id = users.id) as comics_count
+                      FROM users 
+                      ORDER BY created_at DESC";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch(PDOException $exception) {
+            return [];
+        }
+    }
+
+    public function searchUsers($search_term) {
+        try {
+            $query = "SELECT id, username, email, role, created_at,
+                             (SELECT COUNT(*) FROM comics WHERE author_id = users.id) as comics_count
+                      FROM users 
+                      WHERE username LIKE :search OR email LIKE :search
+                      ORDER BY username";
+            $stmt = $this->conn->prepare($query);
+            $search_term = "%$search_term%";
+            $stmt->bindParam(":search", $search_term);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch(PDOException $exception) {
+            return [];
+        }
+    }
+
+    public function searchUsersWithFollow($search_term, $current_user_id = null) {
+        try {
+            $query = "SELECT 
+                        u.id, u.username, u.email, u.avatar, u.role, u.bio,
+                        (SELECT COUNT(*) FROM user_follows WHERE following_id = u.id) as followers_count,
+                        (SELECT COUNT(*) FROM comics WHERE author_id = u.id) as comics_count,
+                        (SELECT COUNT(*) FROM user_follows WHERE follower_id = :current_user_id AND following_id = u.id) as is_following
+                      FROM users u 
+                      WHERE u.username LIKE :search OR u.email LIKE :search
+                      ORDER BY u.username";
+            
+            $stmt = $this->conn->prepare($query);
+            $search_term = "%$search_term%";
+            $stmt->bindParam(":search", $search_term);
+            $stmt->bindParam(":current_user_id", $current_user_id);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch(PDOException $exception) {
+            return [];
+        }
+    }
+
+    public function deleteUserAccount($user_id, $current_user_id = null) {
+        try {
+            // Verificar se é o próprio usuário ou um admin
+            if($current_user_id && $current_user_id != $user_id) {
+                $current_user = $this->getUserData($current_user_id);
+                if($current_user['role'] !== 'admin') {
+                    return "Você não tem permissão para excluir esta conta!";
+                }
+            }
+
+            // Iniciar transação
+            $this->conn->beginTransaction();
+
+            // Excluir dados relacionados
+            $tables = [
+                'user_follows' => ['follower_id', 'following_id'],
+                'conversations' => ['user1_id', 'user2_id'],
+                'messages' => ['sender_id'],
+                'user_reports' => ['reported_user_id', 'reporter_user_id'],
+                'creator_requests' => ['user_id'],
+                'comics' => ['author_id'],
+                'comic_pages' => ['comic_id IN (SELECT id FROM comics WHERE author_id = :user_id)'],
+                'comic_categories' => ['comic_id IN (SELECT id FROM comics WHERE author_id = :user_id)'],
+                'favorites' => ['user_id'],
+                'reviews' => ['user_id']
+            ];
+
+            foreach($tables as $table => $conditions) {
+                if(is_array($conditions)) {
+                    foreach($conditions as $condition) {
+                        if(strpos($condition, 'IN') !== false) {
+                            $query = "DELETE FROM $table WHERE $condition";
+                            $stmt = $this->conn->prepare(str_replace(':user_id', $user_id, $query));
+                        } else {
+                            $query = "DELETE FROM $table WHERE $condition = :user_id";
+                            $stmt = $this->conn->prepare($query);
+                            $stmt->bindParam(":user_id", $user_id);
+                        }
+                        $stmt->execute();
+                    }
+                }
+            }
+
+            // Excluir o usuário
+            $query = "DELETE FROM users WHERE id = :user_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->execute();
+
+            $this->conn->commit();
+
+            // Se o usuário está excluindo a própria conta, fazer logout
+            if($current_user_id == $user_id) {
+                session_destroy();
+            }
+
+            return true;
+
+        } catch(PDOException $exception) {
+            $this->conn->rollBack();
+            return "Erro ao excluir conta: " . $exception->getMessage();
+        }
+    }
+
+    public function isUserBanned($email, $username = '') {
+        try {
+            $query = "SELECT id, email, username, reason, banned_at, banned_by 
+                     FROM banned_users 
+                     WHERE email = :email OR username = :username";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":email", $email);
+            $stmt->bindParam(":username", $username);
+            $stmt->execute();
+
+            if($stmt->rowCount() > 0) {
+                return $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+            return false;
+
+        } catch(PDOException $exception) {
+            return false;
+        }
+    }
+
+    public function banUser($user_id, $banned_by, $reason = '') {
+        try {
+            // Primeiro obter dados do usuário a ser banido
+            $user_data = $this->getUserData($user_id);
+            if(!$user_data) {
+                return "Usuário não encontrado!";
+            }
+
+            // Verificar se já está banido
+            $already_banned = $this->isUserBanned($user_data['email'], $user_data['username']);
+            if($already_banned) {
+                return "Este usuário já está banido!";
+            }
+
+            // Inserir na tabela de banidos
+            $query = "INSERT INTO banned_users (email, username, reason, banned_by, is_permanent) 
+                     VALUES (:email, :username, :reason, :banned_by, TRUE)";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":email", $user_data['email']);
+            $stmt->bindParam(":username", $user_data['username']);
+            $stmt->bindParam(":reason", $reason);
+            $stmt->bindParam(":banned_by", $banned_by);
+
+            if($stmt->execute()) {
+                // Agora excluir a conta do usuário
+                return $this->deleteUserAccount($user_id, $banned_by);
+            }
+            return "Erro ao banir usuário!";
+
+        } catch(PDOException $exception) {
+            return "Erro: " . $exception->getMessage();
+        }
+    }
+
+    public function getBannedUsers() {
+        try {
+            $query = "SELECT bu.*, u.username as banned_by_name 
+                     FROM banned_users bu 
+                     LEFT JOIN users u ON bu.banned_by = u.id 
+                     ORDER BY bu.banned_at DESC";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch(PDOException $exception) {
+            return [];
+        }
+    }
+
+    // ============ FUNÇÕES DE QUADRINHOS ============
+
+    public function getAllCategories() {
+        try {
+            $query = "SELECT id, name, description FROM categories ORDER BY name";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch(PDOException $e) {
+            error_log("Erro ao obter categorias: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function addCategory($name, $description = '') {
+        try {
+            // Verificar se categoria já existe
+            $query = "SELECT id FROM categories WHERE name = :name";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":name", $name);
+            $stmt->execute();
+
+            if($stmt->rowCount() > 0) {
+                return ['success' => false, 'message' => 'Esta categoria já existe!'];
+            }
+
+            // Inserir nova categoria
+            $query = "INSERT INTO categories (name, description, created_at) VALUES (:name, :description, NOW())";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":name", $name);
+            $stmt->bindParam(":description", $description);
+
+            if($stmt->execute()) {
+                return ['success' => true, 'category_id' => $this->conn->lastInsertId(), 'message' => 'Categoria adicionada com sucesso!'];
+            } else {
+                return ['success' => false, 'message' => 'Erro ao adicionar categoria!'];
+            }
+
+        } catch(PDOException $e) {
+            error_log("Erro ao adicionar categoria: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Erro interno ao adicionar categoria!'];
+        }
+    }
+
+    public function uploadComicCover($file, $user_id) {
+        try {
         $upload_dir = "uploads/covers/";
         
-        // Criar diretório se não existir
         if(!is_dir($upload_dir)) {
             mkdir($upload_dir, 0777, true);
         }
         
-        // Validar tipo de arquivo
-        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
         if(!in_array($file['type'], $allowed_types)) {
             return ['success' => false, 'message' => 'Tipo de arquivo não suportado! Use apenas JPG, PNG, GIF ou WebP.'];
         }
         
-        // Validar tamanho (5MB)
-        if($file['size'] > 5 * 1024 * 1024) {
-            return ['success' => false, 'message' => 'Arquivo muito grande! Máximo 5MB.'];
+        // AUMENTEI PARA 50MB
+        if($file['size'] > 50 * 1024 * 1024) {
+            return ['success' => false, 'message' => 'Arquivo muito grande! Máximo 50MB.'];
         }
-        
+
+    
         // Gerar nome único
         $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = "cover_" . $user_id . "_" . time() . "." . $extension;
@@ -1236,17 +1172,20 @@ public function uploadComicCover($file, $user_id) {
             return ['success' => false, 'message' => 'Erro ao fazer upload da capa!'];
         }
         
-    } catch(PDOException $e) {
+    } catch(Exception $e) {
         error_log("Erro no upload da capa: " . $e->getMessage());
         return ['success' => false, 'message' => 'Erro interno no upload!'];
     }
 }
 
-/**
- * Upload das páginas do quadrinho
- */
-public function uploadComicPages($files, $comic_id, $user_id) {
+    public function uploadComicPages($files, $comic_id, $user_id) {
+        
     try {
+        error_log("=== UPLOAD COMIC PAGES ===");
+        error_log("Comic ID: $comic_id");
+        error_log("User ID: $user_id");
+        error_log("Files received: " . count($files['name']));
+        
         $upload_dir = "uploads/pages/";
         
         // Criar diretório se não existir
@@ -1259,6 +1198,8 @@ public function uploadComicPages($files, $comic_id, $user_id) {
         
         // Processar cada arquivo
         for($i = 0; $i < count($files['name']); $i++) {
+            error_log("Processando arquivo $i: " . $files['name'][$i]);
+            
             if($files['error'][$i] === UPLOAD_ERR_OK) {
                 // Validar tipo de arquivo
                 $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -1278,20 +1219,27 @@ public function uploadComicPages($files, $comic_id, $user_id) {
                 $filename = "page_" . $comic_id . "_" . ($i + 1) . "_" . time() . "." . $extension;
                 $filepath = $upload_dir . $filename;
                 
+                error_log("Tentando mover arquivo para: $filepath");
+                
                 if(move_uploaded_file($files['tmp_name'][$i], $filepath)) {
-                    // Inserir página no banco
+                    // Inserir página no banco - CORRIGIDO
                     $page_number = $i + 1;
-                    $stmt = $this->conn->prepare("INSERT INTO comic_pages (comic_id, page_number, image_url, title) VALUES (?, ?, ?, ?)");
+                    $query = "INSERT INTO comic_pages (comic_id, page_number, image_url, title) VALUES (:comic_id, :page_number, :image_url, :title)";
+                    $stmt = $this->conn->prepare($query);
+                    
                     $title = "Página " . $page_number;
-                    $stmt->bindParam(1, $comic_id);
-                    $stmt->bindParam(2, $page_number);
-                    $stmt->bindParam(3, $filepath);
-                    $stmt->bindParam(4, $title);
+                    $stmt->bindParam(":comic_id", $comic_id);
+                    $stmt->bindParam(":page_number", $page_number);
+                    $stmt->bindParam(":image_url", $filepath);
+                    $stmt->bindParam(":title", $title);
                     
                     if($stmt->execute()) {
                         $uploaded_pages++;
+                        error_log("Página $page_number inserida com sucesso");
                     } else {
-                        $errors[] = "Página " . ($i + 1) . ": Erro ao salvar no banco";
+                        $errorInfo = $stmt->errorInfo();
+                        $errors[] = "Página " . ($i + 1) . ": Erro ao salvar no banco - " . $errorInfo[2];
+                        error_log("Erro ao salvar página no banco: " . $errorInfo[2]);
                         // Remover arquivo se falhou ao salvar no banco
                         if(file_exists($filepath)) {
                             unlink($filepath);
@@ -1299,11 +1247,15 @@ public function uploadComicPages($files, $comic_id, $user_id) {
                     }
                 } else {
                     $errors[] = "Página " . ($i + 1) . ": Erro no upload";
+                    error_log("Erro ao mover arquivo uploadado");
                 }
             } else {
                 $errors[] = "Página " . ($i + 1) . ": Erro no arquivo (Código: " . $files['error'][$i] . ")";
+                error_log("Erro no arquivo: " . $files['error'][$i]);
             }
         }
+        
+        error_log("Upload finalizado: $uploaded_pages páginas carregadas, " . count($errors) . " erros");
         
         if($uploaded_pages > 0) {
             $message = $uploaded_pages . " página(s) carregada(s) com sucesso!";
@@ -1317,173 +1269,203 @@ public function uploadComicPages($files, $comic_id, $user_id) {
         
     } catch(PDOException $e) {
         error_log("Erro no upload das páginas: " . $e->getMessage());
-        return ['success' => false, 'message' => 'Erro interno no upload das páginas!'];
+        return ['success' => false, 'message' => 'Erro interno no upload das páginas: ' . $e->getMessage()];
     }
 }
 
-/**
- * Criar quadrinho no banco de dados
- */
-public function createComic($data) {
+    public function createComic($data) {
     $this->conn->beginTransaction();
     
     try {
-        // Inserir quadrinho
-        $stmt = $this->conn->prepare("
-            INSERT INTO comics (title, author_id, description, cover, is_premium, price, page_count, status, is_published, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'published', 1, NOW(), NOW())
-        ");
-        $stmt->bindParam(1, $data['title']);
-        $stmt->bindParam(2, $data['author_id']);
-        $stmt->bindParam(3, $data['description']);
-        $stmt->bindParam(4, $data['cover']);
-        $stmt->bindParam(5, $data['is_premium']);
-        $stmt->bindParam(6, $data['price']);
-        $stmt->bindParam(7, $data['page_count']);
+        error_log("=== INICIANDO createComic ===");
+        error_log("Dados recebidos: " . print_r($data, true));
+        
+        // VALIDAÇÕES
+        if(empty($data['title'])) {
+            throw new Exception('Título é obrigatório!');
+        }
+        if(empty($data['author_id'])) {
+            throw new Exception('Autor é obrigatório!');
+        }
+        if(empty($data['cover'])) {
+            throw new Exception('Capa é obrigatória!');
+        }
+
+        // INSERIR QUADRINHO
+        $query = "INSERT INTO comics 
+                 (title, author_id, description, cover, is_premium, price, page_count, status, is_published, created_at, updated_at) 
+                 VALUES (:title, :author_id, :description, :cover, :is_premium, :price, :page_count, 'published', 1, NOW(), NOW())";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        // Valores padrão
+        $page_count = $data['page_count'] ?? 0;
+        $price = $data['price'] ?? 0.00;
+        $is_premium = $data['is_premium'] ?? 0;
+        $description = $data['description'] ?? '';
+        
+        $stmt->bindParam(":title", $data['title']);
+        $stmt->bindParam(":author_id", $data['author_id']);
+        $stmt->bindParam(":description", $description);
+        $stmt->bindParam(":cover", $data['cover']);
+        $stmt->bindParam(":is_premium", $is_premium);
+        $stmt->bindParam(":price", $price);
+        $stmt->bindParam(":page_count", $page_count);
         
         if(!$stmt->execute()) {
-            throw new Exception("Erro ao criar quadrinho: " . $stmt->errorInfo()[2]);
+            $errorInfo = $stmt->errorInfo();
+            error_log("Erro ao criar quadrinho: " . $errorInfo[2]);
+            throw new Exception("Erro ao criar quadrinho no banco: " . $errorInfo[2]);
         }
         
         $comic_id = $this->conn->lastInsertId();
+        error_log("Quadrinho inserido com ID: " . $comic_id);
         
-        // Inserir categorias
-        foreach($data['categories'] as $category_id) {
-            $stmt = $this->conn->prepare("INSERT INTO comic_categories (comic_id, category_id) VALUES (?, ?)");
-            $stmt->bindParam(1, $comic_id);
-            $stmt->bindParam(2, $category_id);
-            if(!$stmt->execute()) {
-                throw new Exception("Erro ao adicionar categorias: " . $stmt->errorInfo()[2]);
+        // INSERIR CATEGORIAS
+        if(isset($data['categories']) && is_array($data['categories']) && !empty($data['categories'])) {
+            error_log("Inserindo categorias: " . print_r($data['categories'], true));
+            
+            $category_stmt = $this->conn->prepare("INSERT INTO comic_categories (comic_id, category_id) VALUES (:comic_id, :category_id)");
+            
+            foreach($data['categories'] as $category_id) {
+                $category_id = intval($category_id);
+                if($category_id > 0) {
+                    $category_stmt->bindParam(":comic_id", $comic_id);
+                    $category_stmt->bindParam(":category_id", $category_id);
+                    
+                    if(!$category_stmt->execute()) {
+                        $errorInfo = $category_stmt->errorInfo();
+                        error_log("Erro ao adicionar categoria $category_id: " . $errorInfo[2]);
+                        throw new Exception("Erro ao adicionar categorias: " . $errorInfo[2]);
+                    }
+                    error_log("Categoria $category_id inserida com sucesso");
+                }
             }
+        } else {
+            error_log("Nenhuma categoria para inserir");
         }
         
         $this->conn->commit();
-        return ['success' => true, 'comic_id' => $comic_id];
+        error_log("Transação commitada com sucesso - Quadrinho ID: $comic_id");
+        
+        return [
+            'success' => true, 
+            'comic_id' => $comic_id, 
+            'message' => 'Quadrinho criado com sucesso!'
+        ];
         
     } catch (Exception $e) {
         $this->conn->rollback();
-        return ['success' => false, 'message' => $e->getMessage()];
+        error_log("ERRO NA TRANSAÇÃO createComic: " . $e->getMessage());
+        return [
+            'success' => false, 
+            'message' => $e->getMessage()
+        ];
     }
 }
-
-/**
- * Atualizar contagem de páginas do quadrinho
- */
-public function updateComicPageCount($comic_id, $page_count) {
-    try {
-        $stmt = $this->conn->prepare("UPDATE comics SET page_count = ?, updated_at = NOW() WHERE id = ?");
-        $stmt->bindParam(1, $page_count);
-        $stmt->bindParam(2, $comic_id);
-        return $stmt->execute();
-        
-    } catch(PDOException $e) {
-        error_log("Erro ao atualizar contagem de páginas: " . $e->getMessage());
-        return false;
+    public function updateComicPageCount($comic_id, $page_count) {
+        try {
+            $stmt = $this->conn->prepare("UPDATE comics SET page_count = ?, updated_at = NOW() WHERE id = ?");
+            $stmt->bindParam(1, $page_count);
+            $stmt->bindParam(2, $comic_id);
+            return $stmt->execute();
+            
+        } catch(PDOException $e) {
+            error_log("Erro ao atualizar contagem de páginas: " . $e->getMessage());
+            return false;
+        }
     }
-}
 
-/**
- * Obter quadrinhos do usuário
- */
-public function getUserComics($user_id, $limit = 20) {
-    try {
-        $query = "SELECT c.*, 
-                         COUNT(DISTINCT cp.id) as actual_page_count,
-                         COUNT(DISTINCT f.id) as favorites_count,
-                         COUNT(DISTINCT r.id) as reviews_count,
-                         COALESCE(AVG(r.rating), 0) as avg_rating
-                  FROM comics c
-                  LEFT JOIN comic_pages cp ON c.id = cp.comic_id
-                  LEFT JOIN favorites f ON c.id = f.comic_id
-                  LEFT JOIN reviews r ON c.id = r.comic_id
-                  WHERE c.author_id = :user_id
-                  GROUP BY c.id
-                  ORDER BY c.created_at DESC
-                  LIMIT :limit";
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":user_id", $user_id);
-        $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
-        $stmt->execute();
+    public function getUserComics($user_id, $limit = 20) {
+        try {
+            $query = "SELECT c.*, 
+                             COUNT(DISTINCT cp.id) as actual_page_count,
+                             COUNT(DISTINCT f.id) as favorites_count,
+                             COUNT(DISTINCT r.id) as reviews_count,
+                             COALESCE(AVG(r.rating), 0) as avg_rating
+                      FROM comics c
+                      LEFT JOIN comic_pages cp ON c.id = cp.comic_id
+                      LEFT JOIN favorites f ON c.id = f.comic_id
+                      LEFT JOIN reviews r ON c.id = r.comic_id
+                      WHERE c.author_id = :user_id
+                      GROUP BY c.id
+                      ORDER BY c.created_at DESC
+                      LIMIT :limit";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+            $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-    } catch(PDOException $e) {
-        error_log("Erro ao obter quadrinhos do usuário: " . $e->getMessage());
-        return [];
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch(PDOException $e) {
+            error_log("Erro ao obter quadrinhos do usuário: " . $e->getMessage());
+            return [];
+        }
     }
-}
 
-/**
- * Obter dados do quadrinho
- */
-public function getComicData($comic_id) {
-    try {
-        $query = "SELECT c.*, u.username as author_name, u.avatar as author_avatar,
-                         COUNT(DISTINCT cp.id) as actual_page_count,
-                         COUNT(DISTINCT f.id) as favorites_count,
-                         COUNT(DISTINCT r.id) as reviews_count,
-                         COALESCE(AVG(r.rating), 0) as avg_rating
-                  FROM comics c
-                  JOIN users u ON c.author_id = u.id
-                  LEFT JOIN comic_pages cp ON c.id = cp.comic_id
-                  LEFT JOIN favorites f ON c.id = f.comic_id
-                  LEFT JOIN reviews r ON c.id = r.comic_id
-                  WHERE c.id = :comic_id
-                  GROUP BY c.id";
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":comic_id", $comic_id);
-        $stmt->execute();
+    public function getComicData($comic_id) {
+        try {
+            $query = "SELECT c.*, u.username as author_name, u.avatar as author_avatar,
+                             COUNT(DISTINCT cp.id) as actual_page_count,
+                             COUNT(DISTINCT f.id) as favorites_count,
+                             COUNT(DISTINCT r.id) as reviews_count,
+                             COALESCE(AVG(r.rating), 0) as avg_rating
+                      FROM comics c
+                      JOIN users u ON c.author_id = u.id
+                      LEFT JOIN comic_pages cp ON c.id = cp.comic_id
+                      LEFT JOIN favorites f ON c.id = f.comic_id
+                      LEFT JOIN reviews r ON c.id = r.comic_id
+                      WHERE c.id = :comic_id
+                      GROUP BY c.id";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":comic_id", $comic_id);
+            $stmt->execute();
 
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-        
-    } catch(PDOException $e) {
-        error_log("Erro ao obter dados do quadrinho: " . $e->getMessage());
-        return false;
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+            
+        } catch(PDOException $e) {
+            error_log("Erro ao obter dados do quadrinho: " . $e->getMessage());
+            return false;
+        }
     }
-}
 
-/**
- * Obter páginas do quadrinho
- */
-public function getComicPages($comic_id) {
-    try {
-        $query = "SELECT * FROM comic_pages WHERE comic_id = :comic_id ORDER BY page_number";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":comic_id", $comic_id);
-        $stmt->execute();
+    public function getComicPages($comic_id) {
+        try {
+            $query = "SELECT * FROM comic_pages WHERE comic_id = :comic_id ORDER BY page_number";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":comic_id", $comic_id);
+            $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-    } catch(PDOException $e) {
-        error_log("Erro ao obter páginas do quadrinho: " . $e->getMessage());
-        return [];
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch(PDOException $e) {
+            error_log("Erro ao obter páginas do quadrinho: " . $e->getMessage());
+            return [];
+        }
     }
-}
 
-/**
- * Obter categorias do quadrinho
- */
-public function getComicCategories($comic_id) {
-    try {
-        $query = "SELECT c.id, c.name 
-                  FROM categories c
-                  JOIN comic_categories cc ON c.id = cc.category_id
-                  WHERE cc.comic_id = :comic_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":comic_id", $comic_id);
-        $stmt->execute();
+    public function getComicCategories($comic_id) {
+        try {
+            $query = "SELECT c.id, c.name 
+                      FROM categories c
+                      JOIN comic_categories cc ON c.id = cc.category_id
+                      WHERE cc.comic_id = :comic_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":comic_id", $comic_id);
+            $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-    } catch(PDOException $e) {
-        error_log("Erro ao obter categorias do quadrinho: " . $e->getMessage());
-        return [];
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch(PDOException $e) {
+            error_log("Erro ao obter categorias do quadrinho: " . $e->getMessage());
+            return [];
+        }
     }
-}
 
-/**
+    /**
  * Deletar quadrinho
  */
 public function deleteComic($comic_id, $user_id) {
@@ -1512,7 +1494,7 @@ public function deleteComic($comic_id, $user_id) {
         $cover_stmt->execute();
         $cover = $cover_stmt->fetch(PDO::FETCH_ASSOC);
         
-        // Deletar registros relacionados
+        // Deletar registros relacionados nas outras tabelas
         $tables = [
             'comic_categories' => 'comic_id',
             'comic_pages' => 'comic_id',
@@ -1553,6 +1535,41 @@ public function deleteComic($comic_id, $user_id) {
     }
 }
 
+    private function validateCPF($cpf) {
+        // Remove caracteres não numéricos
+        $cpf = preg_replace('/[^0-9]/', '', $cpf);
+        
+        // Verifica se tem 11 dígitos
+        if (strlen($cpf) != 11) {
+            return false;
+        }
+        
+        // Verifica se não é uma sequência de números iguais
+        if (preg_match('/(\d)\1{10}/', $cpf)) {
+            return false;
+        }
+        
+        // Calcula e verifica primeiro dígito verificador
+        for ($t = 9; $t < 11; $t++) {
+            for ($d = 0, $c = 0; $c < $t; $c++) {
+                $d += $cpf[$c] * (($t + 1) - $c);
+            }
+            $d = ((10 * $d) % 11) % 10;
+            if ($cpf[$c] != $d) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    private function getTableColumns($table) {
+        $query = "SHOW COLUMNS FROM $table";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $columns;
+    }
 
 } // FIM DA CLASSE Auth
 
