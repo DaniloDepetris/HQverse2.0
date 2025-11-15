@@ -32,6 +32,7 @@ if($_POST && isset($_POST['delete_comic'])) {
 // Processar pesquisa de usuários
 if($_POST && isset($_POST['search_users'])) {
     $search_term = $_POST['search_term'] ?? '';
+    
     if(!empty($search_term)) {
         $search_results = $auth->searchUsers($search_term);
         if(empty($search_results)) {
@@ -119,21 +120,75 @@ function banUser($user_id, $banned_by, $reason = '') {
     }
 }
 
-// Função para deletar quadrinho
+// Função para deletar quadrinho - VERSÃO CORRIGIDA
 function deleteComic($comic_id, $admin_id) {
     require_once 'config_database.php';
     $database = new Database();
     $conn = $database->getConnection();
     
     try {
-        // Usar a função do Auth para deletar o quadrinho
-        require_once 'includes_auth.php';
-        $auth = new Auth();
-        $result = $auth->deleteComic($comic_id, $admin_id);
+        // Verificar se o quadrinho existe
+        $check_query = "SELECT id, title FROM comics WHERE id = :comic_id";
+        $check_stmt = $conn->prepare($check_query);
+        $check_stmt->bindParam(":comic_id", $comic_id);
+        $check_stmt->execute();
         
-        return $result;
+        if($check_stmt->rowCount() === 0) {
+            return "Quadrinho não encontrado!";
+        }
         
-    } catch(PDOException $e) {
+        $comic = $check_stmt->fetch(PDO::FETCH_ASSOC);
+        $comic_title = $comic['title'];
+        
+        // Iniciar transação
+        $conn->beginTransaction();
+        
+        // 1. Deletar comic_categories
+        $delete_categories = $conn->prepare("DELETE FROM comic_categories WHERE comic_id = :comic_id");
+        $delete_categories->bindParam(":comic_id", $comic_id);
+        $delete_categories->execute();
+        
+        // 2. Deletar comic_pages
+        $delete_pages = $conn->prepare("DELETE FROM comic_pages WHERE comic_id = :comic_id");
+        $delete_pages->bindParam(":comic_id", $comic_id);
+        $delete_pages->execute();
+        
+        // 3. Deletar favorites
+        $delete_favorites = $conn->prepare("DELETE FROM favorites WHERE comic_id = :comic_id");
+        $delete_favorites->bindParam(":comic_id", $comic_id);
+        $delete_favorites->execute();
+        
+        // 4. Deletar reviews
+        $delete_reviews = $conn->prepare("DELETE FROM reviews WHERE comic_id = :comic_id");
+        $delete_reviews->bindParam(":comic_id", $comic_id);
+        $delete_reviews->execute();
+        
+        // 5. Deletar reading_progress
+        $delete_progress = $conn->prepare("DELETE FROM reading_progress WHERE comic_id = :comic_id");
+        $delete_progress->bindParam(":comic_id", $comic_id);
+        $delete_progress->execute();
+        
+        // 6. Deletar comic_comments
+        $delete_comments = $conn->prepare("DELETE FROM comic_comments WHERE comic_id = :comic_id");
+        $delete_comments->bindParam(":comic_id", $comic_id);
+        $delete_comments->execute();
+        
+        // 7. Finalmente deletar o quadrinho
+        $delete_comic = $conn->prepare("DELETE FROM comics WHERE id = :comic_id");
+        $delete_comic->bindParam(":comic_id", $comic_id);
+        $delete_comic->execute();
+        
+        // Commit da transação
+        $conn->commit();
+        
+        // Log para debug
+        error_log("Quadrinho deletado com sucesso: ID $comic_id - '$comic_title'");
+        return true;
+        
+    } catch (PDOException $e) {
+        // Rollback em caso de erro
+        $conn->rollBack();
+        error_log("Erro ao deletar quadrinho ID $comic_id: " . $e->getMessage());
         return "Erro ao remover quadrinho: " . $e->getMessage();
     }
 }
@@ -291,6 +346,12 @@ $creator_requests = $auth->getPendingCreatorRequests();
 $all_creator_requests = $auth->getAllCreatorRequests();
 $system_stats = getSystemStats();
 $unread_notifications = $auth->getUnreadAdminNotifications();
+
+// Verificar se deve manter a aba ativa após POST
+$active_tab = 'dashboard';
+if($_POST && isset($_POST['search_users'])) {
+    $active_tab = 'users';
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -300,6 +361,7 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
     <title>Painel Admin - HQ Verso</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
+        /* [MANTENHA TODO O CSS ANTERIOR - É O MESMO] */
         * {
             margin: 0;
             padding: 0;
@@ -998,9 +1060,9 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
 
         <!-- Sistema de Tabs -->
         <div class="admin-tabs">
-            <div class="admin-tab active" data-tab="dashboard">Dashboard</div>
-            <div class="admin-tab" data-tab="comics">Gerenciar Quadrinhos</div>
-            <div class="admin-tab" data-tab="users">Gerenciar Usuários</div>
+            <div class="admin-tab <?php echo $active_tab === 'dashboard' ? 'active' : ''; ?>" data-tab="dashboard">Dashboard</div>
+            <div class="admin-tab <?php echo $active_tab === 'comics' ? 'active' : ''; ?>" data-tab="comics">Gerenciar Quadrinhos</div>
+            <div class="admin-tab <?php echo $active_tab === 'users' ? 'active' : ''; ?>" data-tab="users">Gerenciar Usuários</div>
             <div class="admin-tab" data-tab="banned">Usuários Banidos</div>
             <div class="admin-tab" data-tab="reports">
                 Denúncias
@@ -1017,7 +1079,7 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
         </div>
 
         <!-- Tab Dashboard -->
-        <div class="tab-content active" id="dashboard">
+        <div class="tab-content <?php echo $active_tab === 'dashboard' ? 'active' : ''; ?>" id="dashboard">
             <div class="admin-content">
                 <div class="form-section">
                     <h2 class="section-title">Visão Geral do Sistema</h2>
@@ -1040,6 +1102,9 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
 
                     <h3 style="margin: 20px 0 10px 0; color: #e94560;">Ações Rápidas</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button class="btn btn-primary" onclick="switchTab('comics')">
+                            <i class="fas fa-book"></i> Gerenciar Quadrinhos
+                        </button>
                         <button class="btn btn-warning" onclick="switchTab('reports')">
                             <i class="fas fa-flag"></i> Ver Denúncias
                         </button>
@@ -1048,9 +1113,6 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
                         </button>
                         <button class="btn btn-secondary" onclick="switchTab('users')">
                             <i class="fas fa-search"></i> Pesquisar Usuários
-                        </button>
-                        <button class="btn btn-primary" onclick="switchTab('comics')">
-                            <i class="fas fa-book"></i> Gerenciar Quadrinhos
                         </button>
                     </div>
                 </div>
@@ -1127,8 +1189,8 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
             </div>
         </div>
 
-        <!-- Tab Quadrinhos -->
-        <div class="tab-content" id="comics">
+        <!-- Tab Quadrinhos - APENAS LISTA E REMOÇÃO -->
+        <div class="tab-content <?php echo $active_tab === 'comics' ? 'active' : ''; ?>" id="comics">
             <div class="list-section" style="grid-column: 1 / -1;">
                 <h2 class="section-title">Quadrinhos Cadastrados</h2>
                 <div class="comics-list">
@@ -1162,11 +1224,104 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
         </div>
 
         <!-- Tab Gerenciar Usuários -->
-        <div class="tab-content" id="users">
+        <div class="tab-content <?php echo $active_tab === 'users' ? 'active' : ''; ?>" id="users">
             <div class="admin-content">
                 <div class="form-section">
                     <h2 class="section-title">Pesquisar Usuários</h2>
-                    <form method="POST" class="search-form">
+                    <form method="POST" class="search-form" id="searchUsersForm">
+                        <input type="hidden" name="search_users" value="1">
+                        <input type="text" name="search_term" placeholder="Digite nome de usuário ou email..." 
+                               value="<?php echo htmlspecialchars($search_term); ?>" required>
+                        <button type="submit" class="btn btn-secondary">
+                            <i class="fas fa-search"></i> Pesquisar
+                        </button>
+                    </form>
+
+                    <?php if(!empty($search_results)): ?>
+                        <h3 style="margin: 20px 0 10px 0; color: #e94560;">Resultados da Pesquisa:</h3>
+                        <div class="users-list">
+                            <?php foreach($search_results as $user): ?>
+                                <div class="user-item">
+                                    <div class="user-name" style="color: <?php echo $user['role'] === 'admin' ? '#e94560' : '#fff'; ?>;">
+                                        <?php echo htmlspecialchars($user['username']); ?>
+                                        <?php if($user['role'] === 'admin'): ?>
+                                            <span style="background: #e94560; color: white; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; margin-left: 10px;">ADMIN</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="user-meta">
+                                        Email: <?php echo htmlspecialchars($user['email']); ?> | 
+                                        Cadastro: <?php echo date('d/m/Y', strtotime($user['created_at'])); ?> |
+                                        Quadrinhos: <?php echo $user['comics_count']; ?>
+                                    </div>
+                                    <?php if($user['id'] != $_SESSION['user_id']): ?>
+                                        <form method="POST" style="margin-top: 10px;" 
+                                              onsubmit="return confirmBanUser('<?php echo htmlspecialchars($user['username']); ?>', this)">
+                                            <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                            <div class="form-group">
+                                                <label for="ban_reason_<?php echo $user['id']; ?>" style="font-size: 0.9rem;">Motivo do banimento:</label>
+                                                <textarea id="ban_reason_<?php echo $user['id']; ?>" name="ban_reason" 
+                                                          placeholder="Opcional: informe o motivo do banimento..." 
+                                                          style="font-size: 0.9rem; height: 60px;"></textarea>
+                                            </div>
+                                            <button type="submit" name="ban_user" class="btn btn-danger">
+                                                <i class="fas fa-ban"></i> Banir Permanentemente
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <div style="font-size: 0.8rem; opacity: 0.6; margin-top: 5px;">
+                                            <i class="fas fa-info-circle"></i> Esta é sua conta
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php elseif($_POST && isset($_POST['search_users'])): ?>
+                        <div class="no-results">
+                            <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                            <p>Nenhum usuário encontrado para "<?php echo htmlspecialchars($search_term); ?>"</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="no-results">
+                            <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                            <p>Digite um nome de usuário ou email para pesquisar</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="list-section">
+                    <h2 class="section-title">Todos os Usuários</h2>
+                    <div class="users-list">
+                        <?php if(empty($users)): ?>
+                            <p style="text-align: center; opacity: 0.7;">Nenhum usuário cadastrado.</p>
+                        <?php else: ?>
+                            <?php foreach($users as $user): ?>
+                                <div class="user-item">
+                                    <div class="user-name" style="color: <?php echo $user['role'] === 'admin' ? '#e94560' : '#fff'; ?>;">
+                                        <?php echo htmlspecialchars($user['username']); ?>
+                                        <?php if($user['role'] === 'admin'): ?>
+                                            <span style="background: #e94560; color: white; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; margin-left: 10px;">ADMIN</span>
+                                        <?php elseif($user['role'] === 'creator'): ?>
+                                            <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; margin-left: 10px;">CRIADOR</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="user-meta">
+                                        Email: <?php echo htmlspecialchars($user['email']); ?> | 
+                                        Cadastro: <?php echo date('d/m/Y', strtotime($user['created_at'])); ?> |
+                                        Quadrinhos: <?php echo $user['comics_count']; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+  <!-- Tab Gerenciar Usuários -->
+        <div class="tab-content <?php echo $active_tab === 'users' ? 'active' : ''; ?>" id="users">
+            <div class="admin-content">
+                <div class="form-section">
+                    <h2 class="section-title">Pesquisar Usuários</h2>
+                    <form method="POST" class="search-form" id="searchUsersForm">
                         <input type="hidden" name="search_users" value="1">
                         <input type="text" name="search_term" placeholder="Digite nome de usuário ou email..." 
                                value="<?php echo htmlspecialchars($search_term); ?>" required>
@@ -1523,6 +1678,7 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
             <i class="fas fa-arrow-left"></i> Voltar para a Loja
         </a>
     </div>
+    </div>
 
     <script>
         // Sistema de Tema
@@ -1603,6 +1759,9 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
                     content.classList.remove('active');
                 });
                 document.getElementById(tabName).classList.add('active');
+                
+                // Salvar aba ativa
+                sessionStorage.setItem('activeTab', tabName);
             });
         });
 
@@ -1615,75 +1774,31 @@ $unread_notifications = $auth->getUnreadAdminNotifications();
             
             document.querySelector(`.admin-tab[data-tab="${tabName}"]`).classList.add('active');
             document.getElementById(tabName).classList.add('active');
+            
+            // Salvar aba ativa
+            sessionStorage.setItem('activeTab', tabName);
         }
 
-        // Funções para gerenciar denúncias
-        function viewUserProfile(userId) {
-            window.open(`perfil.php?user_id=${userId}`, '_blank');
-        }
-
-        function banReportedUser(reportId, userId, username) {
-            const reason = prompt(`Digite o motivo do banimento para ${username}:`);
-            if(reason !== null && reason.trim() !== '') {
-                if(confirm(`Banir permanentemente ${username}? Esta ação não pode ser desfeita.`)) {
-                    // Fazer requisição para banir o usuário
-                    const formData = new FormData();
-                    formData.append('ban_user', '1');
-                    formData.append('user_id', userId);
-                    formData.append('ban_reason', reason);
-                    
-                    fetch('admin.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.text())
-                    .then(() => {
-                        // Marcar report como resolvido
-                        const statusForm = new FormData();
-                        statusForm.append('update_report_status', '1');
-                        statusForm.append('report_id', reportId);
-                        statusForm.append('status', 'resolved');
-                        
-                        fetch('admin.php', {
-                            method: 'POST',
-                            body: statusForm
-                        }).then(() => {
-                            alert('Usuário banido com sucesso!');
-                            location.reload();
-                        });
-                    })
-                    .catch(error => {
-                        alert('Erro ao banir usuário: ' + error);
-                    });
-                }
-            } else if(reason !== null) {
-                alert('Por favor, informe o motivo do banimento.');
-            }
-        }
-
-        // Inicialização
+        // Restaurar aba ativa após submit
         document.addEventListener('DOMContentLoaded', function() {
             initializeTheme();
             
-            // Adicionar loading nos formulários
-            document.querySelectorAll('form').forEach(form => {
-                form.addEventListener('submit', function() {
-                    const submitBtn = this.querySelector('button[type="submit"]');
-                    if(submitBtn) {
-                        const originalText = submitBtn.innerHTML;
-                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
-                        submitBtn.disabled = true;
-                        
-                        // Restaurar após 5 segundos (fallback)
-                        setTimeout(() => {
-                            submitBtn.innerHTML = originalText;
-                            submitBtn.disabled = false;
-                        }, 5000);
-                    }
+            // Restaurar aba ativa do sessionStorage
+            const savedTab = sessionStorage.getItem('activeTab');
+            if (savedTab) {
+                switchTab(savedTab);
+            }
+            
+            // Para formulário de pesquisa de usuários, manter na aba users
+            const searchForm = document.getElementById('searchUsersForm');
+            if (searchForm) {
+                searchForm.addEventListener('submit', function() {
+                    sessionStorage.setItem('activeTab', 'users');
                 });
-            });
+            }
         });
 
+        // [MANTENHA AS OUTRAS FUNÇÕES JAVASCRIPT]
         console.log('Painel Admin carregado com sucesso!');
     </script>
 </body>
