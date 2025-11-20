@@ -14,52 +14,82 @@ class Auth {
     // ============ FUNÇÕES DE AUTENTICAÇÃO ============
     
     public function register($username, $email, $password) {
-        try {
-            // VERIFICAÇÃO DE BANIMENTO
-            $banned = $this->isUserBanned($email, $username);
-            if($banned) {
-                $banned_date = date('d/m/Y H:i', strtotime($banned['banned_at']));
-                return "Este email ou nome de usuário está permanentemente banido. Motivo: " . 
-                       ($banned['reason'] ?: 'Não especificado') . 
-                       " (Banido em: $banned_date)";
-            }
-
-            // Verificar se usuário ou email já existem
-            $query = "SELECT id FROM " . $this->table . " WHERE username = :username OR email = :email";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":username", $username);
-            $stmt->bindParam(":email", $email);
-            $stmt->execute();
-
-            if($stmt->rowCount() > 0) {
-                return "Usuário ou email já cadastrado!";
-            }
-
-            // Inserir novo usuário
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $query = "INSERT INTO " . $this->table . " 
-                     (username, email, password, created_at) 
-                     VALUES (:username, :email, :password, NOW())";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(":username", $username);
-            $stmt->bindParam(":email", $email);
-            $stmt->bindParam(":password", $hashed_password);
-
-            if($stmt->execute()) {
-                $new_user_id = $this->conn->lastInsertId();
-                
-                // Seguir automaticamente o usuário "Juan Taborda"
-                $this->autoFollowAfterRegister($new_user_id);
-                
-                return true;
-            }
-            return "Erro ao cadastrar usuário!";
-
-        } catch(PDOException $exception) {
-            return "Erro: " . $exception->getMessage();
+    try {
+        // VERIFICAÇÃO DE BANIMENTO
+        $banned = $this->isUserBanned($email, $username);
+        if($banned) {
+            $banned_date = date('d/m/Y H:i', strtotime($banned['banned_at']));
+            return "Este email ou nome de usuário está permanentemente banido. Motivo: " . 
+                   ($banned['reason'] ?: 'Não especificado') . 
+                   " (Banido em: $banned_date)";
         }
+
+        // Verificar se usuário ou email já existem
+        $query = "SELECT id FROM " . $this->table . " WHERE username = :username OR email = :email";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":username", $username);
+        $stmt->bindParam(":email", $email);
+        $stmt->execute();
+
+        if($stmt->rowCount() > 0) {
+            return "Usuário ou email já cadastrado!";
+        }
+
+        // Inserir novo usuário
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $query = "INSERT INTO " . $this->table . " 
+                 (username, email, password, created_at) 
+                 VALUES (:username, :email, :password, NOW())";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":username", $username);
+        $stmt->bindParam(":email", $email);
+        $stmt->bindParam(":password", $hashed_password);
+
+        if($stmt->execute()) {
+            $new_user_id = $this->conn->lastInsertId();
+            
+            // Seguir automaticamente o Juan Taborda
+            $this->autoFollowAfterRegister($new_user_id);
+            
+            return true;
+        } else {
+            return "Erro ao criar conta!";
+        }
+
+    } catch(PDOException $exception) {
+        return "Erro: " . $exception->getMessage();
     }
+}
+
+// ============ FUNÇÃO DE SEGUIR AUTOMATICAMENTE ============
+
+private function autoFollowAfterRegister($new_user_id) {
+    try {
+        // Buscar o ID do usuário "Juan Taborda"
+        $query = "SELECT id FROM users WHERE username = 'Juan Taborda' OR username = 'juan' LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        
+        if($stmt->rowCount() > 0) {
+            $juan_user = $stmt->fetch(PDO::FETCH_ASSOC);
+            $juan_id = $juan_user['id'];
+            
+            // Seguir automaticamente
+            $follow_query = "INSERT INTO user_follows (follower_id, following_id) VALUES (:follower_id, :following_id)";
+            $follow_stmt = $this->conn->prepare($follow_query);
+            $follow_stmt->bindParam(":follower_id", $new_user_id);
+            $follow_stmt->bindParam(":following_id", $juan_id);
+            
+            return $follow_stmt->execute();
+        }
+        return false;
+        
+    } catch(PDOException $exception) {
+        error_log("Erro no auto-follow: " . $exception->getMessage());
+        return false;
+    }
+}
 
     public function login($email, $password) {
         try {
@@ -1363,6 +1393,7 @@ class Auth {
         ];
     }
 }
+
     public function updateComicPageCount($comic_id, $page_count) {
         try {
             $stmt = $this->conn->prepare("UPDATE comics SET page_count = ?, updated_at = NOW() WHERE id = ?");
