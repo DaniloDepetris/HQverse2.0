@@ -1,23 +1,131 @@
 <?php
+// LIMITES AUMENTADOS PARA PDFs GRANDES
+ini_set('memory_limit', '4096M');
+ini_set('post_max_size', '2000M');  
+ini_set('upload_max_filesize', '2000M');
+ini_set('max_execution_time', 12000);
+ini_set('max_input_time', 12000);
+ini_set('max_file_uploads', 1000);
 
-ini_set('memory_limit', '2048M');  // Aumentei para 2GB
-ini_set('post_max_size', '1000M'); // Aumentei para 1GB  
-ini_set('upload_max_filesize', '1000M'); // Aumentei para 1GB
-ini_set('max_execution_time', 6000); // 10 minutos
-ini_set('max_input_time', 6000); // 10 minutos
-ini_set('max_file_uploads', 500); // Permite mais arquivos
+// Adicionar estas linhas também
+ini_set('max_input_vars', 10000);
+ini_set('max_input_nesting_level', 512);
+ini_set('default_socket_timeout', 12000);
 
+// Para processamento de PDFs grandes
+ini_set('opcache.memory_consumption', 512);
+ini_set('opcache.max_accelerated_files', 20000);
+
+// Garantir que todas as respostas de API sejam JSON
+function sendJsonResponse($data, $statusCode = 200) {
+    http_response_code($statusCode);
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit();
+}
+
+function handleException($e) {
+    error_log("ERRO: " . $e->getMessage());
+    sendJsonResponse([
+        'success' => false, 
+        'message' => $e->getMessage()
+    ], 400);
+}
 
 require_once 'includes_auth.php';
+
+// ============ PROCESSAMENTO DE PDF EM PARTES ============
+if(isset($_POST['pdf_chunk_upload']) && $_POST['pdf_chunk_upload'] == '1') {
+    error_log("=== INICIANDO UPLOAD DE PDF EM PARTES ===");
+    
+    try {
+        if(!$auth->isLoggedIn()) {
+            throw new Exception('Não autorizado');
+        }
+
+        if(!$auth->isCreator($_SESSION['user_id'])) {
+            throw new Exception('Apenas criadores podem publicar quadrinhos');
+        }
+        
+        $chunk_index = intval($_POST['chunk_index'] ?? 0);
+        $total_chunks = intval($_POST['total_chunks'] ?? 1);
+        $upload_id = $_POST['upload_id'] ?? '';
+        $filename = $_POST['filename'] ?? '';
+        
+        error_log("Processando chunk $chunk_index de $total_chunks - Upload ID: $upload_id");
+        
+        if(empty($upload_id) || empty($filename)) {
+            throw new Exception('Dados de upload inválidos');
+        }
+        
+        // Diretório temporário para chunks
+        $temp_dir = "uploads/temp/" . $upload_id . "/";
+        if(!is_dir($temp_dir)) {
+            mkdir($temp_dir, 0777, true);
+        }
+        
+        // Salvar chunk
+        $chunk_file = $temp_dir . "chunk_" . $chunk_index;
+        if(isset($_FILES['chunk_data']) && $_FILES['chunk_data']['error'] === UPLOAD_ERR_OK) {
+            if(move_uploaded_file($_FILES['chunk_data']['tmp_name'], $chunk_file)) {
+                error_log("Chunk $chunk_index salvo com sucesso");
+            } else {
+                throw new Exception('Erro ao salvar chunk ' . $chunk_index);
+            }
+        } else {
+            throw new Exception('Chunk ' . $chunk_index . ' não recebido corretamente');
+        }
+        
+        // Verificar se todos os chunks foram recebidos
+        $all_chunks_received = true;
+        for($i = 0; $i < $total_chunks; $i++) {
+            if(!file_exists($temp_dir . "chunk_" . $i)) {
+                $all_chunks_received = false;
+                break;
+            }
+        }
+        
+        if($all_chunks_received) {
+            error_log("Todos os chunks recebidos, reconstruindo PDF...");
+            
+            // Reconstruir arquivo PDF
+            $final_pdf_path = $temp_dir . "final.pdf";
+            $final_file = fopen($final_pdf_path, 'wb');
+            
+            for($i = 0; $i < $total_chunks; $i++) {
+                $chunk_path = $temp_dir . "chunk_" . $i;
+                $chunk_content = file_get_contents($chunk_path);
+                fwrite($final_file, $chunk_content);
+                unlink($chunk_path); // Limpar chunk individual
+            }
+            
+            fclose($final_file);
+            error_log("PDF reconstruído: " . $final_pdf_path);
+            
+            sendJsonResponse([
+                'success' => true,
+                'message' => 'PDF recebido completamente',
+                'complete' => true,
+                'pdf_path' => $final_pdf_path
+            ]);
+        } else {
+            sendJsonResponse([
+                'success' => true,
+                'message' => "Chunk $chunk_index recebido",
+                'complete' => false,
+                'received_chunks' => $chunk_index + 1,
+                'total_chunks' => $total_chunks
+            ]);
+        }
+        
+    } catch (Exception $e) {
+        handleException($e);
+    }
+}
 
 // ============ PROCESSAMENTO DE PDF CONVERTIDO ============
 if(isset($_POST['processed_pdf']) && $_POST['processed_pdf'] == '1') {
     error_log("=== INICIANDO PROCESSAMENTO PDF ===");
-    error_log("Dados POST: " . print_r($_POST, true));
-    error_log("Files recebidos: " . print_r($_FILES, true));
-    
-    // Configurar para JSON
-    header('Content-Type: application/json');
     
     try {
         if(!$auth->isLoggedIn()) {
@@ -130,12 +238,11 @@ if(isset($_POST['processed_pdf']) && $_POST['processed_pdf'] == '1') {
                 $auth->updateComicPageCount($comic_id, $pages_result['page_count']);
                 error_log("Páginas processadas: " . $pages_result['page_count']);
                 
-                echo json_encode([
+                sendJsonResponse([
                     'success' => true, 
                     'message' => 'Quadrinho criado com sucesso! ' . $pages_result['page_count'] . ' página(s) carregada(s)!',
                     'comic_id' => $comic_id
                 ]);
-                exit();
             } else {
                 throw new Exception('Erro nas páginas: ' . $pages_result['message']);
             }
@@ -144,19 +251,91 @@ if(isset($_POST['processed_pdf']) && $_POST['processed_pdf'] == '1') {
         }
         
     } catch (Exception $e) {
-        error_log("ERRO NO PROCESSAMENTO PDF: " . $e->getMessage());
-        http_response_code(400);
-        echo json_encode([
-            'success' => false, 
-            'message' => $e->getMessage()
-        ]);
-        exit();
+        handleException($e);
     }
 }
-// ============ FIM DO PROCESSAMENTO DE PDF ============
+
+// ============ PROCESSAMENTO DE PDF PRÉ-UPLOADADO ============
+if(isset($_POST['process_uploaded_pdf']) && $_POST['process_uploaded_pdf'] == '1') {
+    error_log("=== PROCESSANDO PDF PRÉ-UPLOADADO ===");
+    
+    try {
+        if(!$auth->isLoggedIn()) {
+            throw new Exception('Não autorizado');
+        }
+
+        $pdf_path = $_POST['pdf_path'] ?? '';
+        $title = trim($_POST['title'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $categories = $_POST['categories'] ?? [];
+        $is_premium = isset($_POST['is_premium']) ? 1 : 0;
+        $price = $is_premium ? floatval($_POST['price'] ?? 0) : 0;
+        
+        if(empty($pdf_path) || !file_exists($pdf_path)) {
+            throw new Exception('PDF não encontrado');
+        }
+        
+        // Validar dados
+        if(empty($title)) throw new Exception('O título é obrigatório!');
+        if(empty($description)) throw new Exception('A descrição é obrigatória!');
+        if(empty($categories)) throw new Exception('Selecione pelo menos uma categoria!');
+        
+        // PROCESSAR CAPA (já deve ter sido feito)
+        $cover_path = null;
+        if(isset($_FILES['cover']) && $_FILES['cover']['error'] === UPLOAD_ERR_OK) {
+            $cover_result = $auth->uploadComicCover($_FILES['cover'], $_SESSION['user_id']);
+            if($cover_result['success']) {
+                $cover_path = $cover_result['path'];
+            } else {
+                throw new Exception($cover_result['message']);
+            }
+        } else {
+            throw new Exception('A capa é obrigatória!');
+        }
+        
+        // CRIAR QUADRINHO
+        $result = $auth->createComic([
+            'title' => $title,
+            'author_id' => $_SESSION['user_id'],
+            'description' => $description,
+            'cover' => $cover_path,
+            'is_premium' => $is_premium,
+            'price' => $price,
+            'categories' => $categories,
+            'page_count' => 0
+        ]);
+        
+        if(!$result['success']) {
+            throw new Exception($result['message']);
+        }
+        
+        $comic_id = $result['comic_id'];
+        
+        // Limpar arquivo temporário
+        if(file_exists($pdf_path)) {
+            unlink($pdf_path);
+            $temp_dir = dirname($pdf_path);
+            if(is_dir($temp_dir)) {
+                rmdir($temp_dir);
+            }
+        }
+        
+        sendJsonResponse([
+            'success' => true,
+            'message' => 'Quadrinho criado! Agora converta o PDF para páginas.',
+            'comic_id' => $comic_id,
+            'needs_processing' => true
+        ]);
+        
+    } catch (Exception $e) {
+        handleException($e);
+    }
+}
 
 // Processamento normal do formulário (não-PDF)
-if($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['processed_pdf'])) {
+if($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['processed_pdf']) && !isset($_POST['pdf_chunk_upload']) && !isset($_POST['process_uploaded_pdf'])) {
+    error_log("=== PROCESSAMENTO NORMAL DO FORMULÁRIO ===");
+    
     if(!$auth->isLoggedIn()) {
         header("Location: login.php");
         exit();
@@ -201,7 +380,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['processed_pdf'])) {
         $price = $is_premium ? floatval($_POST['price'] ?? 0) : 0;
         $upload_type = $_POST['upload_type'] ?? 'pages';
         
-        error_log("Dados recebidos - Título: $title, Categorias: " . count($categories));
+        error_log("Dados recebidos - Título: $title, Categorias: " . count($categories) . ", Tipo: $upload_type");
         
         // Validar dados
         if(empty($title)) {
@@ -254,27 +433,40 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['processed_pdf'])) {
                 if($result['success']) {
                     $success = $result['message'];
                     $_SESSION['success_message'] = $success;
+                    $comic_id = $result['comic_id'];
                     
                     // PROCESSAR PÁGINAS INDIVIDUAIS
-                    if(isset($_FILES['pages']) && !empty($_FILES['pages']['name'][0])) {
-                        $pages_result = $auth->uploadComicPages($_FILES['pages'], $result['comic_id'], $_SESSION['user_id']);
+                    if($upload_type === 'pages' && isset($_FILES['pages']) && !empty($_FILES['pages']['name'][0])) {
+                        error_log("Processando páginas individuais...");
+                        $pages_result = $auth->uploadComicPages($_FILES['pages'], $comic_id, $_SESSION['user_id']);
                         
                         if($pages_result['success']) {
-                            $auth->updateComicPageCount($result['comic_id'], $pages_result['page_count']);
+                            $auth->updateComicPageCount($comic_id, $pages_result['page_count']);
                             $success .= " " . $pages_result['page_count'] . " página(s) carregada(s)!";
+                            error_log("Páginas processadas com sucesso: " . $pages_result['page_count']);
                         } else {
                             $error = $pages_result['message'];
-                            // Se deu erro nas páginas, ainda assim redireciona mas mostra erro
+                            error_log("Erro nas páginas: " . $error);
                         }
+                    } elseif($upload_type === 'pdf') {
+                        error_log("Upload por PDF selecionado - o processamento deve ser feito via JavaScript");
+                        $success .= " (PDF será processado no navegador)";
                     }
                     
                     if(!$error) {
                         $_SESSION['success_message'] = $success;
-                        header("Location: comic.php?id=" . $result['comic_id']);
+                        error_log("Redirecionando para leitor.html com ID: " . $comic_id);
+                        header("Location: leitor.html?id=" . $comic_id);
+                        exit();
+                    } else {
+                        // Se houve erro nas páginas, ainda mostra sucesso da criação
+                        $_SESSION['success_message'] = $success . " Mas houve erro nas páginas: " . $error;
+                        header("Location: leitor.html?id=" . $comic_id);
                         exit();
                     }
                 } else {
                     $error = $result['message'];
+                    error_log("Erro ao criar quadrinho: " . $error);
                 }
             }
         }
@@ -306,6 +498,7 @@ if(isset($_SESSION['success_message'])) {
 $success = $success ?? '';
 $error = $error ?? '';
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -314,7 +507,17 @@ $error = $error ?? '';
     <title>Publicar Quadrinho - HQ Verso</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Sistema de Tema Automático -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        });
+    </script>
+    
     <style>
+        /* [MANTENHA TODO O CSS ANTERIOR - É O MESMO] */
         :root {
             --bg-primary: #1a1a2e;
             --bg-secondary: #16213e;
@@ -344,6 +547,7 @@ $error = $error ?? '';
             padding: 0; 
             box-sizing: border-box; 
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
         
         body { 
@@ -524,6 +728,10 @@ $error = $error ?? '';
             margin-bottom: 10px;
         }
 
+        [data-theme="light"] .preview-item {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
         .preview-item img {
             width: 50px;
             height: 50px;
@@ -563,8 +771,16 @@ $error = $error ?? '';
             border: 1px solid var(--border-color);
         }
 
+        [data-theme="light"] .btn-secondary {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="light"] .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.1);
         }
 
         .btn-full {
@@ -597,6 +813,10 @@ $error = $error ?? '';
             border-radius: 10px;
             padding: 20px;
             margin-top: 30px;
+        }
+
+        [data-theme="light"] .upload-tips {
+            background: rgba(0, 0, 0, 0.05);
         }
 
         .upload-tips h3 {
@@ -641,6 +861,10 @@ $error = $error ?? '';
             cursor: pointer;
             transition: all 0.3s ease;
             background: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] .upload-type-label {
+            background: rgba(0, 0, 0, 0.05);
         }
         
         .upload-type-label:hover {
@@ -692,6 +916,10 @@ $error = $error ?? '';
             border-radius: 10px;
             margin: 15px 0;
             overflow: hidden;
+        }
+
+        [data-theme="light"] .progress-bar {
+            background: rgba(0, 0, 0, 0.1);
         }
 
         .progress-fill {
@@ -764,6 +992,10 @@ $error = $error ?? '';
             border-radius: 8px;
         }
 
+        [data-theme="light"] .categories-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
         .category-checkbox {
             display: none;
         }
@@ -777,6 +1009,10 @@ $error = $error ?? '';
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
+        }
+
+        [data-theme="light"] .category-label {
+            background: rgba(0, 0, 0, 0.05);
         }
 
         .category-checkbox:checked + .category-label {
@@ -798,6 +1034,10 @@ $error = $error ?? '';
             background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
             min-height: 60px;
+        }
+
+        [data-theme="light"] .selected-categories {
+            background: rgba(0, 0, 0, 0.05);
         }
 
         .selected-category {
@@ -830,6 +1070,27 @@ $error = $error ?? '';
             font-style: italic;
             text-align: center;
             padding: 20px;
+        }
+
+        .large-pdf-warning {
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid #ff9800;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .chunk-progress {
+            margin: 15px 0;
+        }
+
+        .chunk-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
         }
 
         @media (max-width: 768px) {
@@ -1005,7 +1266,7 @@ $error = $error ?? '';
                         <div class="file-upload" onclick="document.getElementById('pdf_file').click()">
                             <i class="fas fa-file-pdf"></i>
                             <h3>Clique para selecionar o PDF</h3>
-                            <p>Selecione um arquivo PDF contendo todas as páginas (Máx. 20MB)</p>
+                            <p>Selecione um arquivo PDF contendo todas as páginas (Máx. 2GB)</p>
                             <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" 
                                    style="display: none;">
                         </div>
@@ -1326,13 +1587,103 @@ $error = $error ?? '';
             }
         });
 
-        // Processar PDF no cliente
+        // Função para upload de PDF em partes
+        async function uploadPDFInChunks(pdfFile) {
+            const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB por chunk
+            const totalChunks = Math.ceil(pdfFile.size / CHUNK_SIZE);
+            const uploadId = Math.random().toString(36).substring(2);
+            
+            console.log(`Iniciando upload de PDF em ${totalChunks} partes...`);
+            
+            const processingElement = document.createElement('div');
+            processingElement.className = 'pdf-processing';
+            processingElement.innerHTML = `
+                <h3><i class="fas fa-spinner fa-spin"></i> Enviando PDF Grande</h3>
+                <p>Arquivo muito grande (${(pdfFile.size / 1024 / 1024).toFixed(1)}MB), enviando em partes...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="uploadProgress"></div>
+                </div>
+                <div class="chunk-info">
+                    <span id="uploadProgressText">0% enviado</span>
+                    <span id="uploadChunkInfo">0/${totalChunks} partes</span>
+                </div>
+            `;
+            
+            document.querySelector('.upload-card').insertBefore(processingElement, document.querySelector('.upload-tips'));
+            
+            try {
+                // Upload de cada chunk
+                for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                    const start = chunkIndex * CHUNK_SIZE;
+                    const end = Math.min(start + CHUNK_SIZE, pdfFile.size);
+                    const chunk = pdfFile.slice(start, end);
+                    
+                    const chunkFormData = new FormData();
+                    chunkFormData.append('pdf_chunk_upload', '1');
+                    chunkFormData.append('chunk_index', chunkIndex);
+                    chunkFormData.append('total_chunks', totalChunks);
+                    chunkFormData.append('upload_id', uploadId);
+                    chunkFormData.append('filename', pdfFile.name);
+                    chunkFormData.append('chunk_data', chunk);
+                    
+                    const response = await fetch('upload_comic.php', {
+                        method: 'POST',
+                        body: chunkFormData
+                    });
+                    
+                    // Verificar se a resposta é JSON válido
+                    const responseText = await response.text();
+                    let result;
+                    
+                    try {
+                        result = JSON.parse(responseText);
+                    } catch (e) {
+                        console.error("Resposta não é JSON:", responseText);
+                        throw new Error('Resposta inválida do servidor: ' + responseText.substring(0, 100));
+                    }
+                    
+                    if (!result.success) {
+                        throw new Error(result.message || `Erro no chunk ${chunkIndex}`);
+                    }
+                    
+                    const progress = ((chunkIndex + 1) / totalChunks) * 100;
+                    document.getElementById('uploadProgress').style.width = progress + '%';
+                    document.getElementById('uploadProgressText').textContent = `${Math.round(progress)}% enviado`;
+                    document.getElementById('uploadChunkInfo').textContent = `${chunkIndex + 1}/${totalChunks} partes`;
+                    
+                    console.log(`Chunk ${chunkIndex + 1}/${totalChunks} enviado`);
+                    
+                    // Pequena pausa para não sobrecarregar o servidor
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                // Todos os chunks foram enviados, agora processar o PDF
+                processingElement.innerHTML = `
+                    <h3><i class="fas fa-spinner fa-spin"></i> PDF Recebido, Convertendo...</h3>
+                    <p>Upload completo! Convertendo páginas no navegador...</p>
+                `;
+                
+                // Agora processar o PDF localmente
+                return await processPDFInBrowser(pdfFile);
+                
+            } catch (error) {
+                console.error('Erro no upload em partes:', error);
+                processingElement.innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        <strong>Erro no upload:</strong> ${error.message}
+                    </div>
+                `;
+                throw error;
+            }
+        }
+
+        // Processar PDF no cliente (versão otimizada)
         async function processPDFInBrowser(pdfFile) {
             const submitBtn = document.getElementById('submitBtn');
             const originalText = submitBtn.innerHTML;
             
-            // Criar elemento de processamento
-            const processingElement = document.createElement('div');
+            const processingElement = document.querySelector('.pdf-processing') || document.createElement('div');
             processingElement.className = 'pdf-processing';
             processingElement.innerHTML = `
                 <h3><i class="fas fa-spinner fa-spin"></i> Processando PDF...</h3>
@@ -1343,7 +1694,9 @@ $error = $error ?? '';
                 <p id="progressText">0% concluído</p>
             `;
             
-            document.querySelector('.upload-card').insertBefore(processingElement, document.querySelector('.upload-tips'));
+            if (!document.querySelector('.pdf-processing')) {
+                document.querySelector('.upload-card').insertBefore(processingElement, document.querySelector('.upload-tips'));
+            }
             
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
             submitBtn.disabled = true;
@@ -1364,6 +1717,7 @@ $error = $error ?? '';
                     console.log(`Processando página ${pageNum}/${pageCount}`);
                     const page = await pdf.getPage(pageNum);
                     
+                    // Reduzir escala para melhor performance
                     const viewport = page.getViewport({ scale: 1.0 });
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
@@ -1436,30 +1790,13 @@ $error = $error ?? '';
                 const responseText = await response.text();
                 console.log("Resposta do servidor:", responseText);
 
-                // Tentar extrair JSON
                 let result;
                 try {
                     result = JSON.parse(responseText);
-                } catch (e1) {
-                    try {
-                        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-                        if (jsonMatch) {
-                            result = JSON.parse(jsonMatch[0]);
-                        } else {
-                            throw new Error('JSON não encontrado');
-                        }
-                    } catch (e2) {
-                        if (responseText.includes('sucesso') || responseText.includes('comic_id')) {
-                            const comicIdMatch = responseText.match(/comic_id["']?\s*:\s*["']?([^"'\s]+)/);
-                            result = {
-                                success: true,
-                                message: 'Quadrinho criado com sucesso',
-                                comic_id: comicIdMatch ? comicIdMatch[1] : 'unknown'
-                            };
-                        } else {
-                            throw new Error('Não foi possível entender a resposta do servidor');
-                        }
-                    }
+                } catch (e) {
+                    console.error("Erro ao parsear JSON:", e);
+                    console.error("Resposta completa:", responseText);
+                    throw new Error('Resposta inválida do servidor. Verifique o console para detalhes.');
                 }
                 
                 if(result.success) {
@@ -1471,16 +1808,16 @@ $error = $error ?? '';
                             <small>ID: ${result.comic_id}</small>
                         </div>
                         <div class="text-center" style="margin-top: 15px;">
-                            <a href="comic.php?id=${result.comic_id}" class="btn btn-primary">
-                                <i class="fas fa-eye"></i> Ver Quadrinho
+                            <a href="leitor.html?id=${result.comic_id}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> Ver Quadrinho no Leitor
                             </a>
                         </div>
                     `;
                     
-                    // Redirecionar após 3 segundos
+                    // Redirecionar para leitor.html após 3 segundos
                     setTimeout(() => {
-                        if(result.comic_id && result.comic_id !== 'unknown') {
-                            window.location.href = 'comic.php?id=' + result.comic_id;
+                        if(result.comic_id) {
+                            window.location.href = 'leitor.html?id=' + result.comic_id;
                         }
                     }, 3000);
                     
@@ -1523,7 +1860,25 @@ $error = $error ?? '';
             // Se for upload por PDF, processar no cliente
             if (uploadType === 'pdf' && pdfFile) {
                 e.preventDefault();
-                await processPDFInBrowser(pdfFile);
+                
+                try {
+                    // Para PDFs maiores que 20MB, usar upload em partes
+                    if (pdfFile.size > 20 * 1024 * 1024) {
+                        const confirmUpload = confirm(
+                            `Este PDF é muito grande (${(pdfFile.size / 1024 / 1024).toFixed(1)}MB). ` +
+                            `O sistema usará upload em partes para melhor estabilidade. Deseja continuar?`
+                        );
+                        
+                        if (confirmUpload) {
+                            await uploadPDFInChunks(pdfFile);
+                        }
+                    } else {
+                        await processPDFInBrowser(pdfFile);
+                    }
+                } catch (error) {
+                    console.error('Erro no processamento do PDF:', error);
+                    alert('Erro ao processar PDF: ' + error.message);
+                }
                 return false;
             }
             
@@ -1569,7 +1924,7 @@ $error = $error ?? '';
             
             // Validar tamanho máximo dos arquivos
             const maxImageSize = 5 * 1024 * 1024;
-            const maxPDFSize = 20 * 1024 * 1024;
+            const maxPDFSize = 2 * 1024 * 1024 * 1024; // 2GB
             
             if(cover.size > maxImageSize) {
                 e.preventDefault();
@@ -1589,15 +1944,13 @@ $error = $error ?? '';
                 e.preventDefault();
                 alert('Por favor, selecione um arquivo PDF!');
                 return false;
-            } else if(uploadType === 'pdf' && pdfFile.size > maxPDFSize) {
-                e.preventDefault();
-                alert('O arquivo PDF é muito grande! O tamanho máximo é 20MB.');
-                return false;
             }
             
             // Mostrar loading para envio normal
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
             submitBtn.disabled = true;
+            
+            return true; // Permitir envio normal
         });
 
         // Arrastar e soltar arquivos
