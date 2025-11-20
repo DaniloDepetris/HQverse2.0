@@ -1,6 +1,13 @@
 <?php
-
 require_once 'includes_auth.php';
+
+// Força logout se estiver logado
+if ($auth->isLoggedIn()) {
+    $auth->logout();
+    // Opcional: redirecionar para evitar acesso mesmo após logout
+    header('Location: index.php');
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -140,15 +147,6 @@ require_once 'includes_auth.php';
             font-size: 0.9rem;
         }
         
-        .user-status {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
         @media (max-width: 768px) {
             .logo {
                 font-size: 2.5rem;
@@ -170,36 +168,18 @@ require_once 'includes_auth.php';
     </style>
 </head>
 <body>
-    <?php if($auth->isLoggedIn()): ?>
-        <div class="user-status">
-            <span>Olá, <?php echo htmlspecialchars($_SESSION['username']); ?>!</span>
-            <a href="comics.php" class="btn btn-outline" style="padding: 8px 15px; font-size: 0.9rem;">
-                Entrar na Loja
-            </a>
-        </div>
-    <?php endif; ?>
-    
     <div class="container">
         <div class="hero-section">
-            <a href="comics.php" class="logo">HQ VERSO</a>
+            <a href="index.php" class="logo">HQ VERSO</a>
             <p class="tagline">Descubra um universo infinito de quadrinhos e graphic novels</p>
             
             <div class="hero-buttons">
-                <?php if($auth->isLoggedIn()): ?>
-                    <a href="comics.php" class="btn btn-primary">
-                        <i class="fas fa-rocket"></i> Explorar Quadrinhos
-                    </a>
-                    <a href="perfil.php" class="btn btn-outline">
-                        <i class="fas fa-user"></i> Meu Perfil
-                    </a>
-                <?php else: ?>
-                    <a href="login.php" class="btn btn-primary">
-                        <i class="fas fa-sign-in-alt"></i> Fazer Login
-                    </a>
-                    <a href="login.php" class="btn btn-outline">
-                        <i class="fas fa-user-plus"></i> Criar Conta
-                    </a>
-                <?php endif; ?>
+                <a href="login.php" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Fazer Login
+                </a>
+                <a href="login.php" class="btn btn-outline">
+                    <i class="fas fa-user-plus"></i> Criar Conta
+                </a>
             </div>
         </div>
         
