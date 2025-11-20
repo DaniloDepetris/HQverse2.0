@@ -1753,41 +1753,60 @@ $creator_request_status = $auth->getCreatorRequestStatus($profile_user_id);
 
     <script>
         // Sistema de Tema
-        function initializeTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = document.getElementById('themeIcon');
+        // Sistema de Tema - VERSÃO CORRIGIDA
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    
+    // Aplicar tema salvo
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme, themeIcon);
+    
+    // Event listener para alternar tema
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             
-            // Aplicar tema salvo
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeIcon(savedTheme, themeIcon);
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme, themeIcon);
             
-            // Event listener para alternar tema
-            themeToggle.addEventListener('click', () => {
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                
-                document.documentElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateThemeIcon(newTheme, themeIcon);
-                
-                // Animação no botão
-                themeToggle.classList.add('pulse-animation');
-                setTimeout(() => {
-                    themeToggle.classList.remove('pulse-animation');
-                }, 1000);
-            });
-        }
+            // Animação no botão
+            themeToggle.classList.add('pulse-animation');
+            setTimeout(() => {
+                themeToggle.classList.remove('pulse-animation');
+            }, 1000);
+        });
+    }
+}
 
-        function updateThemeIcon(theme, iconElement) {
-            if (theme === 'dark') {
-                iconElement.className = 'fas fa-moon';
-                iconElement.title = 'Modo Escuro';
-            } else {
-                iconElement.className = 'fas fa-sun';
-                iconElement.title = 'Modo Claro';
-            }
-        }
+function updateThemeIcon(theme, iconElement) {
+    if (!iconElement) return;
+    
+    if (theme === 'dark') {
+        iconElement.className = 'fas fa-moon';
+        iconElement.title = 'Modo Escuro';
+    } else {
+        iconElement.className = 'fas fa-sun';
+        iconElement.title = 'Modo Claro';
+    }
+}
+
+// Inicialização corrigida
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTheme();
+    
+    // Debug: Verificar se os elementos foram encontrados
+    console.log('Botão tema:', document.getElementById('themeToggle'));
+    console.log('Ícone tema:', document.getElementById('themeIcon'));
+    
+    // Adicionar tooltip para indicar que é clicável
+    document.querySelectorAll('.follow-user-info').forEach(info => {
+        info.title = "Clique para ver o perfil";
+    });
+});
 
         // Função para visualizar perfil de usuário
         function viewUserProfile(userId) {
