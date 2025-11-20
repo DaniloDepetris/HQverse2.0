@@ -23,6 +23,8 @@ if ($auth->isLoggedIn()) {
 
 $error = '';
 $success = '';
+$name = '';
+$email = '';
 
 // Use explicit request method check
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -52,16 +54,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $confirm = isset($_POST['confirm_password']) ? $_POST['confirm_password'] : '';
 
             // Server-side validation
-            if ($password !== $confirm) {
+            if (empty($name)) {
+                $error = 'Nome de usuário é obrigatório.';
+            } elseif (empty($email)) {
+                $error = 'Email é obrigatório.';
+            } elseif ($password !== $confirm) {
                 $error = 'As senhas não coincidem.';
             } elseif (strlen($password) < 6) {
                 $error = 'A senha deve ter pelo menos 6 caracteres.';
-            } elseif (empty($email)) {
-                $error = 'Email inválido.';
             } else {
+                // Tentar fazer o cadastro
                 $result = $auth->register($name, $email, $password);
+                
                 if ($result === true) {
-                    $success = "Cadastro realizado com sucesso! Faça login para continuar.";
+                    $success = "🎉 Cadastro realizado com sucesso! Faça login para continuar.";
+                    $name = ''; // Limpar apenas o nome
+                    // Manter o email para facilitar o login
                 } else {
                     $error = $result;
                 }
@@ -69,6 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Debug: Verificar se há mensagens
+error_log("Success message: " . $success);
+error_log("Error message: " . $error);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -121,7 +133,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             overflow-x: hidden;
         }
 
-        /* Layout Horizontal */
         .auth-wrapper {
             display: flex;
             width: 100%;
@@ -136,7 +147,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             position: relative;
         }
 
-        /* Lado Esquerdo - Hero/Banner */
         .auth-hero {
             flex: 1;
             background: linear-gradient(135deg, var(--secondary-color) 0%, #1a1a2e 100%);
@@ -222,7 +232,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin: 0;
         }
 
-        /* Lado Direito - Forms */
         .auth-forms {
             flex: 1;
             padding: 40px;
@@ -258,12 +267,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: rgba(233, 69, 96, 0.15);
             border-color: var(--primary-color);
             color: var(--primary-color);
+            border-left: 4px solid var(--primary-color);
         }
         
         .alert-success {
-            background: rgba(76, 175, 80, 0.15);
+            background: rgba(76, 175, 80, 0.2);
             border-color: #4caf50;
             color: #4caf50;
+            border-left: 4px solid #4caf50;
+            border-right: 4px solid #4caf50;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert-success::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.1), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 100%; }
+            100% { left: 100%; }
+        }
+
+        .alert-success i {
+            color: #4caf50;
+            margin-right: 8px;
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-3px); }
         }
 
         .forms-header {
@@ -518,7 +560,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: rgba(255, 255, 255, 0.05);
         }
 
-        /* Loading state */
         .loading {
             pointer-events: none;
             opacity: 0.7;
@@ -544,7 +585,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             100% { transform: rotate(360deg); }
         }
 
-        /* Responsividade */
+        .success-celebration {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+            border-radius: 15px;
+            border: 2px dashed #4caf50;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .success-celebration i {
+            font-size: 3rem;
+            color: #4caf50;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .success-celebration h3 {
+            color: #4caf50;
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+        }
+
         @media (max-width: 968px) {
             .auth-wrapper {
                 flex-direction: column;
@@ -606,7 +675,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        /* Efeitos de partículas */
         .bg-particles {
             position: fixed;
             top: 0;
@@ -632,11 +700,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <!-- Partículas de fundo -->
     <div class="bg-particles" id="particles"></div>
     
     <div class="auth-wrapper">
-        <!-- Lado Esquerdo - Hero/Banner -->
         <div class="auth-hero">
             <div class="hero-content">
                 <h1>HQ VERSO</h1>
@@ -668,12 +734,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-        <!-- Lado Direito - Forms -->
         <div class="auth-forms">
             <div class="forms-header">
                 <h2>Bem-vindo de volta!</h2>
                 <p>Entre na sua conta ou crie uma nova</p>
             </div>
+            
+            <?php if($success): ?>
+                <div class="success-celebration">
+                    <i class="fas fa-party-horn"></i>
+                    <h3>🎉 Parabéns! 🎉</h3>
+                    <p>Conta criada com sucesso!</p>
+                </div>
+            <?php endif; ?>
             
             <?php if($error): ?>
                 <div class="alert alert-error">
@@ -699,7 +772,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     <div class="form-group">
                         <label for="loginEmail"><i class="fas fa-envelope"></i> Email</label>
-                        <input type="email" id="loginEmail" name="email" placeholder="seu@email.com" required>
+                        <input type="email" id="loginEmail" name="email" placeholder="seu@email.com" value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>" required>
                     </div>
                     
                     <div class="form-group password-toggle">
@@ -729,11 +802,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <div class="auth-footer">
                     Ao continuar, você concorda com os <a href="#">Termos de Uso</a> e a <a href="#">Política de Privacidade</a> do HQ Verso.
-                    <div style="margin-top: 10px;">
-                        <a href="detection.html" style="color: var(--primary-color); text-decoration: underline;">
-                            <i class="fas fa-info-circle"></i> Ver informações do navegador
-                        </a>
-                    </div>
                 </div>
             </div>
             
@@ -744,12 +812,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     <div class="form-group">
                         <label for="signupName"><i class="fas fa-user"></i> Nome de usuário</label>
-                        <input type="text" id="signupName" name="name" placeholder="Seu nome de usuário" required>
+                        <input type="text" id="signupName" name="name" placeholder="Seu nome de usuário" value="<?php echo htmlspecialchars($name, ENT_QUOTES, 'UTF-8'); ?>" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="signupEmail"><i class="fas fa-envelope"></i> Email</label>
-                        <input type="email" id="signupEmail" name="email" placeholder="seu@email.com" required>
+                        <input type="email" id="signupEmail" name="email" placeholder="seu@email.com" value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>" required>
                     </div>
                     
                     <div class="form-group password-toggle">
@@ -785,11 +853,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <div class="auth-footer">
                     Ao continuar, você concorda com os <a href="#">Termos de Uso</a> e a <a href="#">Política de Privacidade</a> do HQ Verso.
-                    <div style="margin-top: 10px;">
-                        <a href="detection.html" style="color: var(--primary-color); text-decoration: underline;">
-                            <i class="fas fa-info-circle"></i> Ver informações do navegador
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -869,13 +932,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (password !== confirmPassword) {
                 e.preventDefault();
-                showNotification('As senhas não coincidem!', 'error');
+                alert('❌ As senhas não coincidem!');
                 return false;
             }
             
             if (password.length < 6) {
                 e.preventDefault();
-                showNotification('A senha deve ter pelo menos 6 caracteres!', 'error');
+                alert('❌ A senha deve ter pelo menos 6 caracteres!');
                 return false;
             }
             
@@ -890,36 +953,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             loginBtn.classList.add('loading');
         });
         
-        // Sistema de notificação
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `alert alert-${type}`;
-            notification.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i> ${message}`;
-            notification.style.position = 'fixed';
-            notification.style.top = '20px';
-            notification.style.right = '20px';
-            notification.style.zIndex = '1000';
-            notification.style.maxWidth = '300px';
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 4000);
+        // Processar sucesso de cadastro
+        function processSignupSuccess() {
+            if(document.querySelector('.alert-success')) {
+                // Preencher o email no formulário de login
+                const signupEmail = document.getElementById('signupEmail').value;
+                if(signupEmail) {
+                    document.getElementById('loginEmail').value = signupEmail;
+                }
+                
+                // Mudar para a aba de login automaticamente após 2 segundos
+                setTimeout(() => {
+                    document.querySelector('[data-tab="login"]').click();
+                    
+                    // Adicionar foco no campo de email do login
+                    setTimeout(() => {
+                        document.getElementById('loginEmail').focus();
+                    }, 500);
+                }, 2000);
+            }
         }
-        
-        // Efeitos nos botões sociais
-        document.querySelectorAll('.social-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const platform = this.classList.contains('facebook') ? 'Facebook' : 
-                               this.classList.contains('google') ? 'Google' : 'Twitter';
-                showNotification(`Login com ${platform} será implementado em breve!`, 'info');
-            });
-        });
         
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
             createParticles();
+            processSignupSuccess();
         });
     </script>
 </body>
