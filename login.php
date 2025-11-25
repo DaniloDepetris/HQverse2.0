@@ -118,7 +118,7 @@ error_log("Error message: " . $error);
                     rgba(26, 26, 46, 0.92) 50%,
                     rgba(15, 52, 96, 0.85) 100%
                 ),
-                url('uploads/fundo-logn-hqverse.jpg');
+                url('uploads/fundo_login.jpg');
             background-position: center center;
             background-repeat: no-repeat;
             background-size: cover;
@@ -982,3 +982,4 @@ error_log("Error message: " . $error);
     </script>
 </body>
 </html>
+
