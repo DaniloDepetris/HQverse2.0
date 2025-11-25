@@ -1601,6 +1601,22 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
         </button>
     </div>
 </div>
+
+<!-- Seção Clássicos da Marvel (CORRIGIDA) -->
+<div class="comics-section">
+    <h3 class="section-title">Clássicos da Marvel</h3>
+    <div class="carousel-container">
+        <div class="comics-carousel" id="marvelClassics">
+            <div class="no-comics">Carregando clássicos da Marvel...</div>
+        </div>
+        <button class="carousel-nav prev">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </button>
+        <button class="carousel-nav next">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </button>
+    </div>
+</div>
         
         <!-- Seção Mangás Populares -->
         <div class="comics-section">
@@ -2074,6 +2090,13 @@ function createComicCard(comic, showProgress = false) {
     );
     renderComicsInSection('dcClassics', dcClassics.slice(0, 6));
     
+    // NOVA SEÇÃO: Clássicos da Marvel
+    const marvelClassics = allComics.filter(comic => 
+        isMarvelClassic(comic)
+    );
+    renderComicsInSection('marvelClassics', marvelClassics.slice(0, 6));
+    
+
     // Seção Mangás
     const mangaComics = filteredComics.filter(comic => 
         comic.categories && comic.categories.includes('manga')
@@ -2087,6 +2110,17 @@ function createComicCard(comic, showProgress = false) {
     renderComicsInSection('graphicNovels', graphicNovels.slice(0, 4));
     
     updateComicCount(filteredComics.length);
+}
+
+    
+
+    // Função para identificar quadrinhos clássicos da Marvel
+function isMarvelClassic(comic) {
+    // Lista de IDs dos quadrinhos da Marvel que são clássicos
+    const marvelClassicIds = [1, 17, 19, 20, 21, 22, 23];
+    
+    // Verifica se o quadrinho está na lista de clássicos da Marvel
+    return marvelClassicIds.includes(comic.id);
 }
 
 // Função para identificar quadrinhos clássicos da DC
