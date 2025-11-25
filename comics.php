@@ -1570,21 +1570,37 @@ $user_data = $auth->getUserData($_SESSION['user_id']);
             </div>
         </div>
         
-        <!-- Seção Clássicos da DC -->
-        <div class="comics-section">
-            <h3 class="section-title">Clássicos da DC</h3>
-            <div class="carousel-container">
-                <div class="comics-carousel" id="dcClassics">
-                    <div class="no-comics">Carregando clássicos...</div>
-                </div>
-                <button class="carousel-nav prev">
-                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                </button>
-                <button class="carousel-nav next">
-                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                </button>
-            </div>
+        <!-- Seção Clássicos (genérica) -->
+<div class="comics-section">
+    <h3 class="section-title">Clássicos</h3>
+    <div class="carousel-container">
+        <div class="comics-carousel" id="classics">
+            <div class="no-comics">Carregando clássicos...</div>
         </div>
+        <button class="carousel-nav prev">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </button>
+        <button class="carousel-nav next">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Seção Clássicos da DC -->
+<div class="comics-section">
+    <h3 class="section-title">Clássicos da DC</h3>
+    <div class="carousel-container">
+        <div class="comics-carousel" id="dcClassics">
+            <div class="no-comics">Carregando clássicos da DC...</div>
+        </div>
+        <button class="carousel-nav prev">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </button>
+        <button class="carousel-nav next">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </button>
+    </div>
+</div>
         
         <!-- Seção Mangás Populares -->
         <div class="comics-section">
@@ -2034,35 +2050,53 @@ function createComicCard(comic, showProgress = false) {
 
     // Atualizar todas as seções
     function updateAllSections(category) {
-        const filteredComics = filterComicsByCategory(category);
-        
-        // Seção Continuar Lendo (já é atualizada separadamente)
-        const continueReadingComics = getContinueReadingComics();
-        if (continueReadingComics.length === 0) {
-            renderComicsInSection('continueReading', [], true);
-        }
-        
-        // Outras seções
-        const recommendedComics = filteredComics.slice(0, 6);
-        renderComicsInSection('recommendedComics', recommendedComics);
-        
-        const dcComics = filteredComics.filter(comic => 
-            comic.categories && comic.categories.includes('super-herois')
-        );
-        renderComicsInSection('dcClassics', dcComics.slice(0, 4));
-        
-        const mangaComics = filteredComics.filter(comic => 
-            comic.categories && comic.categories.includes('manga')
-        );
-        renderComicsInSection('popularManga', mangaComics.slice(0, 4));
-        
-        const graphicNovels = filteredComics.filter(comic => 
-            comic.categories && comic.categories.includes('graphic-novels')
-        );
-        renderComicsInSection('graphicNovels', graphicNovels.slice(0, 4));
-        
-        updateComicCount(filteredComics.length);
+    const filteredComics = filterComicsByCategory(category);
+    
+    // Seção Continuar Lendo
+    const continueReadingComics = getContinueReadingComics();
+    if (continueReadingComics.length === 0) {
+        renderComicsInSection('continueReading', [], true);
     }
+    
+    // Seção Recomendados
+    const recommendedComics = filteredComics.slice(0, 6);
+    renderComicsInSection('recommendedComics', recommendedComics);
+    
+    // Seção Clássicos (genérica)
+    const classics = filteredComics.filter(comic => 
+        comic.categories && comic.categories.includes('classicos')
+    );
+    renderComicsInSection('classics', classics.slice(0, 4));
+    
+    // Seção Clássicos da DC (MODIFICADA)
+    const dcClassics = allComics.filter(comic => 
+        isDCClassic(comic)
+    );
+    renderComicsInSection('dcClassics', dcClassics.slice(0, 6));
+    
+    // Seção Mangás
+    const mangaComics = filteredComics.filter(comic => 
+        comic.categories && comic.categories.includes('manga')
+    );
+    renderComicsInSection('popularManga', mangaComics.slice(0, 4));
+    
+    // Seção Graphic Novels
+    const graphicNovels = filteredComics.filter(comic => 
+        comic.categories && comic.categories.includes('graphic-novels')
+    );
+    renderComicsInSection('graphicNovels', graphicNovels.slice(0, 4));
+    
+    updateComicCount(filteredComics.length);
+}
+
+// Função para identificar quadrinhos clássicos da DC
+function isDCClassic(comic) {
+    // Lista de IDs dos quadrinhos da DC que são clássicos
+    const dcClassicIds = [9, 10, 16, 24, 25, 26, 27]; // IDs dos quadrinhos da DC do seu banco
+    
+    // Verifica se o quadrinho está na lista de clássicos da DC
+    return dcClassicIds.includes(comic.id);
+}
 
     // Atualizar contador de quadrinhos
     function updateComicCount(count) {
@@ -2576,6 +2610,19 @@ function openComicModal(comic) {
             alert('Erro ao processar solicitação');
         });
     }
+
+    // Adicione esta função NOVA no seu JavaScript (pode colocar perto das outras funções de filtro)
+function isDCClassic(comic) {
+    const dcKeywords = ['batman', 'superman', 'mulher-maravilha', 'flash', 'liga da justiça', 
+                       'arqueiro verde', 'aquaman', 'lanterna verde', 'dc', 'gotham', 'metropolis'];
+    
+    const title = comic.title.toLowerCase();
+    const description = comic.description ? comic.description.toLowerCase() : '';
+    
+    return dcKeywords.some(keyword => 
+        title.includes(keyword) || description.includes(keyword)
+    ) && (comic.categories && comic.categories.includes('classicos'));
+}
 
     // Inicialização completa
     async function initializePage() {
