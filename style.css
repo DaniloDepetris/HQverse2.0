@@ -1,0 +1,1494 @@
+  :root {
+            --primary: #e94560;
+            --secondary: #0f3460;
+            --dark: #16213e;
+            --light: #f6f6f6;
+            --gray: #b2bec3;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .logo {
+            color: var(--primary);
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--light);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background-color: #d13354;
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: var(--light);
+            border: 1px solid var(--light);
+        }
+        
+        .btn-outline:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Página de Quadrinhos - CORRIGIDO: removido display: none */
+        .comics-page {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* User dropdown (vertical, icon list like attachment) */
+        .user-dropdown {
+            position: absolute;
+            right: 16px;
+            top: 60px;
+            background: #0f1220;
+            width: 220px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            display: none;
+            flex-direction: column;
+            padding: 10px 8px;
+            z-index: 1000;
+        }
+        .user-dropdown.open { display: flex; }
+        .user-dropdown a, .user-dropdown button {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 12px;
+            color: #dfe6ee;
+            text-decoration: none;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .user-dropdown a:hover, .user-dropdown button:hover { background: rgba(255,255,255,0.03); }
+        .user-dropdown .section-title { font-size: 0.85rem; color: #9aa6b2; padding: 8px 12px; }
+        .user-dropdown .logout { color: #ff6b81; font-weight: 700; }
+        .user-dropdown i { width: 24px; text-align: center; color: #9fb4c7; }
+        
+        .comics-section {
+            margin: 40px 0;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .comics-carousel {
+                    display: flex;
+                    gap: 18px;
+                    overflow-x: auto;
+                    padding-bottom: 36px; /* make room for nav/progress */
+                    scrollbar-width: thin;
+                    scrollbar-color: var(--primary) var(--dark);
+                    scroll-behavior: smooth;
+                    scroll-snap-type: x mandatory;
+        }
+        
+        .comics-carousel::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .comics-carousel::-webkit-scrollbar-track {
+            background: var(--dark);
+        }
+        
+        .comics-carousel::-webkit-scrollbar-thumb {
+            background-color: var(--primary);
+            border-radius: 20px;
+        }
+        
+        .comic-card {
+                    min-width: 220px;
+                    background-color: #0f1320;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    transition: transform 0.28s ease, box-shadow 0.28s ease;
+                    cursor: pointer;
+                    flex-shrink: 0;
+                    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+                    scroll-snap-align: center;
+        }
+        
+        .comic-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .comic-cover {
+                    width: 100%;
+                    height: 380px; /* larger cover like the screenshot */
+                    object-fit: cover;
+                    display: block;
+                    border-radius: 6px;
+                    box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+        }
+
+        /* Row outer to position arrows and title */
+        .row-outer {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .row-title {
+            margin-bottom: 6px;
+        }
+
+        .row-nav {
+            position: absolute;
+            top: 40%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 30;
+        }
+
+        .row-nav.left { left: 6px; }
+        .row-nav.right { right: 6px; }
+
+        .row-nav i { font-size: 14px; }
+
+        /* big highlighted active card look */
+        .comic-card.active-large { transform: scale(1.04); box-shadow: 0 14px 40px rgba(0,0,0,0.6); }
+
+        /* Continue info (black strip with pink progress) */
+        .continue-info {
+            background: #000;
+            color: #fff;
+            padding: 12px 14px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .continue-info .info-inner { display:flex; align-items:center; gap:16px; }
+        .continue-info .info-text { flex: 1; }
+        .continue-info .info-title { font-weight: 700; color: #fff; }
+        .continue-info .info-meta { color: #cfcfcf; font-size: 0.95rem; }
+        .progress-track { background: rgba(255,255,255,0.06); height: 10px; border-radius: 999px; overflow: hidden; }
+        .progress-indicator { height: 100%; background: linear-gradient(90deg,#ff6b81,#e94560); border-radius: 999px; transition: width 220ms ease; }
+
+        /* small responsive tweaks */
+        @media (max-width: 900px) {
+            .comic-cover { height: 300px; }
+            .comic-card { min-width: 180px; }
+            .row-nav { width: 30px; height: 30px; }
+        }
+
+        @media (max-width: 600px) {
+            .comic-cover { height: 200px; }
+            .comic-card { min-width: 160px; }
+        }
+
+        /* Per-card progress bar (small thin bar under each card) */
+        .comic-card .progress { width: calc(100% - 24px); margin: 10px 12px 0 12px; height: 8px; background: rgba(255,255,255,0.04); border-radius: 20px; overflow: hidden; }
+        .comic-card .progress .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg,#ff6b81,#e94560); border-radius: 20px; transition: width 200ms ease; }
+
+        /* Ensure section titles moved to row-title look correct */
+        .row-title h4 { color: var(--light); margin: 0 0 6px 6px; font-size: 1.05rem; }
+
+        /* make continue-info appear full width under the carousel */
+        .comics-section .continue-info { margin-top: 12px; }
+
+        /* Make the overall carousel container a little taller so pink progress isn't too close to cards */
+        .row-outer .comics-carousel { padding-bottom: 26px; }
+        
+        .comic-info {
+            padding: 15px;
+        }
+
+        /* Card action (Ler agora) overlay */
+        .card-actions { position: absolute; left: 12px; top: 12px; z-index: 15; display: none; }
+        .comic-card { position: relative; }
+        .comic-card:hover .card-actions { display: block; }
+        .card-actions .read-now { padding: 8px 12px; font-size: 0.9rem; border-radius: 4px; }
+
+        @media (max-width: 768px) {
+            .card-actions { position: static; display: block; padding: 8px; }
+            .comic-card { display: flex; flex-direction: column; }
+            .comic-cover { height: 180px; }
+        }
+        
+        .comic-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .comic-meta {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .featured-comic {
+            width: 100%;
+            height: 500px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+        
+        .featured-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 30px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        }
+        
+        .featured-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+        
+        .featured-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .search-bar {
+            display: flex;
+            margin: 0; /* remove vertical spacing inside header to keep items inline */
+            width: auto;
+            max-width: 320px; /* constrain so avatar and brand don't wrap */
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .search-bar input {
+            flex: 1;
+            padding: 12px;
+            background-color: #333;
+            border: none;
+            border-radius: 4px 0 0 4px;
+            color: var(--light);
+            outline: none;
+        }
+        
+        .search-bar button {
+            padding: 12px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        
+        .categories {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .category {
+            padding: 8px 15px;
+            background-color: #333;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .category:hover, .category.active {
+            background-color: var(--primary);
+        }
+
+        /* Modal de Login/Cadastro */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: var(--dark);
+            padding: 40px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: color 0.3s;
+        }
+        
+        .close-btn:hover {
+            color: var(--light);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background-color: #333;
+            border: none;
+            border-radius: 4px;
+            color: var(--light);
+            outline: none;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--primary);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Mensagens de status */
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        
+        .welcome-message h2 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .welcome-message p {
+            margin-bottom: 20px;
+            color: var(--gray);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 3px solid #ff6b6b;
+        }
+        
+        .success-message {
+            color: #51cf66;
+            background: rgba(81, 207, 102, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 3px solid #51cf66;
+        }
+        
+        .db-error {
+            background: rgba(255, 107, 107, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #ff6b6b;
+            text-align: center;
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .featured-comic {
+                height: 400px;
+            }
+            
+            .featured-title {
+                font-size: 1.8rem;
+            }
+            
+            .featured-overlay {
+                padding: 20px;
+            }
+            
+            .user-menu {
+                justify-content: center;
+                width: 100%;
+            }
+            
+            .search-bar {
+                max-width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .logo {
+                font-size: 1.8rem;
+            }
+            
+            .featured-comic {
+                height: 300px;
+            }
+            
+            .featured-title {
+                font-size: 1.5rem;
+            }
+            
+            .featured-actions {
+                flex-direction: column;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .comic-card {
+                min-width: 150px;
+            }
+            
+            .comic-cover {
+                height: 220px;
+            }
+        }
+
+/* ========================================================================== */
+/* Integrated CSS (from user snippet)                                            */
+/* This block is appended to avoid altering upstream rules. It intentionally    */
+/* uses alternate variable names for new values and conservative overrides.    */
+/* ========================================================================== */
+
+:root {
+    --primary-alt: var(--primary, #e50914);
+    --secondary-alt: #141414;
+    --dark-alt: #141414;
+    --light-alt: #ffffff;
+    --gray-alt: #b2bec3;
+    --header-height: 80px;
+    --mobile-padding: 15px;
+    --tablet-padding: 20px;
+}
+
+.light-theme {
+    --primary: #e50914;
+    --secondary: #f5f5f1;
+    --text-primary: #141414;
+    --text-secondary: #564d4d;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f1;
+    --bg-card: rgba(255, 255, 255, 0.9);
+    --border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive grid utilities */
+.grid-responsive { display: grid; gap: 20px; }
+.grid-1 { grid-template-columns: 1fr; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-5 { grid-template-columns: repeat(5, 1fr); }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 var(--tablet-padding); width: 100%; }
+
+header { display:flex; justify-content:space-between; align-items:center; padding:20px 0; position:fixed; top:0; width:100%; z-index:100; transition:background-color 0.3s; background-color:transparent; flex-wrap:wrap; gap:15px; }
+header.scrolled { background-color: var(--secondary); }
+
+.logo { color: var(--primary); font-size:2.5rem; font-weight:bold; text-decoration:none; font-family:'Arial Black', Arial, sans-serif; }
+.nav-links { display:flex; gap:20px; }
+.nav-links a { color: var(--light); text-decoration:none; font-size:0.9rem; transition: color 0.3s; }
+.nav-links a:hover { color: var(--gray); }
+
+.btn-play { background-color: var(--light); color: var(--secondary); padding:12px 30px; border-radius:4px; font-weight:bold; display:flex; align-items:center; gap:10px; }
+.btn-play:hover { background-color: rgba(255,255,255,0.8); }
+
+.user-dropdown a { display:block; color:#fff; background: var(--primary); text-decoration:none; padding: 10px 18px; border-radius:25px; margin:8px 0; font-size:1rem; font-weight:500; text-align:center; transition: background 0.2s, color 0.2s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(233,69,96,0.08); }
+.user-dropdown a:hover { background: #d13354; color: #fff; box-shadow: 0 4px 16px rgba(233,69,96,0.18); }
+
+.comic-card { width:220px; height:330px; display:flex; flex-direction:column; background:#222; border-radius:4px; overflow:hidden; transition:transform 0.3s, box-shadow 0.3s; flex-shrink:0; }
+.comic-card:hover { transform: scale(1.05); box-shadow:0 10px 20px rgba(0,0,0,0.5); z-index:10; }
+.comic-cover { width:100%; height:100%; object-fit:cover; background:#222; display:block; }
+.comic-info { padding:15px; background: rgba(0,0,0,0.7); position:absolute; bottom:0; left:0; right:0; transform: translateY(100%); transition: transform 0.3s; }
+.comic-card:hover .comic-info { transform: translateY(0); }
+
+.featured-comic { width:100%; height:80vh; background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0) 100%), url('https://via.placeholder.com/1920x1080') center/cover no-repeat; border-radius:0; margin-bottom:40px; position:relative; cursor:pointer; display:flex; align-items:flex-end; padding: 0 0 100px 50px; }
+.featured-overlay { max-width:600px; }
+.featured-title { font-size:3.5rem; margin-bottom:20px; text-shadow:2px 2px 4px rgba(0,0,0,0.7); font-weight:800; }
+.featured-description { font-size:1.2rem; margin-bottom:20px; color:#e5e5e5; line-height:1.4; }
+.featured-actions { display:flex; gap:15px; margin-top:20px; }
+
+.search-bar { display:flex; margin:20px 0; width:100%; max-width:500px; }
+.search-bar input { flex:1; padding:12px; background-color:#333; border:none; border-radius:4px 0 0 4px; color:var(--light); outline:none; }
+.search-bar button { padding:12px 20px; background-color:var(--primary); color:white; border:none; border-radius:0 4px 4px 0; cursor:pointer; }
+
+.categories { display:flex; gap:10px; margin:20px 0; flex-wrap:wrap; }
+.category { padding:8px 15px; background-color: rgba(255,255,255,0.1); border-radius:4px; font-size:0.9rem; cursor:pointer; transition: all 0.3s ease; }
+.category:hover, .category.active { background-color: var(--primary); }
+
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.8); z-index:100; justify-content:center; align-items:center; }
+.modal-content { background-color: var(--dark); padding:40px; border-radius:8px; width:100%; max-width:500px; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.5); }
+.close-btn { position:absolute; top:15px; right:15px; font-size:1.5rem; cursor:pointer; color:var(--gray); transition: color 0.3s; }
+.close-btn:hover { color: var(--light); }
+
+.tabs { display:flex; margin-bottom:30px; border-bottom:1px solid #333; }
+.tab { padding:10px 20px; cursor:pointer; border-bottom:3px solid transparent; transition: all 0.3s; }
+.tab.active { border-bottom:3px solid var(--primary); font-weight:bold; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+.welcome-message { text-align:center; padding:40px 20px; background: rgba(255,255,255,0.05); border-radius:8px; margin:30px 0; }
+.welcome-message h2 { color: var(--primary); margin-bottom:15px; }
+.welcome-message p { margin-bottom:20px; color: var(--gray); max-width:600px; margin-left:auto; margin-right:auto; }
+
+.error-message { color:#ff6b6b; background: rgba(255,107,107,0.1); padding:10px; border-radius:4px; margin:10px 0; border-left:3px solid #ff6b6b; }
+.success-message { color:#51cf66; background: rgba(81,207,102,0.1); padding:10px; border-radius:4px; margin:10px 0; border-left:3px solid #51cf66; }
+
+/* ----------------- Netflix-like rows ----------------- */
+.row { margin-bottom: 30px; }
+.row-title { display:flex; align-items:center; justify-content:space-between; margin: 0 0 10px 0; }
+.row-title h4 { color: var(--light); font-size: 1.2rem; margin: 0; }
+.row-outer { position: relative; }
+.row-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 96px; display:flex; align-items:center; justify-content:center; background: linear-gradient(90deg, rgba(0,0,0,0.0), rgba(0,0,0,0.35)); cursor: pointer; z-index: 20; border: none; }
+.row-nav.left { left: 0; }
+.row-nav.right { right: 0; transform: translateY(-50%) rotate(180deg); }
+.row-nav i { color: #fff; font-size: 20px; }
+
+/* adjust cards for Netflix look */
+.comics-carousel { scroll-behavior: smooth; padding: 10px 40px; }
+.comics-carousel { scroll-behavior: smooth; padding: 10px 40px; display:flex; align-items:flex-start; }
+.comic-card { width: 260px; height: 380px; }
+
+@media (min-width: 1024px) {
+    .comic-card { width: 260px; height: 380px; }
+}
+
+/* Improved snap behavior and larger visuals */
+.comics-carousel { scroll-snap-type: x mandatory; }
+.comic-card { scroll-snap-align: center; flex: 0 0 auto; margin-right: 18px; }
+
+/* Make the first card in continue-row more prominent */
+.continue-row .comic-card:first-child { width: 460px; height: 440px; }
+.continue-row .comic-card:first-child .comic-cover { height: 100%; }
+.continue-row .comics-carousel { padding-left: 60px; padding-right: 60px; }
+
+/* Bigger covers for desktop rows */
+@media (min-width: 1200px) {
+    .comics-carousel .comic-card { width: 300px; height: 420px; }
+}
+
+/* Add subtle gradient overlay on covers to match screenshot vibe */
+.comic-card::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%); pointer-events: none; }
+
+/* Make the continue info panel taller and progress more visible */
+.continue-info { background: #000; color: #fff; margin-top: 14px; padding: 16px 0; border-radius: 2px; }
+.continue-info .info-inner { max-width: 1200px; margin: 0 auto; display:flex; align-items:center; gap:20px; padding: 0 20px; }
+.continue-info .info-text { flex: 1 1 auto; padding-left: 12px; }
+.continue-info .info-title { font-weight: 800; font-size: 1.15rem; margin-bottom: 6px; color: #fff; }
+.continue-info .info-meta { color: #cfcfcf; font-size: 0.95rem; }
+.continue-info .info-progress { width: 100%; max-width: 900px; }
+.progress-track { height: 10px; background: rgba(233,69,96,0.12); border-radius: 6px; overflow: hidden; }
+.progress-indicator { height: 100%; background: linear-gradient(90deg,#e50914,#ff6b6b); width: 0%; transition: width 300ms ease; box-shadow: 0 2px 6px rgba(229,9,20,0.2); }
+
+/* End Netflix-like rows */
+
+/* Header and hero tweaks to mimic Netflix */
+header {
+    background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0));
+    padding: 18px 40px;
+    align-items: center;
+}
+.header-left { display:flex; align-items:center; gap:24px; }
+.main-nav a { color: rgba(255,255,255,0.9); text-decoration:none; margin-right:18px; font-weight:600; }
+.header-right { display:flex; align-items:center; gap:16px; flex-wrap: nowrap; }
+.netflix-brand { background: #e50914; color: #fff; width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:4px; font-weight:bold; margin-left:12px; }
+
+/* Ensure brand/avatar letters are centered and don't wrap */
+.brand-letter, .avatar-letter {
+    display: inline-block;
+    line-height: 1;
+    font-size: 16px;
+    color: #fff;
+    user-select: none;
+}
+
+/* Prevent header children from wrapping on wider screens */
+@media (min-width: 769px) {
+    header { flex-wrap: nowrap; }
+    .header-right > * { flex: 0 0 auto; white-space: nowrap; }
+}
+
+/* Hero larger visual */
+.featured-comic { height: 65vh; padding: 0 0 80px 60px; }
+
+/* Progress bars on cards */
+.progress { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: rgba(255,255,255,0.08); }
+.progress-bar { height: 100%; background: linear-gradient(90deg, #e50914, #ff6b6b); }
+
+/* Make Continue row highlight larger card first */
+.continue-row .comics-carousel { padding-left: 60px; }
+.continue-row .comic-card:first-child { width: 520px; height: 300px; border-radius: 6px; overflow: hidden; }
+.continue-row .comic-card:first-child .comic-cover { height: 100%; }
+
+/* Continue info strip (black panel with title/meta and pink progress) */
+.continue-info { background: #000; color: #fff; margin-top: 14px; padding: 12px 0; border-radius: 2px; }
+.continue-info .info-inner { max-width: 1200px; margin: 0 auto; display:flex; align-items:center; gap:20px; padding: 0 20px; }
+.continue-info .info-text { flex: 1 1 auto; }
+.continue-info .info-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
+.continue-info .info-meta { color: var(--gray); font-size: 0.9rem; }
+.continue-info .info-progress { width: 320px; }
+.progress-track { height: 8px; background: rgba(233,69,96,0.12); border-radius: 6px; overflow: hidden; }
+.progress-indicator { height: 100%; background: linear-gradient(90deg,#e50914,#ff6b6b); width: 0%; transition: width 300ms ease; }
+
+@media (max-width: 768px) {
+    .continue-info .info-inner { flex-direction: column; align-items: flex-start; }
+    .continue-info .info-progress { width: 100%; }
+}
+
+.success-message { color:#51cf66; background: rgba(81,207,102,0.1); padding:10px; border-radius:4px; margin:10px 0; border-left:3px solid #51cf66; }
+.db-error { background: rgba(255,107,107,0.1); padding:20px; border-radius:8px; margin:20px 0; border:1px solid #ff6b6b; text-align:center; }
+
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+@media (max-width: 768px) {
+    .logo { font-size:2rem; }
+    .featured-comic { height:60vh; padding:0 0 50px 20px; }
+    .featured-title { font-size:2rem; }
+    .featured-description { font-size:1rem; }
+    .nav-links { display:none; }
+    .user-menu { justify-content:center; width:100%; }
+    .search-bar { max-width:100%; }
+    .comic-card { width:150px; height:225px; }
+}
+
+@media (max-width: 480px) {
+    header { flex-direction:column; text-align:center; }
+    .logo { font-size:1.8rem; }
+    .featured-comic { height:50vh; }
+    .featured-title { font-size:1.5rem; }
+    .featured-actions { flex-direction:column; }
+    .modal-content { padding:20px; }
+    .comic-card { width:120px; height:180px; }
+}
+
+/* Theme toggle button */
+.theme-toggle { position: fixed; bottom:20px; right:20px; width:60px; height:60px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,0.3); z-index:1000; border:none; font-size:24px; }
+.theme-toggle:hover { transform: scale(1.1); }
+
+/* Link de informações do navegador (posição fixa) */
+.browser-info-link {
+    position: fixed;
+    bottom: 10px;
+    right: 90px;
+    z-index: 1000;
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 12px;
+    background: rgba(0,0,0,0.5);
+    padding: 5px 10px;
+    border-radius: 3px;
+}
+
+/* ====================================================================== */
+/* Integrated User CSS (APPENDED SAFELY - commented out)                  */
+/* - This block contains the CSS you provided.                                */
+/* - It's commented out so it won't affect the current site layout.          */
+/* - To enable it safely: either remove the surrounding comment block, or   */
+/*   uncomment specific sections you want (recommended).                    */
+/* - If you want these styles applied conditionally, I can wrap them in    */
+/*   a `.user-theme` class and enable by adding `class="user-theme"` to  */
+/*   the <body> element. Tell me if you want that.                         */
+/* ====================================================================== */
+
+/*
+:root {
+    --primary: #e50914;
+    --secondary: #141414;
+    --dark: #141414;
+    --light: #ffffff;
+    --gray: #b2bec3;
+    --header-height: 80px;
+    --mobile-padding: 15px;
+    --tablet-padding: 20px;
+}
+
+.light-theme {
+    --primary: #e50914;
+    --secondary: #f5f5f1;
+    --text-primary: #141414;
+    --text-secondary: #564d4d;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f1;
+    --bg-card: rgba(255, 255, 255, 0.9);
+    --border-color: rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+    background-color: var(--secondary);
+    color: var(--light);
+    line-height: 1.6;
+    transition: all 0.3s ease;
+}
+
+body.light-theme {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--tablet-padding);
+    width: 100%;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    transition: background-color 0.3s;
+    background-color: transparent;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+header.scrolled {
+    background-color: var(--secondary);
+}
+
+body.light-theme header.scrolled {
+    background-color: var(--bg-secondary);
+}
+
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo {
+    color: var(--primary);
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-decoration: none;
+    font-family: 'Arial Black', Arial, sans-serif;
+}
+
+/* Search Bar */
+.search-bar {
+    display: flex;
+    margin: 0;
+    width: auto;
+    max-width: 320px;
+    align-items: center;
+}
+
+.search-bar input {
+    flex: 1;
+    padding: 12px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 4px 0 0 4px;
+    color: var(--light);
+    outline: none;
+    min-width: 200px;
+}
+
+body.light-theme .search-bar input {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+.search-bar button {
+    padding: 12px 20px;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+/* User Menu */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    position: relative;
+}
+
+.avatar-letter {
+    color: white;
+}
+
+.user-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: rgba(26, 26, 46, 0.95);
+    border-radius: 5px;
+    padding: 10px;
+    min-width: 150px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+body.light-theme .user-dropdown {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.user-avatar:hover .user-dropdown {
+    display: block;
+}
+
+.user-dropdown a {
+    display: block;
+    color: #fff;
+    background: var(--primary);
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 25px;
+    margin: 8px 0;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    transition: background 0.2s;
+}
+
+.user-dropdown a:hover {
+    background: #b8070f;
+}
+
+/* Categories */
+.categories {
+    display: flex;
+    gap: 10px;
+    margin: 100px 0 20px 0;
+    flex-wrap: wrap;
+}
+
+.category {
+    padding: 8px 15px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+body.light-theme .category {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+.category:hover, .category.active {
+    background-color: var(--primary);
+}
+
+/* Featured Comic */
+.featured-comic {
+    width: 100%;
+    height: 80vh;
+    background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0) 100%);
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    margin-bottom: 40px;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 0 0 100px 50px;
+}
+
+.featured-overlay {
+    max-width: 600px;
+}
+
+.featured-title {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    font-weight: 800;
+}
+
+.featured-description {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    color: #e5e5e5;
+    line-height: 1.4;
+}
+
+.featured-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+    text-align: center;
+    border: none;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: var(--light);
+}
+
+.btn-primary:hover {
+    background-color: #b8070f;
+    transform: translateY(-2px);
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: var(--light);
+    border: 1px solid var(--light);
+}
+
+body.light-theme .btn-outline {
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+.btn-outline:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn-play {
+    background-color: var(--light);
+    color: var(--secondary);
+    padding: 12px 30px;
+    border-radius: 4px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-play:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Comics Sections */
+.comics-section {
+    margin: 40px 0;
+    position: relative;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: var(--light);
+    font-weight: 600;
+}
+
+body.light-theme .section-title {
+    color: var(--text-primary);
+}
+
+/* Comics Carousel */
+.comics-carousel {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding: 10px 0 20px 0;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+}
+
+.comics-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+/* Comic Cards */
+.comic-card {
+    min-width: 200px;
+    height: 300px;
+    background-color: #222;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+body.light-theme .comic-card {
+    background-color: var(--bg-card);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comic-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.comic-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.comic-info {
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: translateY(100%);
+    transition: transform 0.3s;
+}
+
+.comic-card:hover .comic-info {
+    transform: translateY(0);
+}
+
+.comic-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: white;
+}
+
+.comic-meta {
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+/* Card Actions */
+.card-actions {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    z-index: 15;
+    display: none;
+}
+
+.comic-card:hover .card-actions {
+    display: block;
+}
+
+.card-actions .read-now {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    border-radius: 4px;
+}
+
+/* Progress Bars */
+.progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), #ff6b6b);
+}
+
+/* Continue Info Panel */
+.continue-info {
+    background: #000;
+    color: #fff;
+    margin-top: 14px;
+    padding: 16px 0;
+    border-radius: 2px;
+    display: none;
+}
+
+body.light-theme .continue-info {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.continue-info .info-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0 20px;
+}
+
+.continue-info .info-text {
+    flex: 1 1 auto;
+}
+
+.continue-info .info-title {
+    font-weight: 800;
+    font-size: 1.15rem;
+    margin-bottom: 6px;
+}
+
+.continue-info .info-meta {
+    color: var(--gray);
+    font-size: 0.95rem;
+}
+
+.continue-info .info-progress {
+    width: 100%;
+    max-width: 300px;
+}
+
+.progress-track {
+    height: 8px;
+    background: rgba(233, 69, 96, 0.12);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-indicator {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), #ff6b6b);
+    width: 0%;
+    transition: width 300ms ease;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    border: none;
+    font-size: 24px;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* Browser Info Link */
+.browser-info-link {
+    position: fixed;
+    bottom: 10px;
+    right: 90px;
+    z-index: 1000;
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 12px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 3px;
+}
+
+body.light-theme .browser-info-link {
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--primary);
+}
+
+/* Row Navigation */
+.row-outer {
+    position: relative;
+}
+
+.row-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 0.35));
+    cursor: pointer;
+    z-index: 20;
+    border: none;
+    color: white;
+}
+
+.row-nav.left {
+    left: 0;
+}
+
+.row-nav.right {
+    right: 0;
+}
+
+.row-nav:hover {
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.5));
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 var(--mobile-padding);
+    }
+    
+    .logo {
+        font-size: 2rem;
+    }
+    
+    .featured-comic {
+        height: 60vh;
+        padding: 0 0 50px 20px;
+    }
+    
+    .featured-title {
+        font-size: 2rem;
+    }
+    
+    .featured-description {
+        font-size: 1rem;
+    }
+    
+    .search-bar {
+        max-width: 100%;
+    }
+    
+    .search-bar input {
+        min-width: 150px;
+    }
+    
+    .comic-card {
+        min-width: 150px;
+        height: 225px;
+    }
+    
+    .card-actions {
+        position: static;
+        display: block;
+        padding: 8px;
+    }
+    
+    .header-left, .header-right {
+        gap: 10px;
+    }
+    
+    .categories {
+        margin-top: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px 0;
+    }
+    
+    .logo {
+        font-size: 1.8rem;
+    }
+    
+    .featured-comic {
+        height: 50vh;
+        padding: 0 0 30px 15px;
+    }
+    
+    .featured-title {
+        font-size: 1.5rem;
+    }
+    
+    .featured-actions {
+        flex-direction: column;
+    }
+    
+    .comic-card {
+        min-width: 120px;
+        height: 180px;
+    }
+    
+    .categories {
+        justify-content: center;
+    }
+    
+    .theme-toggle {
+        width: 50px;
+        height: 50px;
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    .browser-info-link {
+        bottom: 15px;
+        right: 75px;
+    }
+}
+
+/* Screen Reader Only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+*/
+
+/* End of integrated user CSS (commented). Remove the surrounding comment block to enable. */

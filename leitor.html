@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Leitor de Quadrinhos - HQ Verso</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* SEU CSS PERMANECE IGUAL - não mudei nada aqui */
+        :root {
+            --bg-primary: #18122b;
+            --bg-secondary: #1a1a2e;
+            --bg-card: rgba(26, 26, 46, 0.8);
+            --text-primary: #f6f6f6;
+            --text-secondary: #b0b0b0;
+            --accent-color: #e94560;
+            --accent-hover: #d8345f;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #e9ecef;
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --text-primary: #2d3748;
+            --text-secondary: #6c757d;
+            --accent-color: #e94560;
+            --accent-hover: #d8345f;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            background: var(--accent-hover);
+        }
+        
+        .reader-header {
+            background: var(--accent-color);
+            padding: 20px;
+            text-align: center;
+            font-size: 2rem;
+            color: white;
+            letter-spacing: 2px;
+        }
+        
+        .comic-pages {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+        
+        .comic-page-img {
+            width: 90vw;
+            max-width: 700px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        .back-btn {
+            display: inline-block;
+            margin: 20px;
+            padding: 10px 20px;
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        
+        .read-now-btn {
+            display: inline-block;
+            margin: 20px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .read-now-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .page-list {
+            width: 90vw;
+            max-width: 700px;
+            margin: 10px auto 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .page-link {
+            display: block;
+            background: rgba(0,0,0,0.3);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            box-shadow: var(--shadow);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        [data-theme="light"] .page-link {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .page-link.current {
+            background: linear-gradient(90deg, var(--accent-color), #ff6b81);
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(233,69,96,0.28);
+        }
+        
+        .reader-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .info-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .info-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .progress-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .comic-info {
+            background: rgba(15, 52, 96, 0.1);
+            padding: 20px;
+            margin: 20px auto;
+            border-radius: 10px;
+            max-width: 700px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        [data-theme="light"] .comic-info {
+            background: rgba(233, 69, 96, 0.1);
+        }
+
+        .page-counter {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: var(--accent-color);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+    
+    <div class="reader-header">
+        <span id="readerTitleText">Carregando...</span>
+        <a href="detection.html" class="info-link" style="font-size: 14px; margin-left: 20px;">
+            <i class="fas fa-info-circle"></i> Info do Navegador
+        </a>
+    </div>
+    
+    <div class="reader-actions">
+        <a href="comics.php" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Voltar para Biblioteca
+        </a>
+        <button class="read-now-btn" id="readNowBtn">
+            <i class="fas fa-play"></i> Ler agora
+        </button>
+    </div>
+
+    <div class="comic-info" id="comicInfo" style="display: none;">
+        <h3 id="comicTitle"></h3>
+        <p id="comicDescription"></p>
+        <div class="page-counter" id="pageCounter">
+            Página <span id="currentPage">1</span> de <span id="totalPages">1</span>
+        </div>
+    </div>
+    
+    <div class="comic-pages" id="comicPages">
+        <div class="loading">
+            <i class="fas fa-spinner"></i>
+            <div>Carregando quadrinho...</div>
+        </div>
+    </div>
+    
+    <div class="page-list" id="pageList" aria-label="Lista de páginas">
+        <!-- Lista clicável de páginas -->
+    </div>
+
+    <div class="progress-indicator" id="progressIndicator" style="display: none;">
+        Progresso: <span id="progressText">0%</span>
+    </div>
+
+    <script>
+        // Sistema de Tema
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            
+            // Aplicar tema salvo
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme, themeIcon);
+            
+            // Event listener para alternar tema
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme, themeIcon);
+            });
+        }
+
+        function updateThemeIcon(theme, iconElement) {
+            if (theme === 'dark') {
+                iconElement.className = 'fas fa-moon';
+            } else {
+                iconElement.className = 'fas fa-sun';
+            }
+        }
+
+        // Ler parâmetros da URL
+        const params = new URLSearchParams(window.location.search);
+        const comicId = params.get('comic') || '';
+        let comicTitle = params.get('title') || 'Quadrinho';
+
+        // Variáveis de controle
+        let currentPage = 1;
+        let totalPages = 1;
+        let comicData = null;
+        let pages = [];
+
+        // VARIÁVEIS GLOBAIS PARA O OBSERVER (ADICIONE ESTAS)
+        let activeObserver = null;
+        let observerUpdateTimeout = null;
+        let saveProgressTimeout = null;
+
+        // Elementos DOM
+        const pagesDiv = document.getElementById('comicPages');
+        const pageListDiv = document.getElementById('pageList');
+        const titleEl = document.getElementById('readerTitleText');
+        const progressIndicator = document.getElementById('progressIndicator');
+        const progressText = document.getElementById('progressText');
+
+        // Carregar dados do quadrinho do banco
+        async function loadComicData() {
+            if (!comicId) {
+                showError('ID do quadrinho não especificado');
+                return;
+            }
+
+            try {
+                const response = await fetch(`get_comic_pages.php?comic_id=${comicId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    comicData = data.comic;
+                    pages = data.pages || [];
+                    
+                    // Atualizar título
+                    titleEl.textContent = comicData.title || 'Quadrinho';
+                    
+                    // Gerar páginas
+                    generatePages();
+                    
+                    // Carregar progresso salvo
+                    await loadSavedProgress();
+                    
+                } else {
+                    throw new Error(data.message || 'Erro ao carregar quadrinho');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar quadrinho:', error);
+                showError('Erro ao carregar quadrinho. Usando dados locais.');
+                loadFallbackData();
+            }
+        }
+
+        // Carregar progresso salvo
+        async function loadSavedProgress() {
+            try {
+                const response = await fetch(`get_comic_progress.php?comic_id=${comicId}`);
+                const data = await response.json();
+
+                if (data.success && data.progress) {
+                    const savedProgress = data.progress.progress_pct;
+                    const initialIndex = Math.round((savedProgress / 100) * (pages.length - 1));
+                    goToPage(initialIndex);
+                    updateProgressIndicator(savedProgress);
+                } else {
+                    // Sem progresso salvo, começar do início
+                    goToPage(0);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar progresso:', error);
+                goToPage(0);
+            }
+        }
+
+        // CORREÇÃO COMPLETA DA FUNÇÃO generatePages()
+        function generatePages() {
+            if (!pagesDiv || pages.length === 0) {
+                showError('Nenhuma página encontrada para este quadrinho');
+                return;
+            }
+
+            // Limpar loading
+            pagesDiv.innerHTML = '';
+            if (pageListDiv) pageListDiv.innerHTML = '';
+
+            // Criar elementos de imagem SEM observers individuais
+            pages.forEach((page, idx) => {
+                const img = document.createElement('img');
+                img.className = 'comic-page-img';
+                img.alt = `Página ${idx + 1} - ${comicData.title}`;
+                img.dataset.pageIndex = idx;
+                
+                // Configurar loading lazy para melhor performance
+                img.loading = 'lazy';
+                
+                const placeholderSrc = `https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Página+${idx+1}+${encodeURIComponent(comicData.title.substring(0, 10))}`;
+                img.src = page.image_url || placeholderSrc;
+                
+                img.onerror = () => {
+                    if (!img.dataset.broken) {
+                        img.dataset.broken = '1';
+                        img.src = placeholderSrc;
+                    }
+                };
+
+                pagesDiv.appendChild(img);
+
+                // Criar link na lista de páginas
+                if (pageListDiv) {
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.className = 'page-link';
+                    a.textContent = `Página ${idx + 1}`;
+                    a.dataset.pageIndex = idx;
+                    a.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        goToPage(idx);
+                    });
+                    pageListDiv.appendChild(a);
+                }
+            });
+
+            totalPages = pages.length;
+            updateComicInfo();
+            
+            // Configurar observer único após criar todas as imagens
+            setTimeout(() => setupIntersectionObserver(), 100);
+        }
+
+        // CORREÇÃO COMPLETA DA FUNÇÃO setupIntersectionObserver()
+        function setupIntersectionObserver() {
+            // Limpar observer anterior se existir
+            if (activeObserver) {
+                activeObserver.disconnect();
+            }
+
+            // Criar novo observer
+            activeObserver = new IntersectionObserver((entries) => {
+                // Debounce para evitar atualizações muito rápidas
+                if (observerUpdateTimeout) {
+                    clearTimeout(observerUpdateTimeout);
+                }
+
+                observerUpdateTimeout = setTimeout(() => {
+                    let mostVisiblePage = null;
+                    let maxVisibility = 0;
+
+                    // Encontrar a página mais visível
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            // Calcular visibilidade considerando a proporção e altura
+                            const visibility = entry.intersectionRatio * entry.boundingClientRect.height;
+                            if (visibility > maxVisibility) {
+                                maxVisibility = visibility;
+                                mostVisiblePage = entry.target;
+                            }
+                        }
+                    });
+
+                    // Atualizar apenas se encontrou uma página suficientemente visível
+                    if (mostVisiblePage && maxVisibility > 100) {
+                        const pageIndex = parseInt(mostVisiblePage.dataset.pageIndex);
+                        if ((pageIndex + 1) !== currentPage) {
+                            updateCurrentPage(pageIndex);
+                        }
+                    }
+                }, 50);
+            }, { 
+                threshold: [0.1, 0.25, 0.5, 0.75, 1.0],
+                rootMargin: '-20% 0px -20% 0px'
+            });
+
+            // Observar todas as imagens
+            document.querySelectorAll('.comic-page-img').forEach(img => {
+                activeObserver.observe(img);
+            });
+        }
+
+        function updateComicInfo() {
+            const comicInfo = document.getElementById('comicInfo');
+            const comicTitle = document.getElementById('comicTitle');
+            const comicDescription = document.getElementById('comicDescription');
+            
+            if (comicData) {
+                comicTitle.textContent = comicData.title;
+                comicDescription.textContent = comicData.description || 'Uma incrível história em quadrinhos.';
+                comicInfo.style.display = 'block';
+            }
+        }
+
+        // CORREÇÃO DA FUNÇÃO goToPage
+        function goToPage(pageIndex) {
+            // Garantir que pageIndex está dentro dos limites
+            pageIndex = Math.max(0, Math.min(pageIndex, totalPages - 1));
+            
+            const targetPage = document.querySelector(`.comic-page-img[data-page-index="${pageIndex}"]`);
+            if (targetPage) {
+                targetPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                updateCurrentPage(pageIndex);
+            } else {
+                // Fallback: scroll para topo se página não encontrada
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                updateCurrentPage(0);
+            }
+        }
+
+        // Atualizar página atual
+        function updateCurrentPage(pageIndex) {
+            currentPage = pageIndex + 1;
+            
+            // Atualizar links ativos
+            const links = pageListDiv ? Array.from(pageListDiv.querySelectorAll('.page-link')) : [];
+            links.forEach(l => l.classList.remove('current'));
+            const currentLink = links[pageIndex];
+            if (currentLink) currentLink.classList.add('current');
+
+            // Atualizar contador
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('totalPages').textContent = totalPages;
+
+            // Calcular e salvar progresso
+            const progress = Math.round((currentPage / totalPages) * 100);
+            updateProgressIndicator(progress);
+            saveProgress(progress);
+        }
+
+        // Atualizar indicador de progresso
+        function updateProgressIndicator(progress) {
+            progressText.textContent = `${progress}%`;
+            progressIndicator.style.display = 'block';
+            
+            // Esconder após alguns segundos
+            clearTimeout(progressIndicator.timeout);
+            progressIndicator.timeout = setTimeout(() => {
+                progressIndicator.style.display = 'none';
+            }, 3000);
+        }
+
+        // CORREÇÃO DA FUNÇÃO saveProgress com debounce
+        async function saveProgress(progress) {
+            if (!comicId) return;
+
+            // Debounce: cancelar salvamento anterior pendente
+            clearTimeout(saveProgressTimeout);
+            
+            saveProgressTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch('save_progress.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            comicId: parseInt(comicId),
+                            progress: progress
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!data.ok) {
+                        console.warn('Erro ao salvar progresso no servidor');
+                    }
+                } catch (error) {
+                    console.error('Erro ao salvar progresso:', error);
+                }
+            }, 1000);
+        }
+
+        // Dados de fallback caso o banco falhe
+        function loadFallbackData() {
+            const COMICS_MAP = {
+                1:{title:"Homem-Aranha: A Última Caçada",cover:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9az9jtGfQoj20u_4hUEeTQXvXvX9i0W2KPKw&s"},
+                2:{title:"Watchmen",cover:"https://upload.wikimedia.org/wikipedia/pt/d/d0/Watchmen.jpg"},
+            };
+
+            const comicInfo = COMICS_MAP[Number(comicId)] || { title: comicTitle };
+            comicData = { title: comicInfo.title };
+            titleEl.textContent = comicInfo.title;
+
+            // Gerar páginas placeholder
+            pages = [
+                { image_url: comicInfo.cover || 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Capa' },
+                { image_url: 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Página+1' },
+                { image_url: 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Página+2' },
+                { image_url: 'https://via.placeholder.com/700x1000/1a1a2e/e94560?text=Página+3' }
+            ];
+
+            generatePages();
+            goToPage(0);
+        }
+
+        // Mostrar erro
+        function showError(message) {
+            pagesDiv.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>${message}</div>
+                    <button class="back-btn" onclick="location.href='comics.php'" style="margin-top: 20px;">
+                        Voltar para Biblioteca
+                    </button>
+                </div>
+            `;
+        }
+
+        // Event Listeners
+        document.getElementById('readNowBtn').addEventListener('click', () => {
+            goToPage(0);
+        });
+
+        // Salvar progresso ao sair da página
+        window.addEventListener('beforeunload', () => {
+            const progress = Math.round((currentPage / totalPages) * 100);
+            saveProgress(progress);
+        });
+
+        // CORREÇÃO DA NAVEGAÇÃO POR TECLADO
+        document.addEventListener('keydown', (e) => {
+            // Prevenir comportamento padrão apenas para teclas de navegação
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                const nextPage = Math.min(currentPage, totalPages - 1);
+                goToPage(nextPage);
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                const prevPage = Math.max(currentPage - 2, 0);
+                goToPage(prevPage);
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                goToPage(0);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                goToPage(totalPages - 1);
+            }
+        });
+
+        // Inicializar
+        loadComicData();
+        initializeTheme();
+
+        console.log('Leitor de quadrinhos carregado com sucesso!');
+    </script>
+</body>
+</html>
